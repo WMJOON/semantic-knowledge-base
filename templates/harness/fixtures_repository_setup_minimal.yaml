@@ -1,0 +1,9 @@
+id: repository_setup_minimal
+description: "최소 repository 구조 검증"
+checks:
+  - path: canonical_root_hub.yaml
+    exists: true
+  - path: ontology/Tbox
+    exists: true
+  - path: evidence/seeds.jsonl
+    exists: true

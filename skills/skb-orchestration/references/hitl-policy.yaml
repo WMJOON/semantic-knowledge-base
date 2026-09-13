@@ -1,0 +1,54 @@
+# HITL policy for skb-orchestration v0.10.0.
+# SPEC §7.
+
+version: "1.0"
+
+always_hitl:
+  - canonical_root_hub_locked_change
+  - tbox_abox_boundary_move
+  - workflow_topology_change
+  - dependency_edge_change
+  - retry_after_max_retry_exhausted
+  - destructive_legacy_route
+
+# PreToolUse hook 패턴. tool 호출 시 영향받는 파일이 이 glob에 매칭되면 차단.
+pretool_block_patterns:
+  - path_glob: "canonical_root_hub.yaml"
+    reason: canonical_root_hub_locked_change
+    proposed_action: "invoke `skb init` with --yes after review"
+  - path_glob: "ontology/explain/concept/**/*.jsonl"
+    reason: tbox_abox_boundary_move
+    proposed_action: "use skb-ontology workflow with HITL ack"
+  - path_glob: "ontology/explain/instance/**/*.jsonl"
+    reason: tbox_abox_boundary_move
+    proposed_action: "use skb-ontology workflow with HITL ack"
+  - path_glob: "ontology/system/**/*.ttl"
+    reason: tbox_abox_boundary_move
+    proposed_action: "use skb-ontology workflow with HITL ack"
+  - path_glob: "agent-context/workflow/**/*.yaml"
+    reason: workflow_topology_change
+    proposed_action: "migrate/edit through workflow TTL pipeline, not directly"
+  - path_glob: "agent-context/workflow/**/*.ttl"
+    reason: workflow_topology_change
+    proposed_action: "edit via orchestration dispatch or reviewed TTL migration"
+  - path_glob: "workflow/**/*.yaml"
+    reason: workflow_topology_change
+    proposed_action: "legacy workflow path; migrate to agent-context/workflow"
+  - path_glob: "workflow/**/*.ttl"
+    reason: workflow_topology_change
+    proposed_action: "legacy workflow path; migrate to agent-context/workflow"
+
+# Layer-2 trigger reasons (orchestration이 자동으로 발행)
+observability_triggers:
+  non_determinism_high:
+    axis: non_determinism
+    condition: "value > threshold_max"
+  oracle_below_threshold:
+    axis: oracle
+    condition: "score < threshold_min"
+  cost_budget_exceeded:
+    axis: cost
+    condition: "tokens|seconds|power_wh > budget"
+  trajectory_incomplete:
+    axis: trajectory
+    condition: "complete is false"

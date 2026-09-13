@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# skb-explain CLI wrapper.
+# Delegates to the legacy skb-explain implementation during migration.
+set -euo pipefail
+
+# The previous body exec'd "$SCRIPT_DIR/../../skb-explain/scripts/skb-explain",
+# which resolves to this same file — each call forked until the process limit.
+# This skill ships no run.py/list.py, so there is nothing to delegate to.
+echo "skb-explain is not implemented (this skill ships no run.py/list.py)." >&2
+echo "Markdown projection lives in skb-ontology:" >&2
+echo "  skb-ontology project --target REPO --cluster NAME [--apply]" >&2
+exit 2

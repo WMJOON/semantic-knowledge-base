@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# msm — CLI entrypoint for the skb-repository-setup skill.
+# Usage: skb init [options]
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PY="${PYTHON:-python3}"
+
+sub="${1:-}"
+shift || true
+
+case "$sub" in
+  init)
+    mode="dry-run"
+    apply=0
+    validate_only=0
+    args=()
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --dry-run) apply=0; shift;;
+        --apply) apply=1; shift;;
+        --validate-only) validate_only=1; shift;;
+        *) args+=("$1"); shift;;
+      esac
+    done
+
+    if [[ $validate_only -eq 1 ]]; then
+      # delegate to L0 validators directly
+      target="."
+      for ((i=0; i<${#args[@]}; i++)); do
+        if [[ "${args[$i]}" == "--target" ]]; then target="${args[$((i+1))]}"; fi
+      done
+      L0="$(cd "$SCRIPT_DIR/.." && pwd)/harness/tiers/L0_static"
+      "$PY" "$L0/validate_repository_setup.py" --target "$target"
+      "$PY" "$L0/validate_canonical_hub.py" --target "$target"
+      "$PY" "$L0/validate_workflows.py" --target "$target"
+      exit $?
+    fi
+
+    if [[ $apply -eq 1 ]]; then
+      exec "$PY" "$SCRIPT_DIR/apply_init.py" "${args[@]}"
+    else
+      exec "$PY" "$SCRIPT_DIR/plan_init.py" "${args[@]}"
+    fi
+    ;;
+  ""|-h|--help)
+    cat <<EOF
+msm — Markdown Scaffolding Multihop (v1.0.0)
+
+Commands:
+  skb init [options]      Bootstrap a 5-Layer KB. Default is dry-run.
+
+Common options:
+  --target PATH           KB root (default: .)
+  --name NAME             KB name (default: basename of target)
+  --domain NAME           Initial canonical-cluster
+  --targets claude,codex  Skill scaffold targets
+  --apply                 Materialise the plan
+  --dry-run               Plan only (default)
+  --validate-only         Run L0 validators against existing target
+  --yes                   HITL acknowledgement
+  --with-skill-links      Install ~/.claude/skills symlinks via legacy installer
+  --with-venv             Create .venv in target
+  --strict                Promote warns to fails
+EOF
+    ;;
+  *)
+    echo "unknown subcommand: $sub" >&2
+    exit 2
+    ;;
+esac

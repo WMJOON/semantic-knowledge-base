@@ -1,0 +1,44 @@
+{
+  "$schema": "./pack_config.schema.json",
+  "pack_id": "msm",
+  "version": "v0.10.0",
+  "prefix": "msm-",
+  "description": "Markdown Scaffolding Multihop — ontology-specialized KB system",
+  "repo_url": "https://github.com/WMJOON/semantic-knowledge-base",
+  "overload_threshold": 10,
+  "migration": {
+    "target_version": "v0.10.0",
+    "mode": "compatibility",
+    "deprecation_window_days": 90
+  },
+  "skills": {
+    "core": [
+      "skb-repository-setup",
+      "skb-evidence",
+      "skb-ontology",
+      "skb-maintain",
+      "msm-graph-reasoning",
+      "msm-semantic-search",
+      "skb-harness",
+      "skb-orchestration"
+    ],
+    "legacy_v0_2_0": [
+      "msm-data-analysis",
+      "msm-kb-graph",
+      "msm-kb-rewrite",
+      "msm-mece-validator",
+      "msm-ralph-etl",
+      "msm-rdf-owl-bridge"
+    ],
+    "global": [
+      "msm-obsidian-cli"
+    ]
+  },
+  "router": {
+    "trigger_map_path": "references/router-trigger-map.yaml"
+  },
+  "hitl": {
+    "policy_path": "references/hitl-policy.yaml"
+  },
+  "thresholds_path": "references/5-axis-thresholds.yaml"
+}

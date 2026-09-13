@@ -1,0 +1,42 @@
+module:
+  name: KB Validation
+  id: validation
+  version: "1.0"
+  description: Run static and semantic maintenance checks for an MSM repository.
+  owner: user
+
+maintain:
+  id: maintain
+  label: Repository validation
+  status: pending
+  steps:
+    - type: step
+      id: va-s-01
+      label: Validate repository layers
+      instruction: Run static checks for hub, workflow, evidence, ontology, and harness skeletons.
+      status: pending
+      directories:
+        - {role: input, path: ./}
+        - {role: output, path: harness/reports/}
+      deliverables:
+        - harness/reports/
+
+x_msm:
+  category: maintain
+  kind: single
+  mode: validate-only
+  status: draft
+  tool: skb-maintain
+  inputs:
+    target: ./
+  outputs:
+    report: harness/reports/
+  runtime:
+    tier: L0
+    timeout_seconds: 300
+    max_concurrency: 1
+  governance:
+    hitl_required: false
+    max_retry: 1
+    oracle: repository_integrity
+    oracle_threshold: 0.85

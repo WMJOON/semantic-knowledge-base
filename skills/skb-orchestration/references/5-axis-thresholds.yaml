@@ -1,0 +1,44 @@
+# 5-axis gate thresholds for skb-orchestration v0.10.0.
+# SPEC §6.1. Resolution: workflow_id override → category override → defaults.
+
+version: "1.0"
+
+defaults:
+  non_determinism:
+    max: 0.15
+    sample_n: 1            # 1이면 측정 안 함
+  oracle:
+    min_score: 0.85
+  cost:
+    full_mode:
+      tokens_max: 100000
+      seconds_max: 1800
+      power_wh_max: 50
+    fallback_mode:
+      tokens_max: 100000
+      seconds_max: 1800
+  hitl:
+    auto_escalate_on:
+      - canonical_root_hub_locked_change
+      - tbox_abox_boundary_move
+      - workflow_topology_change
+
+overrides:
+  by_workflow_id:
+    explorer.search_reason.default:
+      oracle:
+        min_score: 0.80
+    maintain.oracle.test:
+      oracle:
+        min_score: 0.85
+
+  by_category:
+    evidence:
+      cost:
+        full_mode:
+          tokens_max: 50000
+        fallback_mode:
+          tokens_max: 50000
+    ontology:
+      oracle:
+        min_score: 0.90

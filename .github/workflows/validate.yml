@@ -1,0 +1,21 @@
+name: validate
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install rdflib pyshacl owlrl pytest pyyaml
+      - run: bash scripts/public_release_audit.sh
+      - run: python -m pytest -q skills/skb-ontology/tests/test_ttl_only.py skills/skb-repository-setup/tests skills/skb-maintain/tests tests

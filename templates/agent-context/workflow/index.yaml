@@ -1,0 +1,19 @@
+schema_version: "1.0"
+name: "{{KB_NAME}} MSM Workflows"
+workflows:
+  - id: evidence-collection
+    path: agent-context/workflow/evidence/evidence-collection.yaml
+    category: evidence
+    kind: single
+  - id: ontology-construction
+    path: agent-context/workflow/ontology/ontology-construction.yaml
+    category: ontology
+    kind: single
+  - id: validation
+    path: agent-context/workflow/maintain/validation.yaml
+    category: maintain
+    kind: single
+  - id: search-reason
+    path: agent-context/workflow/explorer/search-reason.yaml
+    category: explorer
+    kind: pipeline

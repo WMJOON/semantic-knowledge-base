@@ -1,0 +1,50 @@
+module:
+  name: Search and Reason
+  id: search-reason
+  version: "1.0"
+  description: Search evidence and ontology nodes, then run lightweight multihop reasoning.
+  owner: user
+
+explorer:
+  id: explorer
+  label: Search and reason
+  status: pending
+  steps:
+    - type: step
+      id: sr-s-01
+      label: Retrieve candidate nodes
+      instruction: Search evidence and ontology indexes for candidates related to the user query.
+      status: pending
+      directories:
+        - {role: input, path: evidence/}
+        - {role: input, path: ontology/}
+        - {role: output, path: report/}
+      deliverables:
+        - report/
+
+x_msm:
+  category: explorer
+  kind: pipeline
+  mode: dry-run
+  status: draft
+  tool: msm-graph-reasoning
+  inputs:
+    query: null
+  outputs:
+    report: report/
+  runtime:
+    tier: L1
+    timeout_seconds: 600
+    max_concurrency: 1
+  pipeline:
+    - step_id: retrieve
+      tool: msm-graph-reasoning
+      action: search
+    - step_id: reason
+      tool: msm-graph-reasoning
+      action: multihop
+  governance:
+    hitl_required: false
+    max_retry: 1
+    oracle: reasoning_trace_readiness
+    oracle_threshold: 0.85

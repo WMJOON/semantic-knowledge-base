@@ -1,0 +1,43 @@
+module:
+  name: Ontology Construction
+  id: ontology-construction
+  version: "1.0"
+  description: Promote evidence-derived candidates into MSM ontology JSONL/TTL artifacts.
+  owner: user
+
+ontology:
+  id: ontology
+  label: Ontology construction
+  status: pending
+  steps:
+    - type: step
+      id: on-s-01
+      label: Promote concepts and relations
+      instruction: Validate candidate entities and relations, then write ontology layer artifacts.
+      status: pending
+      directories:
+        - {role: input, path: evidence/}
+        - {role: output, path: ontology/}
+      deliverables:
+        - ontology/Tbox/
+        - ontology/Abox/
+
+x_msm:
+  category: ontology
+  kind: single
+  mode: dry-run
+  status: draft
+  tool: skb-ontology
+  inputs:
+    evidence: evidence/
+  outputs:
+    ontology: ontology/
+  runtime:
+    tier: L1
+    timeout_seconds: 600
+    max_concurrency: 1
+  governance:
+    hitl_required: true
+    max_retry: 1
+    oracle: ontology_mece_readiness
+    oracle_threshold: 0.85

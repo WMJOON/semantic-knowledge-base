@@ -1,0 +1,15 @@
+# Per-token energy estimates (Wh) for cost.full mode.
+# Initial stub; HRN-OI-2에서 ollama 주요 모델 7종 측정 후 확정.
+# Units: Watt-hours per output token.
+
+version: "1.0.0-stub"
+default: 0.0001  # 100 µWh/token, conservative placeholder
+
+models:
+  gemma2:e4b: 0.00012
+  gemma2:9b:  0.00018
+  llama3.1:8b: 0.00018
+  llama3.1:70b: 0.0011
+  qwen2.5:7b: 0.00015
+  qwen2.5:14b: 0.00029
+  mistral:7b: 0.00015

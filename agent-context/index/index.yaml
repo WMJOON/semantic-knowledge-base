@@ -1,0 +1,23 @@
+x_msm_generated:
+  skill: skb-repository-setup
+  version: "1.2.0"
+
+project:
+  name: "repository-test"
+  id: "repository-test"
+  description: "repository-test KB — MSM workflow assets aligned to MSO agent-context."
+  owner: OWNER
+  updated: "1970-01-01"
+  version: "1.0.0"
+
+modules:
+  - id: agent-context
+    path: ../
+    description: Agent-facing operational context for MSO workflow and MSM runtime contracts.
+    subdirs:
+      - path: index/
+        role: scaffold
+        description: MSO scaffold index for agent-context.
+      - path: workflow/
+        role: workflow
+        description: MSO canonical workflow definitions and MSM x_msm execution extensions.

@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# skb-orchestrate — unified CLI for skb-orchestration v1.0.0.
+# Subcommands route to the appropriate router/ or policy/ module.
+
+set -euo pipefail
+
+SKILL_HOME="$(cd "$(dirname "$0")" && pwd)"
+PY="${PYTHON:-python3}"
+
+sub="${1:-}"
+shift || true
+
+case "$sub" in
+  run|dispatch)
+    exec "$PY" "$SKILL_HOME/router/dispatch.py" "$@"
+    ;;
+  match)
+    exec "$PY" "$SKILL_HOME/router/match_trigger.py" "$@"
+    ;;
+  resolve)
+    exec "$PY" "$SKILL_HOME/router/resolve_workflow.py" "$@"
+    ;;
+  cc|cc-check)
+    exec "$PY" "$SKILL_HOME/policy/cc_check.py" "$@"
+    ;;
+  gate)
+    exec "$PY" "$SKILL_HOME/policy/gate_evaluator.py" "$@"
+    ;;
+  ack|hitl-ack)
+    exec "$PY" "$SKILL_HOME/policy/hitl_router.py" "$@"
+    ;;
+  hook)
+    exec "$PY" "$SKILL_HOME/hooks/pretool_use.py" "$@"
+    ;;
+  thresholds)
+    exec "$PY" -c "
+import sys, json
+sys.path.insert(0, '$SKILL_HOME/policy')
+import threshold_resolver as tr
+import argparse
+ap = argparse.ArgumentParser()
+ap.add_argument('--workflow-id', default=None)
+ap.add_argument('--category', default=None)
+a = ap.parse_args(sys.argv[1:])
+json.dump(tr.resolve(workflow_id=a.workflow_id, category=a.category), sys.stdout, indent=2)
+sys.stdout.write('\n')
+" "$@"
+    ;;
+  ""|-h|--help)
+    cat <<EOF
+skb-orchestrate — MSM v1.0.0 orchestration CLI
+
+Subcommands:
+  run --intent TEXT --target REPO         intent → router → harness → gate
+  run --workflow PATH --target REPO       explicit workflow dispatch
+  run --skill NAME --target REPO          skill-direct dispatch
+  match --intent TEXT                     show router decision (no execution)
+  resolve --target REPO --workflow-id ID  workflow registry lookup
+  cc-check --target REPO                  run CC contract checks
+  gate --target REPO --run-id ID          evaluate harness measurement → gate_decision
+  hitl-ack --target REPO --run-id ID --topic T --by USER --outcome approved
+                                          record a HITL decision
+  hook                                    PreToolUse hook (reads stdin payload)
+  thresholds --workflow-id ID|--category C
+                                          show resolved threshold values
+
+Run-time exit codes: 0 ok, 1 cc, 100 hitl pending, 101 gate fail, 102 legacy reject.
+EOF
+    ;;
+  *)
+    echo "unknown subcommand: $sub" >&2
+    exit 2
+    ;;
+esac

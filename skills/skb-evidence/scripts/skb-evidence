@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# skb-evidence — CLI entrypoint for the skb-evidence skill.
+# Usage: skb-evidence <command> [options]
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PY="${PYTHON:-python3}"
+
+sub="${1:-}"
+shift || true
+
+case "$sub" in
+  collect)
+    exec "$PY" "$SCRIPT_DIR/collect.py" "$@"
+    ;;
+  capture)
+    exec "$PY" "$SCRIPT_DIR/capture.py" "$@"
+    ;;
+  convert)
+    exec "$PY" "$SCRIPT_DIR/convert.py" "$@"
+    ;;
+  ingest)
+    exec "$PY" "$SCRIPT_DIR/ingest.py" "$@"
+    ;;
+  verify)
+    exec "$PY" "$SCRIPT_DIR/verify.py" "$@"
+    ;;
+  list)
+    exec "$PY" "$SCRIPT_DIR/list_seeds.py" "$@"
+    ;;
+  ""|-h|--help)
+    cat <<EOF
+skb-evidence — Evidence Collector for SKB v1.1.0
+
+Commands:
+  collect   Fetch + chunk + dedup + write seeds
+  capture   URL 원문 스냅샷(PDF+PNG+HTML) 박제 (opt-in; requires playwright)
+  convert   원문(정적 URL/HTML/PDF/Office) → evidence/raw/ MD 변환 (opt-in; requires docling)
+  ingest    [render→]convert→collect 오케스트레이션 (opt-in; requires docling, --render 시 playwright-cli)
+  verify    Validate seeds.jsonl integrity
+  list      List collected seeds
+
+Common options:
+  --target PATH       KB root (default: .)
+
+collect options:
+  --source URI [...]  One or more URIs (URL or file path)
+  --sources-file PATH File containing URIs, one per line
+  --chunk-size INT    Max chunk size in chars (default: 1200)
+  --chunk-overlap INT Overlap between chunks (default: 100)
+  --cluster NAME      Ontology cluster hint (stored as metadata)
+  --apply             Actually write files (default: dry-run)
+  --dry-run           Plan only, no writes (default)
+  --max-retry INT     HTTP retry limit (default: 1)
+  --user-agent STR    HTTP User-Agent (default: skb-evidence/1.0)
+  --run-id STR        Trajectory run identifier
+  --capture           URL 소스 원문 스냅샷 캡처 후 seed.snapshot 기록 (opt-in)
+
+capture options:
+  --url URL           캡처할 URL (필수)
+  --target PATH       KB root (출력: <target>/evidence/captures/<sha>.{pdf,png,html})
+  --outdir DIR        출력 디렉토리 직접 지정 (--target 대체)
+
+convert options:
+  --source URI        정적 URL 또는 로컬 파일 (HTML/PDF/DOCX/XLSX/PPTX)
+  --source-url URL    중간 파일 변환 시 원본 URL (provenance)
+  --target PATH       KB root (출력: <target>/evidence/raw/<slug>.md)
+
+ingest options:
+  --source URI [...]  수집할 소스 (URL 또는 파일 경로)
+  --sources-file PATH File containing URIs, one per line
+  --render            URL을 playwright-cli로 렌더링 후 변환 (JS-rendered 페이지, opt-in)
+  --cluster NAME      Ontology cluster hint
+  --apply             Actually write files (default: dry-run)
+
+verify options:
+  --id SEED_ID        Verify a specific seed
+
+list options:
+  --format table|json|ids   Output format (default: table)
+EOF
+    ;;
+  *)
+    echo "unknown subcommand: $sub" >&2
+    echo "Use 'skb-evidence --help' for usage." >&2
+    exit 2
+    ;;
+esac

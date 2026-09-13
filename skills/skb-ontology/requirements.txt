@@ -1,0 +1,4 @@
+# skb-ontology TTL-only dependencies (v1.1.0+)
+pyshacl>=0.31
+rdflib>=7.0
+owlrl>=7.1

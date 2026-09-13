@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# skb-maintain — CLI entrypoint for the skb-maintain skill.
+# Usage: skb-maintain <command> [options]
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PY="${PYTHON:-python3}"
+
+sub="${1:-}"
+shift || true
+
+case "$sub" in
+  scan)
+    exec "$PY" "$SCRIPT_DIR/scan.py" "$@"
+    ;;
+  rewrite)
+    exec "$PY" "$SCRIPT_DIR/rewrite.py" "$@"
+    ;;
+  analyze)
+    exec "$PY" "$SCRIPT_DIR/analyze.py" "$@"
+    ;;
+  report)
+    exec "$PY" "$SCRIPT_DIR/report.py" "$@"
+    ;;
+  ""|-h|--help)
+    cat <<EOF
+skb-maintain — TTL-only KB Maintenance Tool for SKB v1.1.0
+
+Commands:
+  scan      Detect drift / orphan / eval issues
+  rewrite   Guarded handoff; ontology auto-fixes are not applied
+  analyze   Generate Turtle graph statistics + analysis report
+  report    Generate troubleshooting report for a date range
+
+Common options:
+  --target PATH       KB root (default: .)
+
+scan options:
+  --domain NAME       Scope to a semantic domain
+  --kind drift|orphan|eval|all  Scan type (default: all)
+  --run-id STR        Trajectory run identifier
+
+rewrite options:
+  --plan PATH         Path to scan plan JSON (required)
+  --apply             Actually apply fixes (default: dry-run)
+  --run-id STR        Trajectory run identifier
+
+analyze options:
+  --domain NAME       Scope to a semantic domain
+  --run-id STR        Run identifier for report filename
+
+report options:
+  --since YYYY-MM-DD  Show events from this date (required)
+  --run-id STR        Run identifier for report filename
+EOF
+    ;;
+  *)
+    echo "unknown subcommand: $sub" >&2
+    echo "Use 'skb-maintain --help' for usage." >&2
+    exit 2
+    ;;
+esac

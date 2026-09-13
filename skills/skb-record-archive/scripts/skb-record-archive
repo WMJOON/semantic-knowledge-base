@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# skb-record-archive CLI entry point (v0.13.4 skeleton)
+set -euo pipefail
+
+SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+COMMAND="${1:-}"
+shift || true
+
+case "$COMMAND" in
+  init)            python3 "$SKILL_DIR/init.py" "$@" ;;
+  insert)          python3 "$SKILL_DIR/insert.py" "$@" ;;
+  query)           python3 "$SKILL_DIR/query.py" "$@" ;;
+  migrate)         python3 "$SKILL_DIR/migrate.py" "$@" ;;
+  export-snapshot) python3 "$SKILL_DIR/export_snapshot.py" "$@" ;;
+  eca-run)         python3 "$SKILL_DIR/eca_run.py" "$@" ;;
+  *)
+    echo "Usage: skb-record-archive <command> [options]"
+    echo "Commands: init | insert | query | migrate | export-snapshot | eca-run"
+    exit 1
+    ;;
+esac

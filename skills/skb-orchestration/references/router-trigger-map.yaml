@@ -1,0 +1,78 @@
+# Router trigger map for skb-orchestration v0.10.0.
+# SPEC §4.1. priority: higher value wins on multi-match; default 0.
+
+version: "1.0"
+triggers:
+  - id: repository.bootstrap
+    priority: 100
+    when:
+      keywords:
+        - "skb init"
+        - "5-layer bootstrap"
+        - "repository scaffold"
+        - "canonical hub 초기화"
+      intents: ["bootstrap", "init"]
+    route:
+      mode: skill
+      skill: skb-repository-setup
+      tier: L0
+      default_mode: dry-run
+
+  - id: evidence.collect
+    priority: 50
+    when:
+      keywords:
+        - "evidence 수집"
+        - "URL 크롤링"
+        - "ralph etl"
+      intents: ["collect", "ingest"]
+      legacy_aliases: ["msm-ralph-etl"]
+    route:
+      mode: workflow
+      workflow_id: evidence.collection.default
+      legacy_target: msm-ralph-etl
+
+  - id: ontology.build
+    priority: 50
+    when:
+      keywords:
+        - "entity 생성"
+        - "온톨로지 확장"
+        - "MECE 검증"
+        - "ontology 구축"
+      intents: ["build", "construct"]
+      legacy_aliases: ["msm-kb-graph", "msm-mece-validator"]
+    route:
+      mode: workflow
+      workflow_id: ontology.construction.default
+      legacy_target: msm-kb-graph
+
+  - id: maintain.validate
+    priority: 40
+    when:
+      keywords:
+        - "노트 재작성"
+        - "KB 정리"
+        - "drift 검증"
+        - "orphan scan"
+      intents: ["validate", "rewrite", "scan"]
+      legacy_aliases: ["msm-kb-rewrite", "msm-data-analysis"]
+    route:
+      mode: workflow
+      workflow_id: maintain.validation.default
+      legacy_target: msm-kb-rewrite
+
+  - id: explorer.search_reason
+    priority: 30
+    when:
+      keywords:
+        - "GraphRAG"
+        - "multihop"
+        - "multi-hop"
+        - "BFS"
+        - "semantic search"
+      intents: ["search", "reason", "explore"]
+      legacy_aliases: ["msm-rdf-owl-bridge"]
+    route:
+      mode: workflow
+      workflow_id: explorer.search_reason.default

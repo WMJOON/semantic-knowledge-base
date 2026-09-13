@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# skb-ontology — TTL-only ontology manager.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SKILL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+if [[ -x "$SKILL_DIR/.venv/bin/python3" ]]; then
+  PY="${PYTHON:-$SKILL_DIR/.venv/bin/python3}"
+else
+  PY="${PYTHON:-python3}"
+fi
+
+sub="${1:-}"
+shift || true
+
+case "$sub" in
+  add)          exec "$PY" "$SCRIPT_DIR/ttl_add.py" "$@" ;;
+  list)         exec "$PY" "$SCRIPT_DIR/ttl_list.py" "$@" ;;
+  validate)     exec "$PY" "$SCRIPT_DIR/ttl_validate.py" "$@" ;;
+  completeness) exec "$PY" "$SCRIPT_DIR/ttl_validate.py" "$@" ;;
+  lint-iri)     exec "$PY" "$SCRIPT_DIR/ttl_validate.py" "$@" ;;
+  reason)       exec "$PY" "$SCRIPT_DIR/ttl_reason.py" "$@" ;;
+  materialize)  exec "$PY" "$SCRIPT_DIR/ttl_materialize.py" "$@" ;;
+  shapes-validate) exec "$PY" "$SCRIPT_DIR/shapes_validate.py" "$@" ;;
+  migrate-legacy)
+    echo "migrate-legacy is intentionally not automatic; pin the pre-TTL-only skill version and review the generated graph before adoption." >&2
+    exit 2
+    ;;
+  compile|abox-compile|postprocess|project|definition|gen-ddl|rbox|axiom|mece|prov)
+    echo "'$sub' is retired from the active TTL-only contract. Edit canonical Turtle directly, then run 'skb-ontology validate'." >&2
+    exit 2
+    ;;
+  ""|-h|--help)
+    cat <<'EOF'
+skb-ontology — TTL-only ontology manager
+
+Canonical data:
+  ontology/system/semantic/<domain>/*.ttl
+
+Commands:
+  add          Add a class, property, individual, or reified assertion directly to Turtle
+  list         List registry terms from Turtle
+  validate     Parse → completeness/link → naming/dedup → SHACL
+  reason       Validate, then emit a derived *.inferred.ttl graph
+  materialize  Validate and reason without a YAML/JSON intermediate
+  shapes-validate  Validate explicitly selected Turtle and SHACL files
+
+Retired active paths:
+  YAML/JSONL compile, abox-compile, project, rbox compile, axiom YAML authoring,
+  inferred.jsonl, and YAML↔TTL completeness.
+
+Use '<command> --help' for command-specific options.
+EOF
+    ;;
+  *)
+    echo "unknown subcommand: $sub" >&2
+    exit 2
+    ;;
+esac

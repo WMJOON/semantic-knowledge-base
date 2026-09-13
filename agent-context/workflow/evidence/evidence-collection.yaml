@@ -1,0 +1,43 @@
+module:
+  name: Evidence Collection
+  id: evidence-collection
+  version: "1.0"
+  description: Collect source URLs or local files into MSM evidence seeds.
+  owner: user
+
+evidence:
+  id: evidence
+  label: Evidence collection
+  status: pending
+  steps:
+    - type: step
+      id: ev-s-01
+      label: Capture evidence seeds
+      instruction: Collect configured sources into evidence/seeds.jsonl and evidence/md/.
+      status: pending
+      directories:
+        - {role: input, path: evidence/}
+        - {role: output, path: evidence/}
+      deliverables:
+        - evidence/seeds.jsonl
+        - evidence/md/
+
+x_msm:
+  category: evidence
+  kind: single
+  mode: dry-run
+  status: draft
+  tool: skb-evidence
+  inputs:
+    seeds: evidence/seeds.jsonl
+  outputs:
+    evidence_md: evidence/md/
+  runtime:
+    tier: L1
+    timeout_seconds: 600
+    max_concurrency: 1
+  governance:
+    hitl_required: false
+    max_retry: 1
+    oracle: evidence_seed_readiness
+    oracle_threshold: 0.85

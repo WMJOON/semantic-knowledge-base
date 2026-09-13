@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "$id": "msm-pack-config-v0.10.0",
+  "title": "MSM Pack Config v0.10.0",
+  "type": "object",
+  "required": ["pack_id", "version", "prefix", "migration", "skills"],
+  "additionalProperties": true,
+  "properties": {
+    "pack_id": {"type": "string"},
+    "version": {"type": "string"},
+    "prefix": {"type": "string"},
+    "description": {"type": "string"},
+    "repo_url": {"type": "string"},
+    "overload_threshold": {"type": "integer", "minimum": 1},
+    "migration": {
+      "type": "object",
+      "required": ["target_version", "mode"],
+      "additionalProperties": false,
+      "properties": {
+        "target_version": {"type": "string"},
+        "mode": {"enum": ["compatibility", "strict-soft", "v1-strict"]},
+        "deprecation_window_days": {"type": "integer", "minimum": 0}
+      }
+    },
+    "skills": {
+      "type": "object",
+      "required": ["core"],
+      "additionalProperties": true,
+      "properties": {
+        "core": {
+          "type": "array",
+          "items": {"type": "string"},
+          "minItems": 8,
+          "uniqueItems": true
+        },
+        "legacy_v0_2_0": {
+          "type": "array",
+          "items": {"type": "string"},
+          "uniqueItems": true
+        },
+        "global": {
+          "type": "array",
+          "items": {"type": "string"},
+          "uniqueItems": true
+        }
+      }
+    },
+    "router": {
+      "type": "object",
+      "required": ["trigger_map_path"],
+      "properties": {
+        "trigger_map_path": {"type": "string"}
+      }
+    },
+    "hitl": {
+      "type": "object",
+      "required": ["policy_path"],
+      "properties": {
+        "policy_path": {"type": "string"}
+      }
+    },
+    "thresholds_path": {"type": "string"}
+  }
+}

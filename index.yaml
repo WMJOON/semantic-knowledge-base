@@ -1,0 +1,62 @@
+x_msm_generated:
+  skill: skb-repository-setup
+  version: 1.2.0
+  generated_at: '2026-08-20'
+project:
+  name: repository-test
+  id: repository-test
+  description: repository-test KB — MSM v0.13.4 record archive 포함.
+  owner: OWNER
+  updated: '2026-08-20'
+  version: 1.0.0
+modules:
+- id: skb-record-archive
+  path: record-archive/
+  description: 'MSM v0.13.4 — record archive: SQLite runtime DB, events, derived records,
+    snapshots'
+  subdirs:
+  - path: registry/
+    role: data
+    description: stable instance id registry
+  - path: runtime/
+    role: runtime
+    description: SQLite runtime DB (OLTP/WAL)
+  - path: events/
+    role: data
+    description: append-only occurrence/change events
+  - path: derived/
+    role: data
+    description: materialized derived state records
+  - path: snapshots/
+    role: output
+    description: Parquet snapshots (DuckDB analytics bridge)
+  key_files:
+  - registry/instance-ids.jsonl
+  - runtime/runtime.db
+  references:
+  - consumes: skb-ontology-layer
+    artifacts:
+    - source_refs
+    - ontology/system/**/*.ttl
+  status: active
+- id: skb-ontology-layer
+  path: ontology/
+  description: MSM v0.13.4 — Ontology layer (explain Markdown + system Turtle/PROV-O
+    graphs)
+  subdirs:
+  - path: explain/concept/
+    role: projection
+    description: human-readable Class projection
+  - path: explain/instance/
+    role: projection
+    description: human-readable instance snapshot projection
+  - path: system/semantic/
+    role: graph
+    description: Turtle/RDF/OWL semantic graph + PROV-O projection
+  - path: system/kinetic/
+    role: graph
+    description: Turtle transition/action rule graph
+  - path: system/dynamic/
+    role: graph
+    description: Turtle event/state/derived-value semantic graph
+  status: active

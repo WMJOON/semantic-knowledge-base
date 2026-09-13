@@ -1,0 +1,7 @@
+@prefix msmwf: <https://msm.dev/ontology/workflow#> .
+
+<https://msm.dev/ontology/workflow#workflow/index> a msmwf:WorkflowIndex ;
+    msmwf:workflowEntry [ msmwf:category "evidence" ;
+            msmwf:id "graphify-etl" ;
+            msmwf:kind "single" ;
+            msmwf:path "agent-context/workflow/evidence/graphify-etl.abox.ttl" ] .

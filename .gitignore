@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 그래프 출력 / 임시 파일
+graph.json
+*.tmp
+
+# 로컬 설정 (예시 파일만 커밋)
+graph-ontology.yaml
+graph-config.yaml
+rollup-config.yaml
+
+# Ralph ETL 런타임 산출물 (크롤링 원문·엔티티 후보·run 상태 등 — 민감 데이터 포함 가능)
+skills/md-ralph-etl/archive/
+skills/md-ralph-etl/data/ontology-entities/
+skills/md-ralph-etl/data/ontology-relations/
+skills/md-ralph-etl/evidence_corpus/
+
+# skill-modules Ralph ETL 런타임 아카이브
+.skill-modules/msm-ralph-etl/archive/
+.claude/
+.antigravity/
+
+# Private/runtime data: public source ships schemas and empty structure only.
+evidence/md/**
+evidence/raw/**
+evidence/captures/**
+evidence/seeds.jsonl
+record-archive/runtime/**
+record-archive/events/**
+record-archive/derived/**
+record-archive/snapshots/**
+agent-context/work-memory/auditlog/**
+agent-context/work-memory/worklog/**
+agent-context/work-memory/track-record/**
+agent-context/work-memory/insight-record/**
+
+# Local harness output
+harness/trajectory/**
+harness/reports/**
+.pytest_cache/

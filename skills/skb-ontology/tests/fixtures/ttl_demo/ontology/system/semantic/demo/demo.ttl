@@ -1,0 +1,35 @@
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix ex: <https://example.org/kb#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skb: <https://semantic-knowledge-base.dev/ontology#> .
+
+ex:ontology a owl:Ontology ;
+    skb:declaresTerm ex:Agent, ex:Organization, ex:alice, ex:acme, ex:memberOf .
+
+ex:Agent a owl:Class ;
+    rdfs:label "에이전트"@ko ; dct:identifier "agent" ; skb:status "accepted" ;
+    prov:hadPrimarySource <https://example.org/source/1> .
+
+ex:Organization a owl:Class ;
+    rdfs:label "조직"@ko ; dct:identifier "organization" ; skb:status "accepted" ;
+    prov:hadPrimarySource <https://example.org/source/1> .
+
+ex:memberOf a owl:ObjectProperty ;
+    rdfs:label "소속"@ko ; dct:identifier "member-of" ; skb:status "accepted" ;
+    rdfs:domain ex:Agent ; rdfs:range ex:Organization ;
+    prov:hadPrimarySource <https://example.org/source/1> .
+
+ex:alice a owl:NamedIndividual, ex:Agent ;
+    rdfs:label "앨리스"@ko ; dct:identifier "alice" ; skb:status "accepted" ;
+    prov:hadPrimarySource <https://example.org/source/1> ; ex:memberOf ex:acme .
+
+ex:acme a owl:NamedIndividual, ex:Organization ;
+    rdfs:label "애크미"@ko ; dct:identifier "acme" ; skb:status "accepted" ;
+    prov:hadPrimarySource <https://example.org/source/1> .
+
+<urn:skb:assertion:alice-member-of-acme> a rdf:Statement ;
+    rdf:subject ex:alice ; rdf:predicate ex:memberOf ; rdf:object ex:acme ;
+    prov:hadPrimarySource <https://example.org/source/1> .

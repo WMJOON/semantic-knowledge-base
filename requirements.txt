@@ -1,0 +1,25 @@
+PyYAML>=6.0
+rdflib>=7.0
+pyshacl>=0.31
+owlrl>=7.1
+networkx>=3.0
+requests>=2.28
+langchain>=0.1
+langchain-anthropic>=0.1
+langchain-community>=0.1
+anthropic>=0.40        # mece_interview.py (medium/deep 모드)
+
+# md-vector-search
+zvec>=0.2
+
+# md-data-analysis
+pandas>=2.0
+numpy>=1.24
+scipy>=1.11
+statsmodels>=0.14
+tabulate>=0.9
+
+# msm-kb-graph Leiden 클러스터링 (선택 — leiden_cluster.py 사용 시만 필요)
+# pip install leidenalg igraph
+leidenalg>=0.10
+igraph>=0.10

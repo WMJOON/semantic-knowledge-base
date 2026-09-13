@@ -1,0 +1,46 @@
+# Reference copy of templates/canonical_root_hub.yaml.
+# Authoritative version is at templates/canonical_root_hub.yaml.
+# Schema: canonical-hub-SPEC §4.
+
+version: "1.1"
+locked: true
+
+domains: []
+
+system:
+  semantic: ontology/system/semantic/**/*.ttl
+  kinetic: ontology/system/kinetic/**/*.ttl
+  dynamic: ontology/system/dynamic/**/*.ttl
+
+record_archive:
+  registry: record-archive/registry/**/*.jsonl
+  runtime: record-archive/runtime/runtime.db
+  events: record-archive/events/**/*.jsonl
+  derived: record-archive/derived/**/*.jsonl
+  snapshots: record-archive/snapshots/**/*.parquet
+
+time_axes:
+  source_time: published_at
+  observation_time: observed_at
+  capture_time: captured_at
+  archive_time: archived_at
+  domain_time: valid_at
+  derivation_time: derived_at
+
+provenance:
+  source_registry: evidence/seeds.jsonl
+  asserted_graph: ontology/system/semantic/**/*.ttl
+  shapes: ontology/system/semantic/**/*.shapes.ttl
+
+scan:
+  include:
+    - "ontology/system/semantic/**/*.ttl"
+  exclude:
+    - "ontology/system/semantic/**/*.shapes.ttl"
+    - "ontology/system/semantic/**/*.inferred.ttl"
+  orphan_exit_code: 1
+
+sync:
+  structural_ssot: ttl
+  projection_target: md
+  auto_apply_md_to_ttl: false
