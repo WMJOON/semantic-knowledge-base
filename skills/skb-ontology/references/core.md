@@ -67,13 +67,22 @@ failed gate.
 
 ## Migration boundary
 
-The pre-v1.1 JSONL registries and LinkML YAML compiler are legacy inputs. Migration is a
-one-time operation with this acceptance boundary:
+The pre-v1.1 JSONL registries and LinkML YAML compiler are legacy inputs. The legacy
+compiler scripts themselves have been deleted; `scripts/migrate_legacy_to_ttl.py`
+(wired as `skb-ontology migrate-legacy`) is the one-time bridge from a LinkML-style
+`classes`/`slots` definition YAML (optionally paired with an `instances` ABox YAML)
+into canonical Turtle, with this acceptance boundary:
 
-1. Convert into asserted Turtle without overwriting the source.
-2. Compare class, property, individual, assertion, label, and provenance counts.
-3. Pass the TTL-only validator and domain SHACL.
-4. Obtain repository-required approval.
+1. Dry-run by default; convert into asserted Turtle without overwriting the source, and
+   never write anything unless `--apply` is given.
+2. Require at least one `--evidence` IRI, forced onto `prov:hadPrimarySource` for every
+   migrated term and reified assertion — legacy YAML carries no provenance, so none is
+   silently fabricated and none is silently omitted.
+3. Write the candidate graph into an isolated temp mirror of the target domain and run
+   the real `ttl_validate.validate_target` gate (registry/link completeness, naming and
+   duplicate audits, domain SHACL) before touching the real target; any failure aborts
+   with a report and writes nothing.
+4. Obtain repository-required approval before adopting the output.
 5. Adopt Turtle as the sole source and archive, rather than continue synchronizing, the
    legacy files.
 

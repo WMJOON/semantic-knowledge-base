@@ -24,8 +24,7 @@ case "$sub" in
   materialize)  exec "$PY" "$SCRIPT_DIR/ttl_materialize.py" "$@" ;;
   shapes-validate) exec "$PY" "$SCRIPT_DIR/shapes_validate.py" "$@" ;;
   migrate-legacy)
-    echo "migrate-legacy is intentionally not automatic; pin the pre-TTL-only skill version and review the generated graph before adoption." >&2
-    exit 2
+    exec "$PY" "$SCRIPT_DIR/migrate_legacy_to_ttl.py" "$@"
     ;;
   compile|abox-compile|postprocess|project|definition|gen-ddl|rbox|axiom|mece|prov)
     echo "'$sub' is retired from the active TTL-only contract. Edit canonical Turtle directly, then run 'skb-ontology validate'." >&2

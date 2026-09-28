@@ -1,0 +1,17 @@
+id: https://example.org/msm/modeling
+name: msm_modeling
+prefixes: {linkml: https://w3id.org/linkml/, ex: https://example.org/msm/modeling/}
+default_prefix: ex
+default_range: string
+imports: [linkml:types]
+classes:
+  Task: {}
+  ImageGeneration: {is_a: Task}
+  TransformerMLMModel: {description: Transformer MLM 모델}
+  # MultimodalModel: 분류 규칙 없이 시작 — 사람이 `axiom` 도구로 대화하며 추가(HITL).
+  # 이 주석은 axiom --apply(ruamel 라운드트립) 후에도 보존되어야 한다.
+  MultimodalModel:
+    is_a: TransformerMLMModel
+    description: 멀티모달 (이미지 생성 가능 모델)
+slots:
+  canBeUsedFor: {domain: TransformerMLMModel, range: Task, multivalued: true}

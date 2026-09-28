@@ -1,0 +1,8 @@
+# ABox — LLM/evidence 가 파싱한 인스턴스 사실(RDF). 자동화 가능한 층.
+# 네임스페이스는 자체 prefixes 없이 definition/modeling.yaml 에서 도출된다.
+instances:
+  gemma4E4b:
+    instance_of: TransformerMLMModel
+    canBeUsedFor: [imageGenerationTask]   # capability = individual (punning 회피)
+  imageGenerationTask:
+    instance_of: ImageGeneration

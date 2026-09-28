@@ -2,3 +2,4 @@
 pyshacl>=0.31
 rdflib>=7.0
 owlrl>=7.1
+pyyaml>=6.0

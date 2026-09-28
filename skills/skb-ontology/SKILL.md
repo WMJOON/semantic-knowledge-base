@@ -5,7 +5,7 @@ description: |
   canonical domain representation is RDF/OWL Turtle. Use for class, property,
   individual, taxonomy, provenance, SHACL, naming, duplicate, and link-integrity work.
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # SKB Ontology
@@ -64,8 +64,17 @@ skb-ontology materialize --target REPO --domain DOMAIN [--gates-only] [--apply]
 ```
 
 `compile`, `abox-compile`, JSONL `project`, YAML `rbox/axiom`, and inferred JSONL are
-retired from the active contract. Legacy conversion is an explicit, separately reviewed
-migration; it is not part of normal ontology authoring.
+retired from the active contract; those legacy scripts have been deleted from
+`scripts/`. Legacy conversion is instead an explicit, separately reviewed migration via:
+
+```bash
+skb-ontology migrate-legacy --definition DEFINITION.yaml [--abox ABOX.yaml] \
+  --target REPO --domain DOMAIN --evidence https://example.org/source/1 [--apply]
+```
+
+Dry-run by default (no `--apply`, no writes); every migrated term requires `--evidence`;
+the candidate graph must pass the real validator gate before anything is written. It is
+not part of normal ontology authoring.
 
 ## Boundaries
 

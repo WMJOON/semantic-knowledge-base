@@ -1,5 +1,30 @@
 # Changelog
 
+## v1.2.0 (2026-09-28) — Legacy compiler removal + guarded migration bridge
+
+### Removed
+
+- Legacy YAML(LinkML) → OWL compile → JSONL re-injection pipeline (22 scripts:
+  `abox_compile`, `add`, `axiom`, `compile`, `completeness`, `definition`, `eca_run`,
+  `eca_schedule`, `explain`, `gen_ddl`, `id_utils`, `layout`, `lint_iri`, `list`,
+  `materialize`, `mece`, `ontology_mece_readiness`, `owl_postprocess`, `project_md`,
+  `prov`, `rbox`, `reason`) and their 7 corresponding tests. TTL is now the only path;
+  nothing in `scripts/` reads or writes YAML/JSONL ontology data.
+
+### Added
+
+- `scripts/migrate_legacy_to_ttl.py`, wired as `skb-ontology migrate-legacy`: a one-time
+  bridge from a LinkML-style `classes`/`slots` definition YAML (optionally paired with an
+  `instances` ABox YAML) into canonical Turtle. Dry-run by default; requires at least one
+  `--evidence` IRI (forced onto every migrated term's `prov:hadPrimarySource`, since legacy
+  YAML carries no provenance); validates the candidate graph against an isolated temp
+  mirror through the real `ttl_validate.validate_target` gate before `--apply` ever writes
+  to the real target.
+- `tests/test_migrate_legacy_to_ttl.py` covering dry-run, `--apply`, missing-evidence
+  rejection, and duplicate re-migration rejection.
+
+---
+
 ## v1.1.1 (2026-09-13) — Public release boundary
 
 - `skb-repository-setup`이 ontology JSONL 대신 유효한 domain Turtle을 생성하도록 변경.
