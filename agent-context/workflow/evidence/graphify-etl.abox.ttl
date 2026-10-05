@@ -1,0 +1,18 @@
+@prefix msmwf: <https://msm.dev/ontology/workflow#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://msm.dev/ontology/workflow#workflow/evidence.graphify.etl> a msmwf:Workflow ;
+    msmwf:category "evidence" ;
+    msmwf:costBudget [ msmwf:seconds 120 ;
+            msmwf:tokens 0 ] ;
+    msmwf:governance [ msmwf:hitl_required false ;
+            msmwf:max_retry 1 ;
+            msmwf:oracle "evidence_seed_readiness" ;
+            msmwf:oracle_threshold 0e+00 ] ;
+    msmwf:id "evidence.graphify.etl" ;
+    msmwf:kind "single" ;
+    msmwf:mode "dry-run" ;
+    msmwf:path "agent-context/workflow/evidence/graphify-etl.yaml" ;
+    msmwf:status "draft" ;
+    msmwf:tool "skb-evidence" ;
+    msmwf:version "1.0" .
