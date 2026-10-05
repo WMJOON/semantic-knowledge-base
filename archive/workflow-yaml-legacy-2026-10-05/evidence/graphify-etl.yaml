@@ -1,0 +1,51 @@
+version: "1.0"
+id: evidence.graphify.etl
+name: Graphify ETL — Semantic Lifting
+category: evidence
+kind: single
+tool: skb-evidence
+mode: dry-run
+status: draft
+
+# Graphify graph.json → MSM entity/relation candidates
+# Option A: file_type==concept 노드만 통과, code 노드 제거
+# 출력은 ontology 승격 전 evidence/graphify/ 에 보관
+
+inputs:
+  graph_json: null          # graphify-out/graph.json 경로 (필수)
+  output_dir: evidence/graphify
+  sigma: 2.0                # god node 임계치 (std-dev 배수)
+
+outputs:
+  entity_candidates: evidence/graphify/entity_candidates.jsonl
+  relation_candidates: evidence/graphify/relation_candidates.jsonl
+
+steps:
+  - id: graphify_to_skb
+    script: skills/skb-evidence/scripts/graphify_to_skb.py
+    args:
+      - "{inputs.graph_json}"
+      - "--output-dir"
+      - "{inputs.output_dir}"
+      - "--sigma"
+      - "{inputs.sigma}"
+
+runtime:
+  tier: L1
+  timeout_seconds: 120
+  max_concurrency: 1
+
+governance:
+  hitl_required: false
+  max_retry: 1
+  oracle: evidence_seed_readiness
+  oracle_threshold: 0.0     # 구조 검증만 (내용 품질은 skb-ontology 단계에서)
+  cost_budget:
+    tokens: 0               # LLM 호출 없음
+    seconds: 120
+    power_wh: null
+
+notes: |
+  - graphify_to_skb.py는 LLM 재호출 없이 동작 (Graphify Step2 concept 노드 재활용)
+  - 출력 후 skb-ontology로 entity_candidates 승격 필요
+  - hub_candidate 태그 노드는 *__hub.md 후보로 별도 검토 권장

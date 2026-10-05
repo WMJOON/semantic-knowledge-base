@@ -1,0 +1,33 @@
+# Search and Reason — MSO v0.7 TTL workflow (SSOT). 옛 YAML+msmwf 에서 이관(2026-10-05). 실행 계약은 skbx: 확장.
+@prefix wf:   <https://mso.dev/ontology/workflow#> .
+@prefix skbx: <https://skb.dev/ontology/workflow-ext#> .
+@prefix w_search_reason: <https://example.org/semantic-knowledge-base/workflow/search-reason#> .
+
+w_search_reason:workflow a wf:Workflow ;
+    wf:label "Search and Reason" ;
+    wf:workflowType "base" ;
+    skbx:id "search-reason" ;
+    wf:status "draft" ;
+    wf:version "1.0" ;
+    skbx:category "explorer" ;
+    skbx:mode "dry-run" ;
+    skbx:maxRetry 1 ;
+    skbx:oracle "reasoning_trace_readiness" ;
+    skbx:oracleThreshold 0.85 ;
+    skbx:hitlRequired false ;
+    wf:has w_search_reason:start, w_search_reason:end, w_search_reason:s1, w_search_reason:s2 .
+w_search_reason:start a wf:Node, wf:Start .
+w_search_reason:end a wf:Node, wf:End .
+w_search_reason:s1 a wf:Node, wf:Execution, wf:Task ;
+    wf:label "retrieve" ;
+    wf:inWorkflow w_search_reason:workflow ;
+    wf:hasSubject "system" ; wf:method "script" ;
+    skbx:tool "msm-graph-reasoning" ; skbx:action "search" .
+w_search_reason:r_start_s1 a wf:Edge, wf:Rail ; wf:from w_search_reason:start ; wf:railType "default" ; wf:to w_search_reason:s1 .
+w_search_reason:s2 a wf:Node, wf:Execution, wf:Task ;
+    wf:label "reason" ;
+    wf:inWorkflow w_search_reason:workflow ;
+    wf:hasSubject "system" ; wf:method "script" ;
+    skbx:tool "msm-graph-reasoning" ; skbx:action "multihop" .
+w_search_reason:r_s1_s2 a wf:Edge, wf:Rail ; wf:from w_search_reason:s1 ; wf:railType "default" ; wf:to w_search_reason:s2 .
+w_search_reason:r_s2_end a wf:Edge, wf:Rail ; wf:from w_search_reason:s2 ; wf:railType "default" ; wf:to w_search_reason:end .
