@@ -1,23 +1,63 @@
 x_msm_generated:
   skill: skb-repository-setup
-  version: "1.2.0"
-
+  version: 1.2.0
 project:
-  name: "repository-test"
-  id: "repository-test"
-  description: "repository-test KB — MSM workflow assets aligned to MSO agent-context."
-  owner: OWNER
-  updated: "1970-01-01"
-  version: "1.0.0"
-
+  name: semantic-knowledge-base
+  id: semantic-knowledge-base
+  description: SKB 스킬 소스 저장소. index SSOT 는 agent-context/index/index.yaml (루트 index.yaml
+    은 2026-10-05 에 합쳐 제거).
+  owner: wmjoon
+  updated: '2026-10-05'
+  version: 1.0.0
+  root_offset: ../..
 modules:
-  - id: agent-context
-    path: ../
-    description: Agent-facing operational context for MSO workflow and MSM runtime contracts.
-    subdirs:
-      - path: index/
-        role: scaffold
-        description: MSO scaffold index for agent-context.
-      - path: workflow/
-        role: workflow
-        description: MSO canonical workflow definitions and MSM x_msm execution extensions.
+- id: skb-record-archive
+  path: record-archive/
+  description: 'MSM v0.13.4 — record archive: SQLite runtime DB, events, derived records,
+    snapshots'
+  subdirs:
+  - path: registry/
+    role: data
+    description: stable instance id registry
+  key_files:
+  - registry/instance-ids.jsonl
+  status: active
+- id: skb-agent-context
+  path: agent-context/
+  description: MSO orchestration layer — TTL workflows, artifact registry, work-memory
+  status: active
+  subdirs:
+  - path: workflow/
+    role: workflow
+    description: 'workflow-<slug>.abox.ttl (MSO v0.7 Rail/Stream, skbx: contract)'
+  - path: index/
+    role: registry
+    description: index.yaml (scaffold SSOT)
+- id: skills
+  path: skills/
+  description: SKB 스킬 소스 (skb-*)
+  status: active
+- id: templates
+  path: templates/
+  description: scaffold 템플릿
+  status: active
+- id: scripts
+  path: scripts/
+  description: 저장소 스크립트
+  status: active
+- id: harness
+  path: harness/
+  description: 검증 하네스
+  status: active
+- id: tests
+  path: tests/
+  description: 테스트
+  status: active
+- id: docs
+  path: docs/
+  description: 문서
+  status: active
+- id: archive
+  path: archive/
+  description: 보관본 (legacy workflow YAML 등)
+  status: active

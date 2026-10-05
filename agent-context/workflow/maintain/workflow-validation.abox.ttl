@@ -1,0 +1,27 @@
+# KB Validation — MSO v0.7 TTL workflow (SSOT). 옛 YAML+msmwf 에서 이관(2026-10-05). 실행 계약은 skbx: 확장.
+@prefix wf:   <https://mso.dev/ontology/workflow#> .
+@prefix skbx: <https://skb.dev/ontology/workflow-ext#> .
+@prefix w_validation: <https://example.org/semantic-knowledge-base/workflow/validation#> .
+
+w_validation:workflow a wf:Workflow ;
+    wf:label "KB Validation" ;
+    wf:workflowType "base" ;
+    skbx:id "validation" ;
+    wf:status "draft" ;
+    wf:version "1.0" ;
+    skbx:category "maintain" ;
+    skbx:mode "validate-only" ;
+    skbx:maxRetry 1 ;
+    skbx:oracle "repository_integrity" ;
+    skbx:oracleThreshold 0.85 ;
+    skbx:hitlRequired false ;
+    wf:has w_validation:start, w_validation:end, w_validation:s1 .
+w_validation:start a wf:Node, wf:Start .
+w_validation:end a wf:Node, wf:End .
+w_validation:s1 a wf:Node, wf:Execution, wf:Task ;
+    wf:label "run" ;
+    wf:inWorkflow w_validation:workflow ;
+    wf:hasSubject "system" ; wf:method "script" ;
+    skbx:tool "skb-maintain" ; skbx:action "default" .
+w_validation:r_start_s1 a wf:Edge, wf:Rail ; wf:from w_validation:start ; wf:railType "default" ; wf:to w_validation:s1 .
+w_validation:r_s1_end a wf:Edge, wf:Rail ; wf:from w_validation:s1 ; wf:railType "default" ; wf:to w_validation:end .
