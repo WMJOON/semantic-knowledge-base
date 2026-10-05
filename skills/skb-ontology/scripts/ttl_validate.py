@@ -17,6 +17,7 @@ from ttl_common import SKB, asserted_files, is_standard, load_graph, local_name,
 CLASS_RE = re.compile(r"^[A-Z][A-Za-z0-9]*$")
 PROPERTY_RE = re.compile(r"^[a-z][A-Za-z0-9]*$")
 INDIVIDUAL_RE = re.compile(r"^[a-z][A-Za-z0-9]*$")
+CONCEPT_RE = re.compile(r"^[a-z][a-z0-9]*(?:-[a-z0-9]+)+$")
 TERM_TYPES = (
     OWL.Class,
     OWL.ObjectProperty,
@@ -66,6 +67,10 @@ def audit(graph: Graph) -> list[str]:
         term_labels = list(graph.objects(term, RDFS.label))
         term_ids = list(graph.objects(term, DCTERMS.identifier))
         sources = list(graph.objects(term, PROV.hadPrimarySource))
+        if SKOS.Concept in term_types:
+            sources += list(graph.objects(term, PROV.wasDerivedFrom))
+            for record in graph.objects(term, DCTERMS.provenance):
+                sources += list(graph.objects(record, PROV.wasDerivedFrom))
         statuses = list(graph.objects(term, SKB.status))
         if len(term_types) != 1:
             failures.append(f"[C6] exactly one registry term kind required: {term}")
@@ -78,13 +83,27 @@ def audit(graph: Graph) -> list[str]:
         elif not isinstance(term_ids[0], Literal):
             failures.append(f"[C4] dct:identifier must be a literal: {term}")
         if not sources or any(not isinstance(source, URIRef) for source in sources):
-            failures.append(f"[C5] IRI prov:hadPrimarySource required: {term}")
+            failures.append(f"[C5] IRI source required (SKOS accepts derived record provenance): {term}")
         if len(statuses) != 1 or str(statuses[0]) not in {"draft", "accepted", "stable", "deprecated"}:
             failures.append(f"[C7] exactly one valid skb:status required: {term}")
         if SKOS.Concept in term_types:
             pref_labels = list(graph.objects(term, SKOS.prefLabel))
-            if len(pref_labels) != 1 or not isinstance(pref_labels[0], Literal):
-                failures.append(f"[C8] SKOS concept requires exactly one literal skos:prefLabel: {term}")
+            if not pref_labels or any(not isinstance(label, Literal) for label in pref_labels):
+                failures.append(f"[C8] SKOS concept requires literal skos:prefLabel: {term}")
+            languages = [str(getattr(label, "language", "") or "").lower() for label in pref_labels]
+            if len(languages) != len(set(languages)):
+                failures.append(f"[C8] at most one skos:prefLabel per language: {term}")
+            pref_values = set(pref_labels)
+            if pref_values.intersection(graph.objects(term, SKOS.altLabel)) or pref_values.intersection(graph.objects(term, SKOS.hiddenLabel)):
+                failures.append(f"[C9] preferred and alternative/hidden labels overlap: {term}")
+            if any(str(identifier).startswith("concept:") for identifier in term_ids):
+                if not list(graph.objects(term, SKOS.scopeNote)):
+                    failures.append(f"[C10] migrated concept requires skos:scopeNote: {term}")
+                schemes = list(graph.objects(term, SKOS.inScheme))
+                if not schemes or any((scheme, RDF.type, SKOS.ConceptScheme) not in graph for scheme in schemes):
+                    failures.append(f"[C11] migrated concept requires a declared ConceptScheme: {term}")
+                if len(term_ids) == 1 and str(term_ids[0]) != "concept:" + local_name(term):
+                    failures.append(f"[C12] concept identifier must match IRI local name: {term}")
         for label in term_labels:
             normalized = " ".join(str(label).casefold().split())
             labels[(getattr(label, "language", "") or "", normalized)].add(term)
@@ -97,8 +116,13 @@ def audit(graph: Graph) -> list[str]:
             failures.append(f"[N1] class must be UpperCamelCase: {term}")
         if term_types.intersection({OWL.ObjectProperty, OWL.DatatypeProperty, OWL.AnnotationProperty}) and not PROPERTY_RE.fullmatch(name):
             failures.append(f"[N2] property must be lowerCamelCase: {term}")
-        if term_types.intersection({OWL.NamedIndividual, SKOS.Concept}) and not INDIVIDUAL_RE.fullmatch(name):
-            failures.append(f"[N3] individual or SKOS concept must be lowerCamelCase: {term}")
+        if OWL.NamedIndividual in term_types and not INDIVIDUAL_RE.fullmatch(name):
+            failures.append(f"[N3] individual must be lowerCamelCase: {term}")
+        if SKOS.Concept in term_types:
+            migrated = any(str(identifier).startswith("concept:") for identifier in term_ids)
+            valid_name = CONCEPT_RE.fullmatch(name) if migrated else (CONCEPT_RE.fullmatch(name) or INDIVIDUAL_RE.fullmatch(name))
+            if not valid_name:
+                failures.append(f"[N4] migrated concept must use domain-entity hyphens: {term}")
 
         for prop_type in (OWL.ObjectProperty, OWL.DatatypeProperty):
             if prop_type in term_types:
@@ -127,8 +151,9 @@ def audit(graph: Graph) -> list[str]:
                     failures.append(f"[A3] individual type target is not an owl:Class: {term} -> {class_iri}")
 
     for (_, label), terms in sorted(labels.items()):
-        if len(terms) > 1:
-            failures.append(f"[D1] duplicate normalized label {label!r}: {sorted(map(str, terms))}")
+        non_concepts = {term for term in terms if SKOS.Concept not in typed.get(term, set())}
+        if len(non_concepts) > 1:
+            failures.append(f"[D1] duplicate normalized label {label!r}: {sorted(map(str, non_concepts))}")
     for identifier, terms in sorted(identifiers.items()):
         if len(terms) > 1:
             failures.append(f"[D2] duplicate identifier {identifier!r}: {sorted(map(str, terms))}")
@@ -163,13 +188,29 @@ def audit(graph: Graph) -> list[str]:
     for statement in graph.subjects(RDF.type, RDF.Statement):
         if not isinstance(statement, (URIRef, BNode)):
             continue
-        if not list(graph.objects(statement, PROV.hadPrimarySource)):
-            failures.append(f"[P1] reified assertion lacks prov:hadPrimarySource: {statement}")
+        if not list(graph.objects(statement, PROV.hadPrimarySource)) and not list(graph.objects(statement, PROV.wasDerivedFrom)):
+            failures.append(f"[P1] reified assertion lacks source provenance: {statement}")
         subject = graph.value(statement, RDF.subject)
         predicate = graph.value(statement, RDF.predicate)
         obj = graph.value(statement, RDF.object)
         if None in (subject, predicate, obj) or (subject, predicate, obj) not in graph:
             failures.append(f"[P2] reified assertion does not resolve to an asserted triple: {statement}")
+    # The KB migration profile requires an acyclic direct hierarchy.
+    parents = collections.defaultdict(set)
+    for child, parent in graph.subject_objects(SKOS.broader):
+        parents[child].add(parent)
+    for parent, child in graph.subject_objects(SKOS.narrower):
+        parents[child].add(parent)
+    for node in sorted(parents, key=str):
+        seen, pending = set(), list(parents[node])
+        while pending:
+            item = pending.pop()
+            if item == node:
+                failures.append(f"[H1] SKOS hierarchy cycle: {node}")
+                break
+            if item not in seen:
+                seen.add(item)
+                pending.extend(parents[item])
     return failures
 
 
