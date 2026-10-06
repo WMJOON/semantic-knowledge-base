@@ -1,5 +1,17 @@
 # Changelog
 
+## skb-evidence 1.2.0 (2026-10-06) — 검증체계 이관 (consumer KB)
+
+- **verify 강화**: seed id 중복, 청크 노트 본문과 `content_hash` 불일치, snapshot 파일 부재, uri 부재를 실패로 보고한다(`--shallow` 로 본문 대조 생략).
+- **verify-quotes**: `claims.json` 의 fact quote 가 원문(evidence/raw)에 글자 그대로 한 번 있는지, inference basis 가 fact 인지 결정적으로 검사한다. 의미 판정은 하지 않는다.
+- **catalog / catalog-validate**: `seeds.jsonl` 을 발행자·문서·청크 프로파일 TTL(`ec:` 어휘, SHACL)과 `chunks.jsonl` 로 정규화하고, raw frontmatter 의 날짜·저자·발행 주체 선언값을 문서에 싣는다. SHACL + TTL↔JSONL 정합 + rawPath 존재를 게이트한다. 어휘·형상은 `skb-evidence/references/catalog/`.
+- **register**: 카탈로그 문서의 저자·발행 주체·계정 선언을 `AgentMention`·`Account` 로 결정적으로 등록한다(`evidence/registrations/<document-key>.ttl`). Person·MentionIdentification·신뢰 평가·모델 triple 은 만들지 않는다. `--check` 로 재검증.
+- **skb-ontology 도메인 pack `source-agents`**: `references/domains/source-agents/`(schema·vocabulary·shapes·SPARQL 2종). consumer KB 의 `meta/source-agents` 를 `https://skb.dev/ontology/source-agents#` 로 일반화(인스턴스 IRI 는 사용자 base). SHACL 테스트 53개 + `skb-ontology validate` 통과 테스트.
+- **identity (저자 신원 해소, HITL)**: `identity propose|apply|check`. propose 는 등록에서 결정적 후보 큐(계정 단위 + 이름 군집 상위 50, 자동 병합 없음)를 만들고, 사람이 `evidence/identity/decisions.jsonl` 에 결정을 쓰면 apply 가 현재 accepted 인 `MentionIdentification` 만 `identifications.ttl` 로 투영한다. reviewer 필수·에이전트 이름 거부, 도구가 accepted 를 만드는 경로 없음. check 는 투영 파일의 손 편집을 탐지한다.
+- **카탈로그 저자 해소 상태**: `ec:authorMentionCount`·`ec:authorResolvedCount` 추가(어휘 0.3.0), authorshipState 를 두 값에서 계산(unresolved/partial/resolved), 해소된 저자는 `dcterms:creator`. `catalog-validate` 가 등록·식별에서 재계산한 값과 일치를 게이트한다. 기존 카탈로그는 `catalog --apply` 로 다시 만들어야 한다.
+- **미이관**: Gemma 이상탐지·LangGraph, cascade author-check, 명제 스키마·claim-scope(초안 단계). 설계: `docs/proposals/2026-10-06-source-agents-port.md`.
+- **알려진 한계**: 카탈로그 청크 프로파일의 size/overlap 은 seed 에 기록되지 않아 인자로 선언한다. 관찰 데이터는 term 레지스트리 계약 밖(evidence 층)이다.
+
 ## v1.2.0 (2026-09-28) — Legacy compiler removal + guarded migration bridge
 
 ### Removed

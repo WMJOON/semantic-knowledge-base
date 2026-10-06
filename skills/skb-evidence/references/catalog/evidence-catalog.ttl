@@ -1,0 +1,79 @@
+# evidence 카탈로그 어휘 (TBox). 네임스페이스 ec: = https://skb.dev/ontology/evidence-catalog#
+# 설계: 발행자·문서·청크 프로파일은 TTL(정본), 청크 행(수만 건)은 JSONL 이고 TTL 은 그 파일을 dcat:Distribution 으로 기술한다.
+# dcterms/dcat/prov 를 먼저 쓰고, 없는 개념만 ec: 로 정의한다. 도메인 전용 속성(법령명 등)은 이 어휘에 두지 않는다.
+@prefix ec:      <https://skb.dev/ontology/evidence-catalog#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcat:    <http://www.w3.org/ns/dcat#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov:    <http://www.w3.org/ns/prov#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+
+<https://skb.dev/ontology/evidence-catalog> a owl:Ontology ;
+    rdfs:label "Evidence Catalog vocabulary"@en ;
+    owl:versionInfo "0.3.0" ;
+    rdfs:comment "SKB evidence 카탈로그 어휘. 발행자(ec:Publisher), 문서(ec:Source), 청크 프로파일(ec:ChunkProfile), 청크 파일(ec:ChunkSet)."@ko .
+
+# ── 클래스 ──
+ec:Publisher a owl:Class ; rdfs:subClassOf prov:Agent ; rdfs:label "Publisher"@en ;
+    rdfs:comment "발행기관 또는 플랫폼. 문서마다 반복하지 않고 한 번만 기록한다."@ko .
+ec:Source a owl:Class ; rdfs:subClassOf dcat:Dataset, prov:Entity ; rdfs:label "Source"@en ;
+    rdfs:comment "수집한 문서 하나(웹 문서 또는 저장소 내부 문서). 청크의 부모."@ko .
+ec:ChunkProfile a owl:Class ; rdfs:label "ChunkProfile"@en ;
+    rdfs:comment "청크를 만든 방법과 단위. 문서는 프로파일을 참조하고, 방법이 바뀌면 새 프로파일을 만든다."@ko .
+ec:ChunkSet a owl:Class ; rdfs:subClassOf dcat:Distribution ; rdfs:label "ChunkSet"@en ;
+    rdfs:comment "청크 행을 담은 JSONL 파일의 기술(경로, 행 수, 해시). 청크 자체는 TTL 이 아니다."@ko .
+
+# ── 문서 속성 (dcterms 우선: title, source, publisher, issued) ──
+ec:sourceType a owl:DatatypeProperty ; rdfs:domain ec:Source ; rdfs:range xsd:string ; rdfs:comment "web | internal"@ko .
+ec:chunkProfile a owl:ObjectProperty ; rdfs:domain ec:Source ; rdfs:range ec:ChunkProfile .
+ec:chunkCount a owl:DatatypeProperty ; rdfs:domain ec:Source ; rdfs:range xsd:integer ; rdfs:comment "chunks.jsonl 에 실제로 있는 청크 수."@ko .
+ec:chunkTotalDeclared a owl:DatatypeProperty ; rdfs:domain ec:Source ; rdfs:range xsd:integer ;
+    rdfs:comment "수집 당시 선언된 청크 총수. chunkCount 와 다르면 청크 일부가 dedup 으로 걸러진 것이다."@ko .
+ec:legacySeedPrefix a owl:DatatypeProperty ; rdfs:domain ec:Source ; rdfs:range xsd:string ; rdfs:comment "seeds.jsonl 의 id 접두(문서 키). 청크 id 는 이 접두 + 순번이다."@ko .
+ec:legacyUri a owl:DatatypeProperty ; rdfs:domain ec:Source ; rdfs:range xsd:string ; rdfs:comment "http 가 아닌 옛 uri(로컬 경로 등). 재취득할 수 없어 참고용으로만 보존한다."@ko .
+ec:snapshotJson a owl:DatatypeProperty ; rdfs:domain ec:Source ; rdfs:range xsd:string ; rdfs:comment "스냅샷(pdf/png/html 캡처) 상태를 JSON 문자열로 보존."@ko .
+ec:rawPath a owl:DatatypeProperty ; rdfs:domain ec:Source ; rdfs:range xsd:string ; rdfs:comment "이 문서의 변환 원문(evidence/raw) 경로. 날짜·저자·발행 주체 선언값의 출처."@ko .
+ec:issuer a owl:ObjectProperty ; rdfs:domain ec:Source ; rdfs:range ec:Publisher ;
+    rdfs:comment "원 발행기관. dcterms:publisher 는 문서를 배포하는 쪽(플랫폼·미러)이고 issuer 는 내용을 만든 기관이다. 둘이 같으면 생략한다."@ko .
+
+# ── 출처 provenance (원문 frontmatter 의 제공자 선언값. 추정하지 않는다) ──
+ec:publishedAtSource a owl:DatatypeProperty ; rdfs:domain ec:Source ; rdfs:range xsd:string ;
+    rdfs:comment "발행일 출처(예: jsonld:datePublished, arxiv:citation_date) 또는 none:<사유>. 값이 없을 때 dcterms:issued 를 쓰지 않고 이 사유만 남긴다."@ko .
+ec:collectedAtBasis a owl:DatatypeProperty ; rdfs:domain ec:Source ; rdfs:range xsd:string ; rdfs:comment "수집 시각(prov:generatedAtTime)의 근거."@ko .
+ec:declaredPublisher a owl:DatatypeProperty ; rdfs:domain ec:Source ; rdfs:range xsd:string ; rdfs:comment "문서가 선언한 발행 주체 표기. 호스트에서 도출한 ec:Publisher 와 구분한다."@ko .
+ec:publisherSource a owl:DatatypeProperty ; rdfs:domain ec:Source ; rdfs:range xsd:string ; rdfs:comment "발행 주체 선언 출처 또는 domain-derived."@ko .
+ec:publisherType a owl:DatatypeProperty ; rdfs:domain ec:Source ; rdfs:range xsd:string ; rdfs:comment "Organization | Person | unknown"@ko .
+ec:documentType a owl:DatatypeProperty ; rdfs:domain ec:Source ; rdfs:range xsd:string ; rdfs:comment "paper | unknown"@ko .
+ec:accountJson a owl:DatatypeProperty ; rdfs:domain ec:Source ; rdfs:range xsd:string ; rdfs:comment "플랫폼 계정 배열(platform, handle, id, role)을 JSON 문자열로 보존."@ko .
+
+# ── 저자 ──
+ec:authorRaw a owl:DatatypeProperty ; rdfs:domain ec:Source ; rdfs:range xsd:string ; rdfs:comment "문서가 선언한 저자 표기(미해소). 해소되면 dcterms:creator 로 source-agent IRI 를 가리킨다."@ko .
+ec:authorshipState a owl:DatatypeProperty ; rdfs:domain ec:Source ; rdfs:range xsd:string ; rdfs:comment "파생값. unresolved(저자 언급 0, 사유 필수) | partial(언급이 있으나 모두 해소되지는 않음) | resolved(모든 저자 언급에 accepted 식별). 부분 커버를 허용한다. catalog-validate 가 재계산 일치를 확인한다."@ko .
+ec:authorMentionCount a owl:DatatypeProperty ; rdfs:domain ec:Source ; rdfs:range xsd:integer ;
+    rdfs:comment "문서가 선언한 저자 언급(role=author) 수. 등록이 있으면 등록의 AgentMention 수, 없으면 raw 선언 저자 수."@ko .
+ec:authorResolvedCount a owl:DatatypeProperty ; rdfs:domain ec:Source ; rdfs:range xsd:integer ;
+    rdfs:comment "그중 accepted 식별(MentionIdentification)이 있는 언급 수. authorshipState 의 계산 근거. 저자 언급 수와 같으면 resolved."@ko .
+ec:authorshipReason a owl:DatatypeProperty ; rdfs:domain ec:Source ; rdfs:range xsd:string ; rdfs:comment "unresolved 의 사유 코드(예: not_extracted, none:no-declared-author)."@ko .
+
+# ── 발행자 ──
+ec:publisherKind a owl:DatatypeProperty ; rdfs:domain ec:Publisher ; rdfs:range xsd:string ;
+    rdfs:comment "repository | platform | publisher | encyclopedia | standards-body | research-org | company | government | internal | web"@ko .
+ec:hostName a owl:DatatypeProperty ; rdfs:domain ec:Publisher ; rdfs:range xsd:string ; rdfs:comment "이 발행자로 묶인 호스트명(여러 개 가능)."@ko .
+ec:curation a owl:DatatypeProperty ; rdfs:domain ec:Publisher ; rdfs:range xsd:string ; rdfs:comment "known(사람이 이름·종류를 확정) | auto(호스트에서 자동 도출, 이름 미확정)"@ko .
+
+# ── 청크 프로파일 ──
+ec:strategy a owl:DatatypeProperty ; rdfs:domain ec:ChunkProfile ; rdfs:range xsd:string ; rdfs:comment "paragraph-sentence-merge | fixed-window | heading | none"@ko .
+ec:unit a owl:DatatypeProperty ; rdfs:domain ec:ChunkProfile ; rdfs:range xsd:string ; rdfs:comment "char | token | section"@ko .
+ec:size a owl:DatatypeProperty ; rdfs:domain ec:ChunkProfile ; rdfs:range xsd:integer .
+ec:overlap a owl:DatatypeProperty ; rdfs:domain ec:ChunkProfile ; rdfs:range xsd:integer .
+ec:minChunk a owl:DatatypeProperty ; rdfs:domain ec:ChunkProfile ; rdfs:range xsd:integer .
+ec:overlapMode a owl:DatatypeProperty ; rdfs:domain ec:ChunkProfile ; rdfs:range xsd:string ; rdfs:comment "forward-prefix: 각 청크 뒤에 다음 조각의 앞 overlap 자를 붙인다."@ko .
+ec:producer a owl:DatatypeProperty ; rdfs:domain ec:ChunkProfile ; rdfs:range xsd:string .
+ec:profileNote a owl:DatatypeProperty ; rdfs:domain ec:ChunkProfile ; rdfs:range xsd:string .
+
+# ── 청크 파일 ──
+ec:rowCount a owl:DatatypeProperty ; rdfs:domain ec:ChunkSet ; rdfs:range xsd:integer .
+ec:sha256 a owl:DatatypeProperty ; rdfs:domain ec:ChunkSet ; rdfs:range xsd:string .
+ec:rowSchema a owl:DatatypeProperty ; rdfs:domain ec:ChunkSet ; rdfs:range xsd:string ; rdfs:comment "JSONL 행 필드 목록."@ko .

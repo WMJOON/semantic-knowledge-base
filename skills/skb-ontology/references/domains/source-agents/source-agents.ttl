@@ -1,0 +1,446 @@
+# source-agents-schema.ttl — 출처 에이전트 메타 층 TBox (status: draft) — 정본(TTL 직접 편집)
+# consumer KB 에서 이관(2026-10-06 승인). 원 결정: UD-0054, UD-0055, 2026-09-30
+# 관찰(AgentMention·Account)과 해석(Person·Organization·MentionIdentification)을 분리한다. 외부 어휘와는 rdfs:subClassOf 로만 연결한다.
+
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix org: <http://www.w3.org/ns/org#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sa: <https://skb.dev/ontology/source-agents#> .
+@prefix skb: <https://semantic-knowledge-base.dev/ontology#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<urn:skb:registry:source-agents/schema> a owl:Ontology ;
+    skb:declaresTerm sa:Account,
+        sa:AgentMention,
+        sa:MentionIdentification,
+        sa:Membership,
+        sa:Organization,
+        sa:Person,
+        sa:TrustFactorAssessment,
+        sa:aboutAccount,
+        sa:aboutMention,
+        sa:aboutTopic,
+        sa:assessedAt,
+        sa:assessedBy,
+        sa:assessesAgent,
+        sa:assessesDocument,
+        sa:assessmentBasis,
+        sa:assessmentStatus,
+        sa:identificationEvidence,
+        sa:identificationStatus,
+        sa:identifiesAs,
+        sa:conflictsWith,
+        sa:declaredAffiliation,
+        sa:declaredBio,
+        sa:declaredCompany,
+        sa:declaredName,
+        sa:declaredType,
+        sa:defaultDiligence,
+        sa:endStatus,
+        sa:factorLevel,
+        sa:handle,
+        sa:identificationMethod,
+        sa:inDocument,
+        sa:isMemberOfHostOrg,
+        sa:memberSince,
+        sa:memberUntil,
+        sa:mentionRole,
+        sa:observedAccount,
+        sa:platform,
+        sa:platformAccountId,
+        sa:platformVerified,
+        sa:reviewedBy,
+        sa:startStatus,
+        sa:supersedesAssessment,
+        sa:trustFactor .
+
+sa:Organization a owl:Class ;
+    rdfs:label "Organization" ;
+    dcterms:identifier "Organization" ;
+    rdfs:comment "A resolved organization identity (publisher, employer)."@en,
+        "발행처·소속 조직으로 해소된 정체성."@ko ;
+    rdfs:subClassOf org:Organization ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:Person a owl:Class ;
+    rdfs:label "Person" ;
+    dcterms:identifier "Person" ;
+    rdfs:comment "A resolved individual identity. Created only when there is public-figure evidence (privacy)."@en,
+        "발행인(저자·관리자) 중 해소된 개인 정체성. 공인 근거가 있는 경우에만 만든다(프라이버시)."@ko ;
+    rdfs:subClassOf foaf:Person ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:aboutAccount a owl:ObjectProperty ;
+    rdfs:label "aboutAccount" ;
+    dcterms:identifier "aboutAccount" ;
+    rdfs:comment "식별의 대상이 계정인 경우."@ko ;
+    rdfs:domain sa:MentionIdentification ;
+    rdfs:range sa:Account ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:aboutMention a owl:ObjectProperty ;
+    rdfs:label "aboutMention" ;
+    dcterms:identifier "aboutMention" ;
+    rdfs:comment "식별의 대상이 언급인 경우."@ko ;
+    rdfs:domain sa:MentionIdentification ;
+    rdfs:range sa:AgentMention ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:aboutTopic a owl:ObjectProperty ;
+    rdfs:label "aboutTopic" ;
+    dcterms:identifier "aboutTopic" ;
+    rdfs:comment "평가가 적용되는 주제(선택). 없으면 주제와 무관한 평가다. 같은 사람도 주제에 따라 공신력이 다르다."@ko ;
+    rdfs:domain sa:TrustFactorAssessment ;
+    rdfs:range skos:Concept ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:assessedAt a owl:DatatypeProperty ;
+    rdfs:label "assessedAt" ;
+    dcterms:identifier "assessedAt" ;
+    rdfs:comment "식별을 평가한 시각."@ko ;
+    rdfs:domain sa:MentionIdentification ;
+    rdfs:range xsd:dateTime ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:assessedBy a owl:ObjectProperty ;
+    rdfs:label "assessedBy" ;
+    dcterms:identifier "assessedBy" ;
+    rdfs:comment "accepted 로 승인한 평가자(사람)."@ko ;
+    rdfs:domain sa:TrustFactorAssessment ;
+    rdfs:range prov:Agent ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:assessesAgent a owl:ObjectProperty ;
+    rdfs:label "assessesAgent" ;
+    dcterms:identifier "assessesAgent" ;
+    rdfs:comment "평가 대상이 에이전트(Person 또는 Organization)인 경우. 공신력 평가에 쓴다."@ko ;
+    rdfs:domain sa:TrustFactorAssessment ;
+    rdfs:range prov:Agent ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:assessesDocument a owl:ObjectProperty ;
+    rdfs:label "assessesDocument" ;
+    dcterms:identifier "assessesDocument" ;
+    rdfs:comment "평가 대상이 문서(원본 출처)인 경우. 성실도 평가에 쓴다."@ko ;
+    rdfs:domain sa:TrustFactorAssessment ;
+    rdfs:range prov:Entity ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:assessmentBasis a owl:ObjectProperty ;
+    rdfs:label "assessmentBasis" ;
+    dcterms:identifier "assessmentBasis" ;
+    rdfs:comment "평가의 근거(문서 또는 구간). accepted 평가는 근거가 있어야 한다."@ko ;
+    rdfs:domain sa:TrustFactorAssessment ;
+    rdfs:range prov:Entity ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:assessmentStatus a owl:DatatypeProperty ;
+    rdfs:label "assessmentStatus" ;
+    dcterms:identifier "assessmentStatus" ;
+    rdfs:comment "candidate | accepted | rejected | revoked."@ko ;
+    rdfs:domain sa:TrustFactorAssessment ;
+    rdfs:range xsd:string ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:identificationEvidence a owl:ObjectProperty ;
+    rdfs:label "identificationEvidence" ;
+    dcterms:identifier "identificationEvidence" ;
+    rdfs:comment "근거 문서 또는 구간(PROV 사슬)."@ko ;
+    rdfs:domain sa:MentionIdentification ;
+    rdfs:range prov:Entity ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:identificationStatus a owl:DatatypeProperty ;
+    rdfs:label "identificationStatus" ;
+    dcterms:identifier "identificationStatus" ;
+    rdfs:comment "candidate | accepted | rejected | revoked."@ko ;
+    rdfs:domain sa:MentionIdentification ;
+    rdfs:range xsd:string ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:identifiesAs a owl:ObjectProperty ;
+    rdfs:label "identifiesAs" ;
+    dcterms:identifier "identifiesAs" ;
+    rdfs:comment "식별 결과로 연결되는 정체성(Person 또는 Organization)."@ko ;
+    rdfs:domain sa:MentionIdentification ;
+    rdfs:range prov:Agent ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:conflictsWith a owl:ObjectProperty ;
+    rdfs:label "conflictsWith" ;
+    dcterms:identifier "conflictsWith" ;
+    rdfs:comment "같은 시점에 함께 성립할 수 없는 다른 Membership 주장. 충돌하는 기록은 지우지 않고 둘 다 남긴다."@ko ;
+    rdfs:domain sa:Membership ;
+    rdfs:range sa:Membership ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:declaredAffiliation a owl:DatatypeProperty ;
+    rdfs:label "declaredAffiliation" ;
+    dcterms:identifier "declaredAffiliation" ;
+    rdfs:comment "문서가 선언한 소속(선언된 경우만)."@ko ;
+    rdfs:domain sa:AgentMention ;
+    rdfs:range xsd:string ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:declaredBio a owl:DatatypeProperty ;
+    rdfs:label "declaredBio" ;
+    dcterms:identifier "declaredBio" ;
+    rdfs:comment "프로필의 자기 소개(최대 300자). 자기 선언이며 근거로는 약하다."@ko ;
+    rdfs:domain sa:Account ;
+    rdfs:range xsd:string ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:declaredCompany a owl:DatatypeProperty ;
+    rdfs:label "declaredCompany" ;
+    dcterms:identifier "declaredCompany" ;
+    rdfs:comment "프로필이 선언한 소속."@ko ;
+    rdfs:domain sa:Account ;
+    rdfs:range xsd:string ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:declaredName a owl:DatatypeProperty ;
+    rdfs:label "declaredName" ;
+    dcterms:identifier "declaredName" ;
+    rdfs:comment "문서가 선언한 이름 문자열."@ko ;
+    rdfs:domain sa:AgentMention ;
+    rdfs:range xsd:string ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:declaredType a owl:DatatypeProperty ;
+    rdfs:label "declaredType" ;
+    dcterms:identifier "declaredType" ;
+    rdfs:comment "선언된 유형: Person | Organization | unknown."@ko ;
+    rdfs:domain sa:AgentMention ;
+    rdfs:range xsd:string ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:defaultDiligence a owl:ObjectProperty ;
+    rdfs:label "defaultDiligence" ;
+    dcterms:identifier "defaultDiligence" ;
+    rdfs:comment "문서 유형이 가진 '성실도'의 기본값(prior). 근거 있는 개별 평가가 있으면 그것이 대체한다. 공신력에는 문서 유형의 기본값을 두지 않는다(공신력은 발행자에 붙는다)."@ko ;
+    rdfs:domain skos:Concept ;
+    rdfs:range skos:Concept ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:endStatus a owl:DatatypeProperty ;
+    rdfs:label "endStatus" ;
+    dcterms:identifier "endStatus" ;
+    rdfs:comment "종료일 상태: ended | open(관찰 시점에 진행 중) | unknown(끝났는지 모름)."@ko ;
+    rdfs:domain sa:Membership ;
+    rdfs:range xsd:string ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:factorLevel a owl:ObjectProperty ;
+    rdfs:label "factorLevel" ;
+    dcterms:identifier "factorLevel" ;
+    rdfs:comment "요인의 수준. trust-levels 스킴의 개념."@ko ;
+    rdfs:domain sa:TrustFactorAssessment ;
+    rdfs:range skos:Concept ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:handle a owl:DatatypeProperty ;
+    rdfs:label "handle" ;
+    dcterms:identifier "handle" ;
+    rdfs:comment "계정 핸들. 바뀌거나 재사용될 수 있다."@ko ;
+    rdfs:domain sa:Account ;
+    rdfs:range xsd:string ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:identificationMethod a owl:ObjectProperty ;
+    rdfs:label "identificationMethod" ;
+    dcterms:identifier "identificationMethod" ;
+    rdfs:comment "근거의 방법. identity-methods 스킴의 개념."@ko ;
+    rdfs:domain sa:MentionIdentification ;
+    rdfs:range skos:Concept ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:inDocument a owl:ObjectProperty ;
+    rdfs:label "inDocument" ;
+    dcterms:identifier "inDocument" ;
+    rdfs:comment "이 언급이 나온 원본 출처 문서."@ko ;
+    rdfs:domain sa:AgentMention ;
+    rdfs:range prov:Entity ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:isMemberOfHostOrg a owl:DatatypeProperty ;
+    rdfs:label "isMemberOfHostOrg" ;
+    dcterms:identifier "isMemberOfHostOrg" ;
+    rdfs:comment "플랫폼이 선언한, 문서를 호스팅한 조직의 구성원 여부."@ko ;
+    rdfs:domain sa:AgentMention ;
+    rdfs:range xsd:boolean ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:memberSince a owl:DatatypeProperty ;
+    rdfs:label "memberSince" ;
+    dcterms:identifier "memberSince" ;
+    rdfs:comment "소속 시작일(유효 시간). startStatus 가 known 일 때만 둔다."@ko ;
+    rdfs:domain sa:Membership ;
+    rdfs:range xsd:date ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:memberUntil a owl:DatatypeProperty ;
+    rdfs:label "memberUntil" ;
+    dcterms:identifier "memberUntil" ;
+    rdfs:comment "소속 종료일(유효 시간). endStatus 가 ended 일 때만 둔다."@ko ;
+    rdfs:domain sa:Membership ;
+    rdfs:range xsd:date ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:mentionRole a owl:ObjectProperty ;
+    rdfs:label "mentionRole" ;
+    dcterms:identifier "mentionRole" ;
+    rdfs:comment "문서에서의 역할(저자·발행 주체·관리자). source-agent-roles 스킴의 개념."@ko ;
+    rdfs:domain sa:AgentMention ;
+    rdfs:range skos:Concept ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:observedAccount a owl:ObjectProperty ;
+    rdfs:label "observedAccount" ;
+    dcterms:identifier "observedAccount" ;
+    rdfs:comment "언급이 가리키는 관찰된 계정."@ko ;
+    rdfs:domain sa:AgentMention ;
+    rdfs:range sa:Account ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:platform a owl:DatatypeProperty ;
+    rdfs:label "platform" ;
+    dcterms:identifier "platform" ;
+    rdfs:comment "플랫폼 이름(github, huggingface …)."@ko ;
+    rdfs:domain sa:Account ;
+    rdfs:range xsd:string ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:platformAccountId a owl:DatatypeProperty ;
+    rdfs:label "platformAccountId" ;
+    dcterms:identifier "platformAccountId" ;
+    rdfs:comment "플랫폼이 부여한 불변 계정 ID."@ko ;
+    rdfs:domain sa:Account ;
+    rdfs:range xsd:string ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:platformVerified a owl:DatatypeProperty ;
+    rdfs:label "platformVerified" ;
+    dcterms:identifier "platformVerified" ;
+    rdfs:comment "플랫폼이 선언한 인증 표시. 선언이 없으면 이 속성을 두지 않는다(false 와 다르다)."@ko ;
+    rdfs:domain sa:Account ;
+    rdfs:range xsd:boolean ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:reviewedBy a owl:ObjectProperty ;
+    rdfs:label "reviewedBy" ;
+    dcterms:identifier "reviewedBy" ;
+    rdfs:comment "accepted 로 승인한 검토자(사람)."@ko ;
+    rdfs:domain sa:MentionIdentification ;
+    rdfs:range prov:Agent ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:startStatus a owl:DatatypeProperty ;
+    rdfs:label "startStatus" ;
+    dcterms:identifier "startStatus" ;
+    rdfs:comment "시작일 상태: known | unknown. 날짜가 없는 이유를 명시한다(빈칸을 '모름'으로 읽지 않기 위함)."@ko ;
+    rdfs:domain sa:Membership ;
+    rdfs:range xsd:string ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:supersedesAssessment a owl:ObjectProperty ;
+    rdfs:label "supersedesAssessment" ;
+    dcterms:identifier "supersedesAssessment" ;
+    rdfs:comment "이 평가가 대체하는 이전 평가. 이전 평가는 지우지 않고 남긴다."@ko ;
+    rdfs:domain sa:TrustFactorAssessment ;
+    rdfs:range sa:TrustFactorAssessment ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:trustFactor a owl:ObjectProperty ;
+    rdfs:label "trustFactor" ;
+    dcterms:identifier "trustFactor" ;
+    rdfs:comment "평가 요인. trust-factors 스킴의 개념(공신력 | 성실도). 두 요인은 서로 독립이고 신뢰도는 둘에서 계산하는 파생값이다."@ko ;
+    rdfs:domain sa:TrustFactorAssessment ;
+    rdfs:range skos:Concept ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:Membership a owl:Class ;
+    rdfs:label "Membership" ;
+    dcterms:identifier "Membership" ;
+    rdfs:comment "A person's membership in an organization with a role and a period; a time-bound fact."@en,
+        "사람과 조직의 소속(역할, 기간). 시점에 묶인 사실이다."@ko ;
+    rdfs:subClassOf org:Membership ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:Account a owl:Class ;
+    rdfs:label "Account" ;
+    dcterms:identifier "Account" ;
+    rdfs:comment "A platform account (observed). Keyed by (platform, immutable id); the handle is only a label."@en,
+        "플랫폼 계정(관찰). 키는 (플랫폼, 불변 ID)이며 핸들은 라벨일 뿐이다."@ko ;
+    rdfs:subClassOf foaf:OnlineAccount ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:AgentMention a owl:Class ;
+    rdfs:label "AgentMention" ;
+    dcterms:identifier "AgentMention" ;
+    rdfs:comment "An author or publisher exactly as a document declared it (name, declared type and affiliation), before resolution."@en,
+        "문서가 선언한 그대로의 저자·발행 주체 관찰(이름, 선언된 유형·소속). 해소 전 상태."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:MentionIdentification a owl:Class ;
+    rdfs:label "MentionIdentification" ;
+    dcterms:identifier "MentionIdentification" ;
+    rdfs:comment "A reviewed decision linking an observed account or author mention to a Person or Organization, with method, evidence and status. It is our judgment, not a statement made by the document."@en,
+        "계정 또는 저자 언급을 Person·Organization 과 연결하는, 검토를 거친 결정. 문서가 한 주장이 아니라 우리의 판단이다. 방법·근거·상태를 갖고 accepted 는 사람이 검토해야 한다."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+sa:TrustFactorAssessment a owl:Class ;
+    rdfs:label "TrustFactorAssessment" ;
+    dcterms:identifier "TrustFactorAssessment" ;
+    rdfs:comment "One evidence-backed assessment of a publisher's authority or a document's diligence. Trust is a derived value computed from the two factors and never stored; assessments are appended, never overwritten."@en,
+        "발행자의 공신력 또는 문서의 성실도에 대한 근거 있는 평가 한 건. 신뢰도는 저장하지 않는 파생값이며 이 두 요인에서 계산한다. 덮어쓰지 않고 추가한다."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+<https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> a prov:Entity .
+

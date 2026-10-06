@@ -117,3 +117,23 @@ seed 스키마 추가 (선택):
 ```
 
 설치(캡처 사용 시에만): `pip install playwright && playwright install chromium`
+
+
+## 10. 검증 계층 (v1.2.0)
+
+| 계층 | 도구 | 잡는 것 | 못 잡는 것 |
+|---|---|---|---|
+| seed 무결성 | `verify` | id 중복, content_hash 형식, md_path 부재, 청크 본문-해시 불일치, snapshot 파일 부재, uri 부재 | 원문 재fetch 대조, 의미 |
+| 원문 메타 | `verify` (raw) | collected_at/published_at/publisher/authors/accounts 필드 누락·형식 오류 | 선언값의 진위 |
+| 근거 인용 | `verify-quotes` | quote 가 원문에 글자 그대로 정확히 한 번 있는가, 길이, inference basis | claim 이 quote 범위를 넘는지(검증자 세션 몫) |
+| 카탈로그 | `catalog-validate` | SHACL(발행자·문서·청크 프로파일 필수 필드, 출처 없는 발행일 금지), TTL↔chunks.jsonl 정합, rawPath 존재 | 저자 신원 해소 여부(authorshipState 로만 표기) |
+
+| 출처·저자 등록 | `register` | 대체문자·제어/숨은 문자 error, mojibake·NFC·비정상 공백 warning, 도메인 SHACL(필수 필드·역할 개념·IRI 형식), 같은 문서 내용 변경 충돌 | 저자 신원(Person 승격은 사람 검토 뒤 별도), 신뢰도 |
+| 신원 해소 | `identity` | 결정 로그 검증(reviewer 필수·에이전트 이름 거부, 방법·근거 필수, 상태 기계 accept→revoke), 도메인 SHACL(충분성·Person 공인 근거 게이트), 투영 파일의 손 편집(`check`) | 신원이 실제로 맞는지(사람의 근거 판단) |
+| 저자 해소 상태 | `catalog-validate` | authorshipState = 저자 언급 수·해소 수에서 재계산한 값, dcterms:creator = accepted 식별 | |
+
+신원 해소 파일: `evidence/identity/{review-queue.jsonl(도구 산출), decisions.jsonl(사람 작성·append-only 감사 로그), identifications.ttl(현재 accepted 의 투영)}`. reject·revoke 는 로그에만 남고 그래프에는 accepted 만 있다. 한 번에 한 계정을 해소하면 그 계정을 관찰한 모든 언급이 해소된다.
+
+관찰 데이터(`evidence/registrations/<document-key>.ttl`)는 skb-ontology 의 term 레지스트리 계약(인스턴스를 `skb:declaresTerm` 으로 선언)을 따르지 않고 `register --check` 의 SHACL 로 검증한다. 카탈로그와 같은 층이다.
+
+카탈로그 `chunks.jsonl` 은 `char_start` 를 싣지 않는다(collect 가 0 으로 고정하는 근사값이라 정밀 오프셋으로 오해될 수 있다). 청크 프로파일의 size/overlap 은 seed 에 기록되지 않아 `catalog --chunk-size/--chunk-overlap` 인자로 선언하고 `profileNote` 에 그 사실을 남긴다.

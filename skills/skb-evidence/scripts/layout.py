@@ -46,6 +46,8 @@ _DEFAULTS: dict[str, tuple[str, ...]] = {
     "graphify_dir": ("evidence", "graphify"),
     "artifact_dir": ("evidence", "artifact"),
     "catalog_dir": ("evidence", "catalog"),
+    "registrations_dir": ("evidence", "registrations"),
+    "identity_dir": ("evidence", "identity"),
 }
 
 

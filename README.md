@@ -12,6 +12,8 @@ TTL-only: TBox, RBox, ABox, registry membership, status, and provenance live in
 | Validation shapes | SHACL Turtle | `ontology/system/semantic/**/*.shapes.ttl` |
 | Reasoning projection | derived Turtle | `ontology/system/semantic/**/*.inferred.ttl` |
 | Evidence catalog and chunks | JSONL and Markdown are allowed | `evidence/seeds.jsonl`, `evidence/md/` |
+| Evidence catalog, source-agent registrations, identity projection | Turtle (SHACL-gated by `skb-evidence`) | `evidence/catalog/`, `evidence/registrations/`, `evidence/identity/identifications.ttl` |
+| Identity review log (human-written decisions) | JSONL, append-only | `evidence/identity/decisions.jsonl` |
 | Runtime records and events | SQLite, JSONL, Parquet are allowed | `record-archive/` |
 | Workflow migration/editing layer | YAML is allowed | `agent-context/workflow/` |
 | Human-readable view | derived Markdown | `projection/` |

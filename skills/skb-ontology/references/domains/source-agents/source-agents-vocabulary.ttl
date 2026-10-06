@@ -1,0 +1,226 @@
+# source-agents-vocabulary.ttl — 역할·정체성 근거 방법·신뢰도 수준·문서 유형 (SKOS, status: draft) — 정본(TTL 직접 편집)
+# consumer KB 에서 이관(2026-10-06 승인) · 신뢰 요인(공신력, 성실도)과 수준. 성실도 기본값만 문서 유형에 붙는 prior(UD-0059)
+
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sa: <https://skb.dev/ontology/source-agents#> .
+@prefix skb: <https://semantic-knowledge-base.dev/ontology#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+<urn:skb:registry:source-agents/vocabulary> a owl:Ontology ;
+    skb:declaresTerm <https://skb.dev/ontology/source-agents/concept#identity-method-bidirectional-link>,
+        <https://skb.dev/ontology/source-agents/concept#identity-method-org-official-listing>,
+        <https://skb.dev/ontology/source-agents/concept#identity-method-platform-verified>,
+        <https://skb.dev/ontology/source-agents/concept#identity-method-self-declared-bio>,
+        <https://skb.dev/ontology/source-agents/concept#identity-method-strength-medium>,
+        <https://skb.dev/ontology/source-agents/concept#identity-method-strength-strong>,
+        <https://skb.dev/ontology/source-agents/concept#identity-method-strength-weak>,
+        <https://skb.dev/ontology/source-agents/concept#identity-method-third-party-register>,
+        <https://skb.dev/ontology/source-agents/concept#source-agent-role-author>,
+        <https://skb.dev/ontology/source-agents/concept#source-agent-role-maintainer>,
+        <https://skb.dev/ontology/source-agents/concept#source-agent-role-publisher>,
+        <https://skb.dev/ontology/source-agents/concept#source-type-paper>,
+        <https://skb.dev/ontology/source-agents/concept#trust-factor-authority>,
+        <https://skb.dev/ontology/source-agents/concept#trust-factor-diligence>,
+        <https://skb.dev/ontology/source-agents/concept#trust-level-high>,
+        <https://skb.dev/ontology/source-agents/concept#trust-level-low>,
+        <https://skb.dev/ontology/source-agents/concept#trust-level-medium> .
+
+<https://skb.dev/ontology/source-agents/concept#identity-method-bidirectional-link> a skos:Concept ;
+    rdfs:label "Bidirectional Link"@en ;
+    dcterms:identifier "concept:identity-method-bidirectional-link" ;
+    skos:broader <https://skb.dev/ontology/source-agents/concept#identity-method-strength-strong> ;
+    skos:inScheme <https://skb.dev/ontology/source-agents/concept-scheme/identity-methods> ;
+    skos:prefLabel "Bidirectional Link"@en,
+        "양방향 링크"@ko ;
+    skos:scopeNote "계정 프로필이 공식 사이트를 가리키고 그 사이트도 계정을 가리킨다."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+<https://skb.dev/ontology/source-agents/concept#identity-method-org-official-listing> a skos:Concept ;
+    rdfs:label "Organization Official Listing"@en ;
+    dcterms:identifier "concept:identity-method-org-official-listing" ;
+    skos:broader <https://skb.dev/ontology/source-agents/concept#identity-method-strength-medium> ;
+    skos:inScheme <https://skb.dev/ontology/source-agents/concept-scheme/identity-methods> ;
+    skos:prefLabel "Organization Official Listing"@en,
+        "조직 공식 소개"@ko ;
+    skos:scopeNote "조직의 공식 페이지가 그 사람·계정을 소개."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+<https://skb.dev/ontology/source-agents/concept#identity-method-platform-verified> a skos:Concept ;
+    rdfs:label "Platform-Verified Account"@en ;
+    dcterms:identifier "concept:identity-method-platform-verified" ;
+    skos:broader <https://skb.dev/ontology/source-agents/concept#identity-method-strength-strong> ;
+    skos:inScheme <https://skb.dev/ontology/source-agents/concept-scheme/identity-methods> ;
+    skos:prefLabel "Platform-Verified Account"@en,
+        "플랫폼 인증 계정"@ko ;
+    skos:scopeNote "플랫폼이 선언한 인증 표시(예: 인증된 조직)."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+<https://skb.dev/ontology/source-agents/concept#identity-method-self-declared-bio> a skos:Concept ;
+    rdfs:label "Self-Declared Bio"@en ;
+    dcterms:identifier "concept:identity-method-self-declared-bio" ;
+    skos:broader <https://skb.dev/ontology/source-agents/concept#identity-method-strength-weak> ;
+    skos:inScheme <https://skb.dev/ontology/source-agents/concept-scheme/identity-methods> ;
+    skos:prefLabel "Self-Declared Bio"@en,
+        "자기 소개"@ko ;
+    skos:scopeNote "프로필에 본인이 적은 소속·정체성. 자기 주장뿐이다."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+<https://skb.dev/ontology/source-agents/concept#identity-method-third-party-register> a skos:Concept ;
+    rdfs:label "Third-Party Register Listing"@en ;
+    dcterms:identifier "concept:identity-method-third-party-register" ;
+    skos:broader <https://skb.dev/ontology/source-agents/concept#identity-method-strength-strong> ;
+    skos:inScheme <https://skb.dev/ontology/source-agents/concept-scheme/identity-methods> ;
+    skos:prefLabel "Third-Party Register Listing"@en,
+        "제3자 등록부 등재"@ko ;
+    skos:scopeNote "위키데이터 같은 독립된 등록부가 이 계정을 그 정체성의 계정으로 등재. 등재가 없다는 것은 근거 없음일 뿐 부정이 아니다."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+<https://skb.dev/ontology/source-agents/concept#source-agent-role-author> a skos:Concept ;
+    rdfs:label "Document Author"@en ;
+    dcterms:identifier "concept:source-agent-role-author" ;
+    skos:inScheme <https://skb.dev/ontology/source-agents/concept-scheme/source-agent-roles> ;
+    skos:prefLabel "Document Author"@en,
+        "문서 저자"@ko ;
+    skos:scopeNote "문서가 저자로 선언한 에이전트."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+<https://skb.dev/ontology/source-agents/concept#source-agent-role-maintainer> a skos:Concept ;
+    rdfs:label "Project Maintainer"@en ;
+    dcterms:identifier "concept:source-agent-role-maintainer" ;
+    skos:inScheme <https://skb.dev/ontology/source-agents/concept-scheme/source-agent-roles> ;
+    skos:prefLabel "Project Maintainer"@en,
+        "프로젝트 관리자"@ko ;
+    skos:scopeNote "그 문서가 다루는 프로젝트를 관리하는 에이전트. 1차 출처 판정의 기준이 된다."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+<https://skb.dev/ontology/source-agents/concept#source-agent-role-publisher> a skos:Concept ;
+    rdfs:label "Document Publisher"@en ;
+    dcterms:identifier "concept:source-agent-role-publisher" ;
+    skos:inScheme <https://skb.dev/ontology/source-agents/concept-scheme/source-agent-roles> ;
+    skos:prefLabel "Document Publisher"@en,
+        "문서 발행처"@ko ;
+    skos:scopeNote "문서를 발행한 조직·사이트·계정."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+<https://skb.dev/ontology/source-agents/concept#source-type-paper> a skos:Concept ;
+    rdfs:label "Scholarly Paper"@en ;
+    dcterms:identifier "concept:source-type-paper" ;
+    skos:inScheme <https://skb.dev/ontology/source-agents/concept-scheme/source-types> ;
+    skos:prefLabel "Scholarly Paper"@en,
+        "논문"@ko ;
+    skos:scopeNote "제공자가 학술 신호(citation 메타데이터, ScholarlyArticle, 프리프린트 서버)를 선언한 문서. 동료심사 논문과 프리프린트를 구분하지 않는다. 성실도 기본값: 높음(재검토 중). 공신력은 발행자에 붙으므로 문서 유형에 기본값을 두지 않는다."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" ;
+    sa:defaultDiligence <https://skb.dev/ontology/source-agents/concept#trust-level-high> .
+
+<https://skb.dev/ontology/source-agents/concept#trust-factor-authority> a skos:Concept ;
+    rdfs:label "Trust Factor Authority"@en ;
+    dcterms:identifier "concept:trust-factor-authority" ;
+    skos:inScheme <https://skb.dev/ontology/source-agents/concept-scheme/trust-factors> ;
+    skos:prefLabel "Trust Factor Authority"@en,
+        "신뢰 요인 공신력"@ko ;
+    skos:scopeNote "발행자(사람 또는 조직)가 그 주제에서 갖는 공신력. 대상은 에이전트이고 성실도와 독립이다."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+<https://skb.dev/ontology/source-agents/concept#trust-factor-diligence> a skos:Concept ;
+    rdfs:label "Trust Factor Diligence"@en ;
+    dcterms:identifier "concept:trust-factor-diligence" ;
+    skos:inScheme <https://skb.dev/ontology/source-agents/concept-scheme/trust-factors> ;
+    skos:prefLabel "Trust Factor Diligence"@en,
+        "신뢰 요인 성실도"@ko ;
+    skos:scopeNote "문서가 성실하게, 신중하게 쓰였는가. 대상은 문서(원본 출처)이고 공신력과 독립이다. 내용의 참거짓과는 다른 층이다."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+<https://skb.dev/ontology/source-agents/concept#trust-level-low> a skos:Concept ;
+    rdfs:label "Trust Level Low"@en ;
+    dcterms:identifier "concept:trust-level-low" ;
+    skos:inScheme <https://skb.dev/ontology/source-agents/concept-scheme/trust-levels> ;
+    skos:notation "1" ;
+    skos:prefLabel "Trust Level Low"@en,
+        "신뢰 수준 하"@ko ;
+    skos:scopeNote "순서 1."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+<https://skb.dev/ontology/source-agents/concept#trust-level-medium> a skos:Concept ;
+    rdfs:label "Trust Level Medium"@en ;
+    dcterms:identifier "concept:trust-level-medium" ;
+    skos:inScheme <https://skb.dev/ontology/source-agents/concept-scheme/trust-levels> ;
+    skos:notation "2" ;
+    skos:prefLabel "Trust Level Medium"@en,
+        "신뢰 수준 중"@ko ;
+    skos:scopeNote "순서 2."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+<https://skb.dev/ontology/source-agents/concept-scheme/source-types> a skos:ConceptScheme ;
+    skos:prefLabel "문서 유형"@ko .
+
+<https://skb.dev/ontology/source-agents/concept#identity-method-strength-medium> a skos:Concept ;
+    rdfs:label "Medium Identity Evidence"@en ;
+    dcterms:identifier "concept:identity-method-strength-medium" ;
+    skos:inScheme <https://skb.dev/ontology/source-agents/concept-scheme/identity-methods> ;
+    skos:prefLabel "Medium Identity Evidence"@en,
+        "중간 정체성 근거"@ko ;
+    skos:scopeNote "조직의 공식 공개처럼 당사자 쪽이지만 공식적인 근거."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+<https://skb.dev/ontology/source-agents/concept#identity-method-strength-weak> a skos:Concept ;
+    rdfs:label "Weak Identity Evidence"@en ;
+    dcterms:identifier "concept:identity-method-strength-weak" ;
+    skos:inScheme <https://skb.dev/ontology/source-agents/concept-scheme/identity-methods> ;
+    skos:prefLabel "Weak Identity Evidence"@en,
+        "약한 정체성 근거"@ko ;
+    skos:scopeNote "본인의 자기 소개처럼 자기 주장만 있는 근거."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+<https://skb.dev/ontology/source-agents/concept#trust-level-high> a skos:Concept ;
+    rdfs:label "Trust Level High"@en ;
+    dcterms:identifier "concept:trust-level-high" ;
+    skos:inScheme <https://skb.dev/ontology/source-agents/concept-scheme/trust-levels> ;
+    skos:notation "3" ;
+    skos:prefLabel "Trust Level High"@en,
+        "신뢰 수준 상"@ko ;
+    skos:scopeNote "순서 3."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+<https://skb.dev/ontology/source-agents/concept-scheme/trust-factors> a skos:ConceptScheme ;
+    skos:prefLabel "신뢰 요인"@ko .
+
+<https://skb.dev/ontology/source-agents/concept-scheme/source-agent-roles> a skos:ConceptScheme ;
+    skos:prefLabel "출처 에이전트 역할"@ko .
+
+<https://skb.dev/ontology/source-agents/concept-scheme/trust-levels> a skos:ConceptScheme ;
+    skos:prefLabel "신뢰 수준"@ko .
+
+<https://skb.dev/ontology/source-agents/concept#identity-method-strength-strong> a skos:Concept ;
+    rdfs:label "Strong Identity Evidence"@en ;
+    dcterms:identifier "concept:identity-method-strength-strong" ;
+    skos:inScheme <https://skb.dev/ontology/source-agents/concept-scheme/identity-methods> ;
+    skos:prefLabel "Strong Identity Evidence"@en,
+        "강한 정체성 근거"@ko ;
+    skos:scopeNote "독립된 제3자 등록부나 플랫폼 인증처럼 자기 주장이 아닌 근거."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> ;
+    skb:status "draft" .
+
+<https://skb.dev/ontology/source-agents/concept-scheme/identity-methods> a skos:ConceptScheme ;
+    skos:prefLabel "정체성 근거 방법"@ko .
+
+<https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> a prov:Entity .
+
