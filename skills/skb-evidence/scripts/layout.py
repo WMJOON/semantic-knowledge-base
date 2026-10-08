@@ -5,7 +5,7 @@ layout: 섹션에서 읽어온다.
 YAML 읽기와 fail-soft 처리는 skb-ontology의 `read_layout_section` /
 `apply_declared`를 그대로 임포트해 쓴다. 파서를 복사해 두 벌 유지하면 한쪽만
 고쳐진 채 갈라지고, 그게 L0 하네스가 경로 이동을 몇 주 동안 놓친 원인이었다
-(korean-tax IN-0029). 키 집합만 이 스킬이 소유한다.
+(소비자 KB 에서 재현된 사례). 키 집합만 이 스킬이 소유한다.
 
 layout: 섹션이 없는 repo는 이 모듈 도입 전과 완전히 같은 경로를 돌려받는다.
 """
@@ -46,6 +46,8 @@ _DEFAULTS: dict[str, tuple[str, ...]] = {
     "graphify_dir": ("evidence", "graphify"),
     "artifact_dir": ("evidence", "artifact"),
     "catalog_dir": ("evidence", "catalog"),
+    "registrations_dir": ("evidence", "registrations"),
+    "identity_dir": ("evidence", "identity"),
 }
 
 

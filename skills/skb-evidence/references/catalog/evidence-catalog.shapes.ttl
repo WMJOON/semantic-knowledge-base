@@ -1,0 +1,103 @@
+# evidence 카탈로그 SHACL 형상 (게이트). 필수 필드, 참조 무결성, 값 집합을 검증한다.
+@prefix ec:      <https://skb.dev/ontology/evidence-catalog#> .
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcat:    <http://www.w3.org/ns/dcat#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix prov:    <http://www.w3.org/ns/prov#> .
+
+ec:PublisherShape a sh:NodeShape ; sh:targetClass ec:Publisher ;
+    sh:property [ sh:path ec:publisherKind ; sh:minCount 1 ; sh:maxCount 1 ;
+        sh:in ("repository" "platform" "publisher" "encyclopedia" "standards-body" "research-org" "company" "government" "internal" "web") ;
+        sh:message "발행자는 publisherKind 하나가 필요하다" ] ;
+    sh:property [ sh:path ec:curation ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ("known" "auto") ; sh:message "curation 은 known|auto" ] ;
+    sh:property [ sh:path skos:prefLabel ; sh:maxCount 1 ] ;
+    sh:sparql [ sh:message "curation=known 인 발행자는 prefLabel 이 필요하다" ;
+        sh:select """PREFIX ec: <https://skb.dev/ontology/evidence-catalog#>
+            PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+            SELECT $this WHERE { $this ec:curation "known" . FILTER NOT EXISTS { $this skos:prefLabel ?l } }""" ] .
+
+ec:RetrievalShape a sh:NodeShape ; sh:targetClass ec:Retrieval ;
+    sh:property [ sh:path ec:retrievedAt ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:dateTime ; sh:message "retrievedAt(내려받은 시각) 하나가 필요하다" ] ;
+    sh:property [ sh:path ec:searchedAt ; sh:maxCount 1 ; sh:datatype xsd:dateTime ] ;
+    sh:property [ sh:path ec:collectedAt ; sh:maxCount 1 ; sh:datatype xsd:dateTime ] ;
+    sh:property [ sh:path ec:requestUrl ; sh:maxCount 1 ; sh:datatype xsd:anyURI ] ;
+    sh:property [ sh:path ec:requestMethod ; sh:maxCount 1 ; sh:in ("GET" "POST") ] ;
+    sh:property [ sh:path ec:httpStatus ; sh:maxCount 1 ; sh:datatype xsd:integer ] ;
+    sh:property [ sh:path ec:responseHash ; sh:maxCount 1 ; sh:pattern "^[0-9a-f]{64}$" ] ;
+    sh:sparql [ sh:message "searchedAt 이 있으면 searchQuery 가 필요하다(검색으로 찾았다면 어떤 질의인지 남긴다)" ;
+        sh:select """PREFIX ec: <https://skb.dev/ontology/evidence-catalog#>
+            SELECT $this WHERE { $this ec:searchedAt ?s . FILTER NOT EXISTS { $this ec:searchQuery ?q } }""" ] ;
+    sh:sparql [ sh:message "발견(searchedAt)은 내려받기(retrievedAt)보다 늦을 수 없다" ;
+        sh:select """PREFIX ec: <https://skb.dev/ontology/evidence-catalog#>
+            SELECT $this WHERE { $this ec:searchedAt ?s ; ec:retrievedAt ?r . FILTER(?s > ?r) }""" ] ;
+    sh:sparql [ sh:message "collectedAtBasis 가 있으면 collectedAt 이 필요하다" ;
+        sh:select """PREFIX ec: <https://skb.dev/ontology/evidence-catalog#>
+            SELECT $this WHERE { $this ec:collectedAtBasis ?b . FILTER NOT EXISTS { $this ec:collectedAt ?c } }""" ] .
+
+ec:ChunkProfileShape a sh:NodeShape ; sh:targetClass ec:ChunkProfile ;
+    sh:property [ sh:path ec:strategy ; sh:minCount 1 ; sh:maxCount 1 ; sh:message "strategy 필수" ] ;
+    sh:property [ sh:path ec:unit ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ("char" "token" "section") ; sh:message "unit 필수(char|token|section)" ] ;
+    sh:sparql [ sh:message "strategy 가 none 이 아니면 size 가 필요하다" ;
+        sh:select """PREFIX ec: <https://skb.dev/ontology/evidence-catalog#>
+            SELECT $this WHERE { $this ec:strategy ?s . FILTER(?s != "none")
+              FILTER NOT EXISTS { $this ec:size ?z } }""" ] .
+
+ec:SourceShape a sh:NodeShape ; sh:targetClass ec:Source ;
+    sh:property [ sh:path dcterms:publisher ; sh:minCount 1 ; sh:maxCount 1 ; sh:class ec:Publisher ; sh:message "발행자(dcterms:publisher → ec:Publisher) 하나가 필요하다" ] ;
+    sh:property [ sh:path ec:chunkProfile ; sh:minCount 1 ; sh:maxCount 1 ; sh:class ec:ChunkProfile ; sh:message "청크 프로파일 참조 하나가 필요하다" ] ;
+    sh:property [ sh:path ec:sourceType ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ("web" "internal") ] ;
+    sh:property [ sh:path prov:wasGeneratedBy ; sh:minCount 1 ; sh:class ec:Retrieval ; sh:message "수집(prov:wasGeneratedBy → ec:Retrieval)이 필요하다" ] ;
+    sh:property [ sh:path dcterms:title ; sh:maxCount 1 ] ;
+    sh:property [ sh:path ec:issuer ; sh:maxCount 1 ; sh:class ec:Publisher ; sh:message "issuer 는 ec:Publisher 하나" ] ;
+    sh:property [ sh:path ec:chunkCount ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:integer ] ;
+    sh:property [ sh:path ec:authorshipState ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ("resolved" "partial" "unresolved") ] ;
+    sh:property [ sh:path ec:legacySeedPrefix ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path ec:authorMentionCount ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:integer ; sh:minInclusive 0 ] ;
+    sh:property [ sh:path ec:authorResolvedCount ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:integer ; sh:minInclusive 0 ] ;
+    sh:property [ sh:path ec:publisherType ; sh:maxCount 1 ; sh:in ("Organization" "Person" "unknown") ] ;
+    sh:property [ sh:path ec:documentType ; sh:maxCount 1 ; sh:in ("paper" "unknown") ] ;
+    sh:sparql [ sh:message "web 문서는 dcterms:source(URL) 가 필요하다" ;
+        sh:select """PREFIX ec: <https://skb.dev/ontology/evidence-catalog#>
+            PREFIX dcterms: <http://purl.org/dc/terms/>
+            SELECT $this WHERE { $this ec:sourceType "web" . FILTER NOT EXISTS { $this dcterms:source ?u } }""" ] ;
+    sh:sparql [ sh:message "web 문서의 수집(Retrieval)에는 requestUrl 이 필요하다" ;
+        sh:select """PREFIX ec: <https://skb.dev/ontology/evidence-catalog#>
+            PREFIX prov: <http://www.w3.org/ns/prov#>
+            SELECT $this WHERE { $this ec:sourceType "web" ; prov:wasGeneratedBy ?r . FILTER NOT EXISTS { ?r ec:requestUrl ?u } }""" ] ;
+    sh:sparql [ sh:message "원문(rawPath)이 있는 문서는 발행일 출처(publishedAtSource)가 필요하다" ;
+        sh:select """PREFIX ec: <https://skb.dev/ontology/evidence-catalog#>
+            SELECT $this WHERE { $this ec:rawPath ?r . FILTER NOT EXISTS { $this ec:publishedAtSource ?s } }""" ] ;
+    sh:sparql [ sh:message "원문(rawPath)이 있는 문서의 수집(Retrieval)에는 적재 시각(collectedAt)이 필요하다" ;
+        sh:select """PREFIX ec: <https://skb.dev/ontology/evidence-catalog#>
+            PREFIX prov: <http://www.w3.org/ns/prov#>
+            SELECT $this WHERE { $this ec:rawPath ?r ; prov:wasGeneratedBy ?x . FILTER NOT EXISTS { ?x ec:collectedAt ?c } }""" ] ;
+    sh:sparql [ sh:message "dcterms:issued 가 있으면 출처(publishedAtSource)가 필요하다(출처 없는 발행일 금지)" ;
+        sh:select """PREFIX ec: <https://skb.dev/ontology/evidence-catalog#>
+            PREFIX dcterms: <http://purl.org/dc/terms/>
+            SELECT $this WHERE { $this dcterms:issued ?d . FILTER NOT EXISTS { $this ec:publishedAtSource ?s } }""" ] ;
+    sh:sparql [ sh:message "authorshipState 는 저자 언급 수·해소 수에서 계산된 값과 같아야 한다(unresolved: 언급 0, partial: 0<해소<=언급이 아니면 일부, resolved: 해소=언급>0)" ;
+        sh:select """PREFIX ec: <https://skb.dev/ontology/evidence-catalog#>
+            SELECT $this WHERE { $this ec:authorshipState ?s ; ec:authorMentionCount ?m ; ec:authorResolvedCount ?r .
+              FILTER ( ?r > ?m
+                || (?s = "unresolved" && ?m != 0)
+                || (?s = "partial" && !(?m > 0 && ?r < ?m))
+                || (?s = "resolved" && !(?m > 0 && ?r = ?m)) ) }""" ] ;
+    sh:sparql [ sh:message "dcterms:creator 는 해소된 저자가 있을 때만(해소 수 > 0) 둔다" ;
+        sh:select """PREFIX ec: <https://skb.dev/ontology/evidence-catalog#>
+            PREFIX dcterms: <http://purl.org/dc/terms/>
+            SELECT $this WHERE { $this dcterms:creator ?c ; ec:authorResolvedCount ?r . FILTER(?r = 0) }""" ] ;
+    sh:sparql [ sh:message "authorshipState 가 unresolved 이면 사유(authorshipReason)가 필요하다" ;
+        sh:select """PREFIX ec: <https://skb.dev/ontology/evidence-catalog#>
+            SELECT $this WHERE { $this ec:authorshipState "unresolved" . FILTER NOT EXISTS { $this ec:authorshipReason ?r } }""" ] ;
+    sh:sparql [ sh:message "authorshipState 가 resolved/partial 이면 authorRaw 또는 dcterms:creator 가 필요하다" ;
+        sh:select """PREFIX ec: <https://skb.dev/ontology/evidence-catalog#>
+            PREFIX dcterms: <http://purl.org/dc/terms/>
+            SELECT $this WHERE { $this ec:authorshipState ?s . FILTER(?s IN ("resolved","partial"))
+              FILTER NOT EXISTS { $this ec:authorRaw ?a } FILTER NOT EXISTS { $this dcterms:creator ?c } }""" ] .
+
+ec:ChunkSetShape a sh:NodeShape ; sh:targetClass ec:ChunkSet ;
+    sh:property [ sh:path dcat:downloadURL ; sh:minCount 1 ; sh:maxCount 1 ; sh:message "청크 JSONL 경로가 필요하다" ] ;
+    sh:property [ sh:path ec:rowCount ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:integer ] ;
+    sh:property [ sh:path ec:sha256 ; sh:minCount 1 ; sh:maxCount 1 ; sh:pattern "^[0-9a-f]{64}$" ] .

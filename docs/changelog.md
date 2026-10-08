@@ -1,5 +1,37 @@
 # Changelog
 
+## v1.5.0 (2026-10-08) — skb-evidence 1.2.5: source catalog, quote verification, source-agent registration
+
+### Added
+
+- **`catalog` / `catalog-validate`**: normalizes `seeds.jsonl` into publisher / document / chunk profiles (`ec:` vocabulary, SHACL)
+  plus `chunks.jsonl`. Dates, authors and publishers declared in the raw frontmatter are carried onto the document.
+  Retrieval is modelled as `ec:Retrieval` (searched / retrieved / collected times, request URL, method, params, status,
+  media type, response hash); chunks keep `char_start`/`char_end`. `--publishers FILE` lets the repository own publisher rules
+  (distributing site vs. issuing body), `--enricher NAME` adds a domain extension outside the core vocabulary (`legal-kr`).
+- **`verify-quotes`**: a `claims.json` fact quote must appear verbatim exactly once in the raw source, and an inference must rest on facts.
+  It does not judge meaning.
+- **`register`**: registers the authors, publishers and accounts a catalog document declares as source-agent `AgentMention`/`Account`
+  observations (needs the `source-agents` pack from v1.4.0). It creates no Person, identification, trust assessment or model triple.
+- **`identity propose|apply|check`**: author identity resolution as a human-in-the-loop step. `propose` builds a candidate queue
+  (per account, and name clusters) and never merges automatically; only decisions a reviewer wrote to `evidence/identity/decisions.jsonl`
+  are applied.
+- **Retrieval record**: `collect`, `ingest` and `convert` accept `--searched-at` (with `--search-query`) and `--request-params`;
+  `collect` writes a per-document `retrieval` object (final URL, method, status, media type, response hash).
+- `verify --orphans [--strict]` reports `evidence/md` notes that no seed references.
+
+### Changed
+
+- `verify` also checks duplicate seed ids, chunk body vs. `content_hash`, missing snapshot files, missing `uri`, seed `retrieval` fields,
+  raw `collected_at`/`published_at`/publisher/author declarations, and (when `evidence/catalog/catalog.ttl` exists) the catalog itself.
+  `--shallow` skips the body comparison, `--no-catalog` skips the catalog.
+  Existing evidence trees may report new findings.
+- `convert` no longer sends already-Markdown or plain-text sources (GitHub `.md/.markdown/.txt/.rst`, local `.md/.txt`) through docling:
+  docling silently dropped nested list items and some table sentences. Those sources are used as is, and docling is not needed for them.
+  HTML, PDF and Office files still go through docling.
+- `list --catalog` shows one row per document instead of one per chunk.
+
+---
 ## v1.4.0 (2026-10-08) — SKOS concept profile and the source-agents domain in skb-ontology
 
 ### Changed (validation rules)

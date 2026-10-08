@@ -22,6 +22,7 @@ import chunker as _chunker  # noqa: E402
 import extractor as _extractor  # noqa: E402
 import fetcher as _fetcher  # noqa: E402
 import layout as _layout_mod  # noqa: E402
+import retrieval_meta as _rm  # noqa: E402
 
 TOOL_VERSION = "skb-evidence/1.1.2"
 GENERATED_COMMENT = '<!-- msm:generated:file skill="skb-evidence" version="1.1.2" -->'
@@ -103,7 +104,7 @@ def _frontmatter_source(text: str) -> str | None:
     'source: <원본 URL>'을 읽어 원본 provenance 를 복원한다.
 
     local 파일 경로를 그대로 --source로 넘기면 uri 필드가 로컬 경로가 되어
-    원본 웹 출처가 유실된다(consumer KB TS-0008/TS-0010에서 재현 확인).
+    원본 웹 출처가 유실된다(소비자 KB 에서 재현 확인).
     """
     m = re.match(r'^---\s*\n(.*?)\n---\s*\n', text, re.DOTALL)
     if not m:
@@ -227,15 +228,19 @@ def collect_uri(
     user_agent: str,
     max_retry: int,
     capture: bool = False,
+    search: dict | None = None,
+    params: dict | None = None,
 ) -> dict:
-    """Collect a single URI. Returns stats dict."""
+    """Collect a single URI. Returns stats dict.
+
+    search: {"searched_at", "search_query"} — 검색으로 찾은 경우만. params: API 요청 파라미터(JSON 객체).
+    """
     stats = {"uri": uri, "added": 0, "skipped": 0, "error": None}
 
     # Fetch
     try:
-        kind, raw, content_type, effective_uri = _fetcher.fetch(
-            uri, user_agent=user_agent, max_retry=max_retry
-        )
+        fmeta = _fetcher.fetch_meta(uri, user_agent=user_agent, max_retry=max_retry)
+        kind, raw, content_type, effective_uri = fmeta["kind"], fmeta["raw"], fmeta["content_type"], fmeta["effective_uri"]
     except Exception as exc:
         stats["error"] = str(exc)
         return stats
@@ -243,11 +248,16 @@ def collect_uri(
     # local 파일(kind != "url")이 convert.py 등이 생성한 중간 산출물이면
     # frontmatter의 원본 source URL로 uri를 복원한다. 원격 fetch 콘텐츠는
     # 신뢰하지 않는다(임의 웹페이지가 provenance를 위조하는 경로 차단).
+    fm_retrieval: dict = {}
     if kind != "url":
-        fm_source = _frontmatter_source(raw.decode("utf-8", errors="replace"))
+        local_text = raw.decode("utf-8", errors="replace")
+        fm_source = _frontmatter_source(local_text)
         if fm_source:
             uri = fm_source
             stats["uri"] = uri
+            m = re.match(r"^---\n(.*?)\n---\n", local_text, re.S)
+            fm = {k.strip(): v.strip() for k, _, v in (ln.partition(":") for ln in (m.group(1).splitlines() if m else []))}
+            fm_retrieval = _rm.retrieval_from_frontmatter(fm, search, params)  # convert 가 남긴 요청 조건(로컬 중간 파일 한정)
 
     slug = _slug_from_uri(uri)
     retrieved_at = _dt.datetime.now(tz=_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -333,6 +343,7 @@ def collect_uri(
 
         seed_id = f"evidence:seed:{slug}_{idx:04d}"
         md_rel = _layout_mod.rel(target, md_dir / f"{slug}_{idx:04d}.md")
+        retrieval = fm_retrieval if kind != "url" else _rm.retrieval_from_fetch(fmeta, raw, search, params)
         seed = {
             "id": seed_id,
             "kind": kind,
@@ -353,6 +364,8 @@ def collect_uri(
             "md_path": md_rel,
             "tool_version": TOOL_VERSION,
         }
+        if retrieval:
+            seed["retrieval"] = retrieval  # 요청 조건·검색 시각. 문서 단위 값이라 모든 chunk-seed 에 같은 값
         # 같은 URI 의 모든 chunk-seed 가 동일 snapshot 참조 (URL당 1회 캡처)
         if snapshot is not None:
             seed["snapshot"] = snapshot
@@ -393,6 +406,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     p.add_argument("--max-retry", type=int, default=1)
     p.add_argument("--user-agent", default="skb-evidence/1.0")
     p.add_argument("--run-id", default=None)
+    p.add_argument("--searched-at", default=None, metavar="ISO_Z", help="검색 질의로 이 문서를 찾은 시각(UTC). 검색으로 찾은 경우만, --search-query 와 함께")
+    p.add_argument("--search-query", default=None, help="--searched-at 에 쓴 검색 질의")
+    p.add_argument("--request-params", default=None, metavar="JSON", help="API 요청 파라미터(JSON 객체). 예: '{\"MST\": \"123\"}'")
     p.add_argument("--capture", action="store_true", default=False,
                    help="URL 소스 원문 스냅샷(PDF/PNG/HTML) 캡처 후 seed.snapshot 기록 "
                         "(opt-in; requires: pip install playwright && playwright install chromium)")
@@ -418,6 +434,12 @@ def main(argv: list[str]) -> int:
         return 2
 
     apply = args.apply and not args.dry_run
+    bad = _rm.check_search(args.searched_at, args.search_query)
+    params, perr = _rm.check_params(args.request_params)
+    if bad or perr:
+        print(f"ERROR: {bad or perr}", file=sys.stderr)
+        return 2
+    search = {"searched_at": args.searched_at, "search_query": args.search_query} if args.searched_at else None
 
     all_stats: list[dict] = []
     for uri in uris:
@@ -432,6 +454,8 @@ def main(argv: list[str]) -> int:
             user_agent=args.user_agent,
             max_retry=args.max_retry,
             capture=args.capture,
+            search=search,
+            params=params,
         )
         all_stats.append(stats)
         if stats.get("error"):

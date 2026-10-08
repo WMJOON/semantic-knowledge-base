@@ -1,0 +1,9 @@
+@prefix ecl: <https://skb.dev/ontology/evidence-catalog/legal#> .
+@prefix ec:  <https://skb.dev/ontology/evidence-catalog#> .
+@prefix sh:  <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ecl:LegalSourceShape a sh:NodeShape ; sh:targetSubjectsOf ecl:lawName ;
+    sh:property [ sh:path ecl:lawName ; sh:maxCount 1 ; sh:minLength 1 ] ;
+    sh:property [ sh:path ecl:sourceRevision ; sh:maxCount 1 ; sh:pattern "^[0-9a-f]{40}$" ] ;
+    sh:property [ sh:path ecl:lawDocKind ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ("법률" "시행령" "시행규칙") ; sh:message "법령명이 있으면 종류(법률|시행령|시행규칙)가 필요하다" ] .

@@ -24,7 +24,7 @@ development repository and are not part of the public TTL-only distribution.
 
 - `skb-orchestration`: intent routing, governance, and HITL gates
 - `skb-repository-setup`: bootstrap a TTL-only KB layout
-- `skb-evidence`: collect and deduplicate source evidence
+- `skb-evidence`: collect, convert and deduplicate source evidence; a source catalog (provenance, retrieval, chunk positions), quote verification, and source-agent registration with human-reviewed identity resolution
 - `skb-ontology`: add, list, validate, and report orphans/statistics over Turtle graphs
 - `skb-graph-reasoning`: OWL 2 RL reasoning (derived `*.inferred.ttl`), consistency check, SPARQL over the closure
 - `skb-semantic-search`: semantic index and search over SKOS concepts and evidence chunks

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""List seeds from evidence/seeds.jsonl."""
+"""List seeds from evidence/seeds.jsonl, or (--catalog) the documents of evidence/catalog/catalog.ttl."""
 
 from __future__ import annotations
 
@@ -16,12 +16,51 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(prog="list_seeds")
     p.add_argument("--target", default=".", help="KB root path")
     p.add_argument("--format", choices=["table", "json", "ids"], default="table")
+    p.add_argument("--catalog", action="store_true", help="청크 행 대신 카탈로그의 문서 단위 목록(발행자·URL·청크 수·시점)을 보여준다")
     return p.parse_args(argv)
+
+
+def _list_catalog(target: Path, fmt: str) -> int:
+    d = _layout_mod.resolve_layout(target)["catalog_dir"]
+    if not (d / "catalog.ttl").is_file():
+        print("ERROR: 카탈로그가 없다 — skb-evidence catalog --apply 로 먼저 만든다", file=sys.stderr)
+        return 1
+    from rdflib import Graph, Namespace
+    from rdflib.namespace import DCTERMS, RDF, SKOS
+    EC = Namespace("https://skb.dev/ontology/evidence-catalog#")
+    PROV = Namespace("http://www.w3.org/ns/prov#")
+    g = Graph().parse(d / "catalog.ttl", format="turtle")
+    one = lambda s, p: next((str(o) for o in g.objects(s, p)), None)  # noqa: E731
+    docs = []
+    for s in g.subjects(RDF.type, EC.Source):
+        pub = next(g.objects(s, DCTERMS.publisher), None)
+        r = next(g.objects(s, PROV.wasGeneratedBy), None)
+        docs.append({"source": one(s, EC.legacySeedPrefix), "title": one(s, DCTERMS.title),
+                     "publisher": (one(pub, SKOS.prefLabel) or str(pub).rsplit("/", 1)[-1]) if pub else None,
+                     "url": one(s, DCTERMS.source) or one(s, EC.legacyUri), "chunks": int(one(s, EC.chunkCount) or 0),
+                     "retrieved_at": one(r, EC.retrievedAt) if r else None, "searched_at": one(r, EC.searchedAt) if r else None,
+                     "authorship": one(s, EC.authorshipState)})
+    docs.sort(key=lambda x: x["source"] or "")
+    if fmt == "json":
+        json.dump(docs, sys.stdout, indent=2, ensure_ascii=False)
+        sys.stdout.write("\n")
+    elif fmt == "ids":
+        for x in docs:
+            print(x["source"])
+    else:
+        print(f"{'SOURCE':<44} {'PUBLISHER':<18} {'CHUNKS':>6} {'RETRIEVED':<20} {'SEARCHED':<20} URL")
+        print("-" * 140)
+        for x in docs:
+            print(f"{(x['source'] or '')[:43]:<44} {(x['publisher'] or '')[:17]:<18} {x['chunks']:>6} {(x['retrieved_at'] or '')[:19]:<20} {(x['searched_at'] or '-')[:19]:<20} {x['url'] or ''}")
+        print(f"\nTotal: {len(docs)} source(s), {sum(x['chunks'] for x in docs)} chunk(s)")
+    return 0
 
 
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
     target = Path(args.target).resolve()
+    if args.catalog:
+        return _list_catalog(target, args.format)
     seeds_path = _layout_mod.resolve_layout(target)["seeds_path"]
 
     if not seeds_path.exists():

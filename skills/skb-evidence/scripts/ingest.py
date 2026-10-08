@@ -20,7 +20,7 @@ Flow: [render(playwright-cli, opt)] → convert(docling) → collect(청킹·ded
 Usage:
   python3 scripts/ingest.py --target REPO --source URI [URI ...] [--render] [--apply] [--cluster X]
 
-도구 스택 결정 근거: consumer KB work-memory AD-0021 / UD-0031
+도구 스택 결정 근거: firecrawl 불채택, docling 채택 (소비자 KB 의 결정 기록)
 (playwright-cli + docling 2-도구 CLI, firecrawl 불채택).
 """
 
@@ -115,6 +115,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     p.add_argument("--dry-run", action="store_true", default=False)
     p.add_argument("--apply", action="store_true", default=False)
     p.add_argument("--run-id", default=None)
+    p.add_argument("--searched-at", default=None, metavar="ISO_Z", help="검색 질의로 이 문서들을 찾은 시각(UTC). 검색으로 찾은 경우만, --search-query 와 함께")
+    p.add_argument("--search-query", default=None, help="--searched-at 에 쓴 검색 질의")
+    p.add_argument("--request-params", default=None, metavar="JSON", help="API 요청 파라미터(JSON 객체)")
     return p.parse_args(argv)
 
 
@@ -134,6 +137,14 @@ def main(argv: list[str]) -> int:
         print("No sources specified.", file=sys.stderr)
         return 2
 
+    import retrieval_meta as _rm
+    bad = _rm.check_search(args.searched_at, args.search_query)
+    params, perr = _rm.check_params(args.request_params)
+    if bad or perr:
+        print(f"ERROR: {bad or perr}", file=sys.stderr)
+        return 2
+    search = {"searched_at": args.searched_at, "search_query": args.search_query} if args.searched_at else None
+
     converted: list[str] = []
     errors = 0
     for uri in uris:
@@ -149,7 +160,7 @@ def main(argv: list[str]) -> int:
             print(f"[render] {uri} -> {rendered['html']}")
             conv_input, source_url = rendered["html"], uri
 
-        rec = _convert.convert_to_target(conv_input, target, source_url=source_url)
+        rec = _convert.convert_to_target(conv_input, target, source_url=source_url, search=search, params=params)
         if rec["status"] != "ok":
             print(f"ERROR: convert {uri}: {rec['error']}", file=sys.stderr)
             errors += 1

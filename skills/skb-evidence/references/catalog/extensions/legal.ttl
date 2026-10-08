@@ -1,0 +1,15 @@
+# evidence 카탈로그 확장 어휘: 법령 (enricher legal-kr). 코어 ec: 는 도메인을 모르므로 법령 전용 속성은 여기에 둔다.
+# 네임스페이스 ecl: = https://skb.dev/ontology/evidence-catalog/legal#
+@prefix ecl:  <https://skb.dev/ontology/evidence-catalog/legal#> .
+@prefix ec:   <https://skb.dev/ontology/evidence-catalog#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+<https://skb.dev/ontology/evidence-catalog/legal> a owl:Ontology ;
+    rdfs:label "Evidence Catalog legal extension"@en ; owl:versionInfo "0.1.0" ;
+    owl:imports <https://skb.dev/ontology/evidence-catalog> .
+
+ecl:lawName a owl:DatatypeProperty ; rdfs:domain ec:Source ; rdfs:range xsd:string ; rdfs:comment "법령명. 문서 URL(/kr/<법령명>/…)에서 도출."@ko .
+ecl:lawDocKind a owl:DatatypeProperty ; rdfs:domain ec:Source ; rdfs:range xsd:string ; rdfs:comment "법률 | 시행령 | 시행규칙"@ko .
+ecl:sourceRevision a owl:DatatypeProperty ; rdfs:domain ec:Source ; rdfs:range xsd:string ; rdfs:comment "커밋 해시로 고정한 URL 의 커밋(40자리). 법령의 한 시점 버전을 가리킨다. 브랜치(main) URL 은 시점이 바뀔 수 있어 싣지 않는다."@ko .

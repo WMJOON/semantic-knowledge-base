@@ -24,10 +24,42 @@ case "$sub" in
     exec "$PY" "$SCRIPT_DIR/ingest.py" "$@"
     ;;
   verify)
+    # 카탈로그 연동(rdflib·pyshacl)은 선택이다. skb-ontology 의 .venv 가 있으면 그것을 쓴다.
+    VENV="$SCRIPT_DIR/../../skb-ontology/.venv/bin/python"
+    [ -x "$VENV" ] && PY="$VENV"
     exec "$PY" "$SCRIPT_DIR/verify.py" "$@"
     ;;
   list)
+    # 카탈로그 연동(rdflib·pyshacl)은 선택이다. skb-ontology 의 .venv 가 있으면 그것을 쓴다.
+    VENV="$SCRIPT_DIR/../../skb-ontology/.venv/bin/python"
+    [ -x "$VENV" ] && PY="$VENV"
     exec "$PY" "$SCRIPT_DIR/list_seeds.py" "$@"
+    ;;
+  verify-quotes)
+    exec "$PY" "$SCRIPT_DIR/verify_quotes.py" "$@"
+    ;;
+  catalog)
+    # rdflib 필요. skb-ontology 의 .venv 가 있으면 그것을 쓴다.
+    VENV="$SCRIPT_DIR/../../skb-ontology/.venv/bin/python"
+    [ -x "$VENV" ] && PY="$VENV"
+    exec "$PY" "$SCRIPT_DIR/catalog.py" "$@"
+    ;;
+  register)
+    # rdflib, pyshacl 필요
+    VENV="$SCRIPT_DIR/../../skb-ontology/.venv/bin/python"
+    [ -x "$VENV" ] && PY="$VENV"
+    exec "$PY" "$SCRIPT_DIR/register.py" "$@"
+    ;;
+  identity)
+    # propose|apply|check. rdflib, pyshacl 필요
+    VENV="$SCRIPT_DIR/../../skb-ontology/.venv/bin/python"
+    [ -x "$VENV" ] && PY="$VENV"
+    exec "$PY" "$SCRIPT_DIR/identity.py" "$@"
+    ;;
+  catalog-validate)
+    VENV="$SCRIPT_DIR/../../skb-ontology/.venv/bin/python"
+    [ -x "$VENV" ] && PY="$VENV"
+    exec "$PY" "$SCRIPT_DIR/catalog_validate.py" "$@"
     ;;
   ""|-h|--help)
     cat <<EOF
@@ -40,6 +72,11 @@ Commands:
   ingest    [render→]convert→collect 오케스트레이션 (opt-in; requires docling, --render 시 playwright-cli)
   verify    Validate seeds.jsonl integrity
   list      List collected seeds
+  verify-quotes   claims.json 의 fact quote 를 원문(evidence/raw)과 글자 단위로 대조 (결정적)
+  catalog         seeds.jsonl → 발행자·문서·청크 프로파일 TTL + chunks.jsonl 정규화 (requires rdflib)
+  register        카탈로그 문서의 저자·발행 주체·계정 선언을 AgentMention·Account 로 등록 (신원 승격 없음, requires rdflib, pyshacl)
+  identity        저자 신원 해소(HITL): propose(후보 큐) → 사람이 decisions.jsonl 작성 → apply → check (requires rdflib, pyshacl)
+  catalog-validate  카탈로그 SHACL + TTL↔JSONL 정합 + rawPath 존재 검사 (requires rdflib, pyshacl)
 
 Common options:
   --target PATH       KB root (default: .)
@@ -76,6 +113,29 @@ ingest options:
 
 verify options:
   --id SEED_ID        Verify a specific seed
+  --shallow           본문-해시 대조 생략 (id 중복·snapshot·uri·raw 메타 검사는 유지)
+
+verify-quotes options:
+  --claims PATH       claims.json (필수). 항목: id, type(fact|inference), raw, quote, basis
+  --report PATH       [claim-id] 로 인용하는 보고서 md (선택)
+  --min-len/--max-len quote 길이 범위 (기본 40~250)
+
+register options:
+  --base IRI          인스턴스 IRI 접두 (끝 슬래시 포함, 기본: https://example.org/skb/)
+  --source URL        이 URL 의 문서만 (여러 번 가능)
+  --apply             evidence/registrations/<document-key>.ttl 을 쓴다 (기본 dry-run)
+  --check             써 둔 등록 파일 전체를 도메인 SHACL 로 재검증
+
+identity options:
+  propose|apply|check 중 하나. --target, --base IRI(끝 슬래시 포함)
+  --max-clusters N    propose: 이름 군집 후보 상한 (기본 50, 영향 문서 수 순)
+  --apply             propose: review-queue.jsonl 을 쓴다 / apply: identifications.ttl 을 쓴다 (기본 dry-run)
+  결정은 evidence/identity/decisions.jsonl 에 사람이 쓴다(reviewer 필수, 에이전트 이름 거부)
+
+catalog options:
+  --base IRI          인스턴스 IRI 접두 (기본: https://example.org/skb/evidence-catalog/)
+  --chunk-size/--chunk-overlap  chunker 설정 선언(seed 에 기록되지 않음)
+  --apply             파일을 쓴다 (기본 dry-run)
 
 list options:
   --format table|json|ids   Output format (default: table)
