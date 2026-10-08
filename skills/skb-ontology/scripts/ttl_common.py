@@ -42,9 +42,17 @@ def asserted_files(target: Path, domain: str | None = None) -> list[Path]:
 
 
 def shapes_files(target: Path, domain: str | None = None) -> list[Path]:
+    """도메인 범위의 *.shapes.ttl + (도메인 실행일 때) semantic 루트 바로 아래의 KB 전역 shapes.
+
+    루트 직속 shapes(<semantic root>/*.shapes.ttl)는 KB 전체에 적용되는 규약(예: prefLabel/altLabel 관리)이다.
+    도메인 범위 검증에서 이를 빼면 전역 규약이 어느 도메인 실행에도 적용되지 않는다.
+    """
     root = semantic_root(target)
     scope = root / domain.strip("/") if domain else root
-    return sorted(scope.rglob("*.shapes.ttl")) if scope.exists() else []
+    files = sorted(scope.rglob("*.shapes.ttl")) if scope.exists() else []
+    if domain:
+        files += [p for p in sorted(root.glob("*.shapes.ttl")) if p not in files]
+    return files
 
 
 def load_graph(paths: list[Path]) -> Graph:

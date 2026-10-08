@@ -5,7 +5,7 @@ description: |
   canonical domain representation is RDF/OWL Turtle. Use for class, property,
   individual, taxonomy, provenance, SHACL, naming, duplicate, and link-integrity work.
 metadata:
-  version: "1.3.0"
+  version: "1.4.0"
 ---
 
 # SKB Ontology
@@ -83,3 +83,19 @@ not part of normal ontology authoring.
 - Human-readable explanation belongs to `skb-explain` and is projected from Turtle.
 - Large-impact OWL axioms require the repository's HITL policy even though they are
   authored directly in Turtle.
+
+## Change log (local)
+
+- `ttl_common.shapes_files` also reads the `*.shapes.ttl` files that sit directly under the semantic root (KB-wide conventions)
+  when a domain run is requested. Before, only shapes inside the domain directory were read, so KB-wide conventions
+  never applied to a domain run. `tests/test_shapes_files_root.py`. A whole-KB run is unchanged (`rglob` already includes the root).
+- SKOS concept profile in `ttl_validate`: concepts may carry provenance through a derived record (`dcterms:provenance` ->
+  `prov:wasDerivedFrom`), need a literal `skos:prefLabel` with at most one per language ([C8]), no preferred/alternative label
+  overlap ([C9]), and migrated concepts (identifier `concept:...`) need a `skos:scopeNote` ([C10]), a declared
+  `skos:ConceptScheme` ([C11]) and an identifier equal to the IRI local name ([C12]). Concepts use domain-entity hyphen names
+  ([N4]) instead of lowerCamelCase ([N3] now applies to individuals only), duplicate-label checks ([D1]) ignore concepts that
+  share a label with another concept, reified assertions accept `prov:wasDerivedFrom` ([P1]), and a cyclic `skos:broader`
+  hierarchy is reported ([H1]).
+- `references/domains/source-agents/`: vocabulary, ontology, SHACL shapes and SPARQL queries for source observation
+  (mentions, accounts, document types, publisher credibility and document diligence as separate trust factors).
+

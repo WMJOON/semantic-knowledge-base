@@ -1,5 +1,31 @@
 # Changelog
 
+## v1.4.0 (2026-10-08) — SKOS concept profile and the source-agents domain in skb-ontology
+
+### Changed (validation rules)
+
+`skb-ontology validate` now has a SKOS concept profile. Existing Turtle that passed before may report new findings.
+
+- **Provenance** [C5], [P1]: a concept may cite its source through a derived record
+  (`dcterms:provenance` -> `prov:wasDerivedFrom`); a reified assertion may use `prov:wasDerivedFrom` instead of `prov:hadPrimarySource`.
+- **Labels** [C8], [C9]: a concept needs at least one literal `skos:prefLabel`, at most one per language, and preferred
+  labels must not repeat as alternative/hidden labels.
+- **Migrated concepts** (identifier `concept:...`) [C10]-[C12]: need a `skos:scopeNote`, a declared `skos:ConceptScheme`,
+  and an identifier equal to the IRI local name.
+- **Names** [N3]/[N4]: individuals stay lowerCamelCase; concepts use domain-entity hyphen names.
+- **Duplicates** [D1]: a label shared by several concepts is allowed (one label, many senses); duplicates among other terms still fail.
+- **Hierarchy** [H1]: a cyclic `skos:broader`/`skos:narrower` chain is reported.
+- Domain runs also read the `*.shapes.ttl` files that sit directly under the semantic root (KB-wide conventions).
+
+### Added
+
+- `skills/skb-ontology/references/domains/source-agents/`: a domain pack for observing sources: vocabulary, ontology,
+  SHACL shapes and two SPARQL queries (current membership, effective trust). Publisher credibility and document diligence
+  are separate factors and trust is derived, never stored. The pack ships no instances.
+- `references/cross-graph-matching.md`.
+- Tests: `test_skos_migration`, `test_source_agents_domain`, `test_source_agents_shapes`, `test_trust_factor_assessment`, `test_shapes_files_root`.
+
+---
 ## v1.3.1 (2026-10-08) — Workflow TTL (`wf:`/`skbx:`) support in the public tooling
 
 ### Fixed

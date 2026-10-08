@@ -19,4 +19,4 @@ jobs:
       - run: pip install rdflib pyshacl owlrl pytest pyyaml
       - run: command -v rg >/dev/null || sudo apt-get install -y ripgrep
       - run: bash scripts/public_release_audit.sh
-      - run: python -m pytest -q skills/skb-ontology/tests/test_ttl_only.py skills/skb-ontology/tests/test_ttl_report.py skills/skb-repository-setup/tests skills/skb-evidence/tests/test_verify_orphans.py skills/skb-harness/tests skills/skb-graph-reasoning/tests skills/skb-semantic-search/tests tests
+      - run: python -m pytest -q skills/skb-ontology/tests skills/skb-repository-setup/tests skills/skb-evidence/tests/test_verify_orphans.py skills/skb-harness/tests skills/skb-graph-reasoning/tests skills/skb-semantic-search/tests tests

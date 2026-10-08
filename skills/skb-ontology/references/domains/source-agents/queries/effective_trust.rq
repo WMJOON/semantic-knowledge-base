@@ -1,0 +1,91 @@
+# 신뢰도는 저장하지 않고 조회로 계산한다: 신뢰도 = 공신력 x 성실도.
+# 바인딩: ?doc (문서 IRI, 필수), ?topic (주제 개념, 선택). 엔진의 초기 바인딩으로 넘긴다.
+#
+# 두 요인
+#   성실도(문서)  : accepted 평가 > 문서 유형의 기본값(prior) > 모름
+#   공신력(발행자): accepted 평가 > 모름. 문서 유형에 공신력의 기본값을 두지 않는다(공신력은 발행자에 붙는다).
+# 평가 선택 규칙(요인마다 같다)
+#   - accepted 만. 다른 accepted 평가에 대체된(sa:supersedesAssessment) 평가는 제외.
+#   - 적용 가능: 주제가 없는 평가, 또는 주제가 ?topic 과 같은 평가.
+#   - 주제 전용 평가가 일반 평가보다 우선, 같은 범위에서는 관찰 시각이 늦은 평가가 이긴다.
+#   - 같은 범위·같은 시각에 수준이 다른 평가가 둘이면 둘 다 돌려주고 *Disagreement 로 표시한다.
+#
+# 결합 규칙 (3x3 표, 기본은 약한 쪽 = 둘 중 낮은 값). 통계적 곱이 아니라 논리 규칙이다.
+#                 성실도 낮음   성실도 중    성실도 높음
+#   공신력 낮음      낮음         낮음         낮음
+#   공신력 중        낮음         중           중
+#   공신력 높음      낮음         중           높음
+#   둘 중 하나라도 모름이면 채우지 않고 계산 불가(trustStatus = unknown)로 둔다.
+#
+# 발행자를 알 수 없으면 ?publisher 없이 한 줄이 나오고 공신력은 모름이다.
+# 구조 메모: SPARQL 의 FILTER 는 자기 그룹 안의 변수만 본다. 그래서 요인마다 최선의 평가를 OPTIONAL 로 붙이고,
+#            공신력 OPTIONAL 은 발행자를 아는 분기 안에만 둔다(발행자가 없을 때 아무 평가에나 붙는 것을 막는다).
+PREFIX sa:      <https://skb.dev/ontology/source-agents#>
+PREFIX concept: <https://skb.dev/ontology/source-agents/concept#>
+PREFIX prov:    <http://www.w3.org/ns/prov#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+
+SELECT ?publisher ?authority ?authorityFrom ?authorityDisagreement
+       ?diligence ?diligenceFrom ?diligenceDisagreement ?trust ?trustStatus
+WHERE {
+  {
+    ?doc (dcterms:publisher|dcterms:creator) ?publisher .
+    OPTIONAL {
+      ?aass a sa:TrustFactorAssessment ; sa:trustFactor concept:trust-factor-authority ; sa:assessesAgent ?publisher ;
+          sa:factorLevel ?authority ; sa:assessmentStatus "accepted" ; prov:generatedAtTime ?aat .
+      FILTER( NOT EXISTS { ?aass sa:aboutTopic ?z1 } || EXISTS { ?aass sa:aboutTopic ?t1 . FILTER(?t1 = ?topic) } )
+      FILTER NOT EXISTS { ?anewer sa:supersedesAssessment ?aass ; sa:assessmentStatus "accepted" }
+      FILTER NOT EXISTS {
+        ?ab a sa:TrustFactorAssessment ; sa:trustFactor concept:trust-factor-authority ; sa:assessesAgent ?publisher ;
+            sa:assessmentStatus "accepted" ; prov:generatedAtTime ?abat .
+        FILTER( NOT EXISTS { ?ab sa:aboutTopic ?z2 } || EXISTS { ?ab sa:aboutTopic ?t2 . FILTER(?t2 = ?topic) } )
+        FILTER NOT EXISTS { ?abnewer sa:supersedesAssessment ?ab ; sa:assessmentStatus "accepted" }
+        FILTER( ( EXISTS { ?ab sa:aboutTopic ?s1 } && NOT EXISTS { ?aass sa:aboutTopic ?s2 } )
+             || ( ( EXISTS { ?ab sa:aboutTopic ?s3 } = EXISTS { ?aass sa:aboutTopic ?s4 } ) && ?abat > ?aat ) )
+      }
+      BIND(EXISTS {
+        ?ao a sa:TrustFactorAssessment ; sa:trustFactor concept:trust-factor-authority ; sa:assessesAgent ?publisher ;
+            sa:assessmentStatus "accepted" ; sa:factorLevel ?aol ; prov:generatedAtTime ?aat .
+        FILTER(?ao != ?aass && ?aol != ?authority)
+        FILTER( NOT EXISTS { ?ao sa:aboutTopic ?z3 } || EXISTS { ?ao sa:aboutTopic ?t3 . FILTER(?t3 = ?topic) } )
+        FILTER( EXISTS { ?ao sa:aboutTopic ?o1 } = EXISTS { ?aass sa:aboutTopic ?o2 } )
+      } AS ?authorityDisagreement)
+    }
+  }
+  UNION
+  { FILTER NOT EXISTS { ?doc (dcterms:publisher|dcterms:creator) ?x } }
+
+  OPTIONAL {
+    ?dass a sa:TrustFactorAssessment ; sa:trustFactor concept:trust-factor-diligence ; sa:assessesDocument ?doc ;
+        sa:factorLevel ?dlevel ; sa:assessmentStatus "accepted" ; prov:generatedAtTime ?dat .
+    FILTER( NOT EXISTS { ?dass sa:aboutTopic ?z4 } || EXISTS { ?dass sa:aboutTopic ?t4 . FILTER(?t4 = ?topic) } )
+    FILTER NOT EXISTS { ?dnewer sa:supersedesAssessment ?dass ; sa:assessmentStatus "accepted" }
+    FILTER NOT EXISTS {
+      ?db a sa:TrustFactorAssessment ; sa:trustFactor concept:trust-factor-diligence ; sa:assessesDocument ?doc ;
+          sa:assessmentStatus "accepted" ; prov:generatedAtTime ?dbat .
+      FILTER( NOT EXISTS { ?db sa:aboutTopic ?z5 } || EXISTS { ?db sa:aboutTopic ?t5 . FILTER(?t5 = ?topic) } )
+      FILTER NOT EXISTS { ?dbnewer sa:supersedesAssessment ?db ; sa:assessmentStatus "accepted" }
+      FILTER( ( EXISTS { ?db sa:aboutTopic ?s5 } && NOT EXISTS { ?dass sa:aboutTopic ?s6 } )
+           || ( ( EXISTS { ?db sa:aboutTopic ?s7 } = EXISTS { ?dass sa:aboutTopic ?s8 } ) && ?dbat > ?dat ) )
+    }
+    BIND(EXISTS {
+      ?do a sa:TrustFactorAssessment ; sa:trustFactor concept:trust-factor-diligence ; sa:assessesDocument ?doc ;
+          sa:assessmentStatus "accepted" ; sa:factorLevel ?dol ; prov:generatedAtTime ?dat .
+      FILTER(?do != ?dass && ?dol != ?dlevel)
+      FILTER( NOT EXISTS { ?do sa:aboutTopic ?z6 } || EXISTS { ?do sa:aboutTopic ?t6 . FILTER(?t6 = ?topic) } )
+      FILTER( EXISTS { ?do sa:aboutTopic ?o3 } = EXISTS { ?dass sa:aboutTopic ?o4 } )
+    } AS ?diligenceDisagreement)
+  }
+  OPTIONAL { ?doc dcterms:type ?ty . ?ty sa:defaultDiligence ?dprior }
+
+  BIND(IF(BOUND(?dass), ?dlevel, ?dprior) AS ?diligence)
+  BIND(IF(BOUND(?dass), "assessment", IF(BOUND(?dprior), "prior", "unknown")) AS ?diligenceFrom)
+  BIND(IF(BOUND(?authority), "assessment", "unknown") AS ?authorityFrom)
+  BIND(IF(BOUND(?authority) && BOUND(?diligence),
+          IF(?authority = concept:trust-level-low || ?diligence = concept:trust-level-low, concept:trust-level-low,
+             IF(?authority = concept:trust-level-medium || ?diligence = concept:trust-level-medium, concept:trust-level-medium,
+                concept:trust-level-high)),
+          ?none) AS ?trust)
+  BIND(IF(BOUND(?trust), "computed", "unknown") AS ?trustStatus)
+}
+ORDER BY ?publisher

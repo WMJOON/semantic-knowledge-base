@@ -1,0 +1,424 @@
+# source-agents.shapes.ttl — HAND-AUTHORED SHACL (source-agents 도메인, consumer KB 에서 이관)
+# 인스턴스 IRI 는 <base>/<종류>/<키> 형식이며 base 는 사용자가 정한다(예: --base https://example.org/skb/).
+#
+# 정책(2026-09-30 승인)을 규칙으로 옮긴 것이다.
+#   1. 관찰(AgentMention·Account)과 해석(Person·Organization·MentionIdentification)을 분리한다.
+#   2. 계정의 키는 (플랫폼, 불변 ID)이다. 핸들은 바뀌거나 재사용되므로 IRI 에 쓰지 않는다.
+#   3. MentionIdentification 은 검토를 거친 식별 결정이다(문서가 한 주장이 아니라 우리의 판단). 방법·근거·상태를 갖고, accepted 는 사람이 검토해야 하며 근거가 충분해야 한다.
+#        충분 = 강한 근거 1개 이상, 또는 서로 다른 방법 2개 이상.
+#   4. 프라이버시: Person instance 는 강하거나 중간 근거가 있는 accepted 식별이 있을 때만 만든다.
+#        자기 소개(self-declared-bio)만으로는 만들 수 없다. 공인 근거가 없는 개인은 AgentMention·Account 로만 둔다.
+#   5. 신뢰도는 저장하지 않는 파생값이다: 공신력(발행자)과 성실도(문서)에서 계산한다. 문서 유형에는 성실도 기본값만 둔다.
+#
+# 근거 방법의 '강도'는 identity-methods 스킴의 skos:broader 로 표현한다:
+#   identity-method-strength-strong / -medium / -weak
+
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix prov:    <http://www.w3.org/ns/prov#> .
+@prefix org:     <http://www.w3.org/ns/org#> .
+@prefix sa:      <https://skb.dev/ontology/source-agents#> .
+@prefix sas:     <https://skb.dev/ontology/source-agents/shape#> .
+@prefix concept: <https://skb.dev/ontology/source-agents/concept#> .
+@prefix scheme:  <https://skb.dev/ontology/source-agents/concept-scheme/> .
+
+sas:Prefixes a owl:Ontology ;
+    sh:declare
+        [ sh:prefix "sa"      ; sh:namespace "https://skb.dev/ontology/source-agents#"^^xsd:anyURI ] ,
+        [ sh:prefix "skos"    ; sh:namespace "http://www.w3.org/2004/02/skos/core#"^^xsd:anyURI ] ,
+        [ sh:prefix "prov"    ; sh:namespace "http://www.w3.org/ns/prov#"^^xsd:anyURI ] ,
+        [ sh:prefix "org"     ; sh:namespace "http://www.w3.org/ns/org#"^^xsd:anyURI ] ,
+        [ sh:prefix "concept" ; sh:namespace "https://skb.dev/ontology/source-agents/concept#"^^xsd:anyURI ] ,
+        [ sh:prefix "scheme"  ; sh:namespace "https://skb.dev/ontology/source-agents/concept-scheme/"^^xsd:anyURI ] .
+
+# ---------------------------------------------------------------------------------------------
+# Account — 관찰된 플랫폼 계정
+# ---------------------------------------------------------------------------------------------
+sas:AccountShape a sh:NodeShape ;
+    sh:targetClass sa:Account ;
+    sh:property [ sh:path sa:platform ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:minLength 1 ;
+                  sh:message "Account 는 sa:platform(플랫폼 이름)을 정확히 1개 가져야 한다."@ko ] ;
+    sh:property [ sh:path sa:platformAccountId ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:minLength 1 ;
+                  sh:message "Account 는 sa:platformAccountId(플랫폼이 부여한 불변 ID)를 정확히 1개 가져야 한다."@ko ] ;
+    sh:property [ sh:path sa:handle ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ;
+                  sh:message "Account 는 sa:handle 을 정확히 1개 가져야 한다."@ko ] ;
+    sh:property [ sh:path sa:platformVerified ; sh:maxCount 1 ; sh:datatype xsd:boolean ;
+                  sh:message "sa:platformVerified 는 xsd:boolean 1개여야 한다(플랫폼이 선언하지 않았으면 이 속성을 두지 않는다)."@ko ] ;
+    sh:property [ sh:path sa:declaredBio ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:maxLength 300 ;
+                  sh:message "sa:declaredBio 는 최대 300자 문자열 1개여야 한다(개인정보 최소화)."@ko ] ;
+    sh:property [ sh:path prov:hadPrimarySource ; sh:minCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "출처 누락: Account 는 관찰한 문서·API 를 prov:hadPrimarySource 로 가리켜야 한다."@ko ] ;
+    sh:property [ sh:path prov:generatedAtTime ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:dateTime ;
+                  sh:message "관찰 시각 누락: Account 는 prov:generatedAtTime(xsd:dateTime)을 정확히 1개 가져야 한다."@ko ] ;
+    # IRI 는 핸들이 아니라 (플랫폼, 불변 ID)로 만든다: <base>/account/<platform>/<id>
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:prefixes sas:Prefixes ;
+        sh:message "계정 IRI 는 <base>/account/<sa:platform>/<sa:platformAccountId> 형식이어야 한다(핸들로 키를 만들지 않는다)."@ko ;
+        sh:select """
+            SELECT $this WHERE {
+                $this sa:platform ?p ; sa:platformAccountId ?id .
+                FILTER(!STRENDS(STR($this), CONCAT("/account/", ?p, "/", ?id)))
+            }
+        """ ;
+    ] .
+
+# ---------------------------------------------------------------------------------------------
+# AgentMention — 문서가 선언한 그대로의 관찰
+# ---------------------------------------------------------------------------------------------
+sas:AgentMentionShape a sh:NodeShape ;
+    sh:targetClass sa:AgentMention ;
+    sh:property [ sh:path sa:declaredName ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ; sh:minLength 1 ;
+                  sh:message "AgentMention 은 sa:declaredName(문서가 선언한 이름)을 정확히 1개 가져야 한다."@ko ] ;
+    sh:property [ sh:path sa:declaredType ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ( "Person" "Organization" "unknown" ) ;
+                  sh:message "sa:declaredType 은 Person | Organization | unknown 중 정확히 1개여야 한다(선언이 없으면 unknown)."@ko ] ;
+    sh:property [ sh:path sa:inDocument ; sh:minCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "AgentMention 은 sa:inDocument 로 나온 문서를 가리켜야 한다."@ko ] ;
+    sh:property [ sh:path sa:mentionRole ; sh:minCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "AgentMention 은 sa:mentionRole(역할 개념)을 가져야 한다."@ko ] ;
+    sh:property [ sh:path sa:observedAccount ; sh:class sa:Account ;
+                  sh:message "sa:observedAccount 는 sa:Account 여야 한다."@ko ] ;
+    sh:property [ sh:path sa:isMemberOfHostOrg ; sh:maxCount 1 ; sh:datatype xsd:boolean ;
+                  sh:message "sa:isMemberOfHostOrg 는 xsd:boolean 1개여야 한다(플랫폼이 선언한 경우만)."@ko ] ;
+    sh:property [ sh:path prov:generatedAtTime ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:dateTime ;
+                  sh:message "관찰 시각 누락: AgentMention 은 prov:generatedAtTime(xsd:dateTime)을 정확히 1개 가져야 한다."@ko ] ;
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:prefixes sas:Prefixes ;
+        sh:message "sa:mentionRole {?role} 이(가) source-agent-roles 스킴의 개념이 아니다."@ko ;
+        sh:select """
+            SELECT $this ?role WHERE {
+                $this sa:mentionRole ?role .
+                FILTER NOT EXISTS { ?role skos:inScheme scheme:source-agent-roles }
+            }
+        """ ;
+    ] .
+
+# ---------------------------------------------------------------------------------------------
+# MentionIdentification — 식별 결정. 방법·근거·상태, accepted 는 사람 검토 + 근거 충분성
+# ---------------------------------------------------------------------------------------------
+sas:MentionIdentificationShape a sh:NodeShape ;
+    sh:targetClass sa:MentionIdentification ;
+    sh:property [ sh:path sa:identifiesAs ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:or ( [ sh:class sa:Person ] [ sh:class sa:Organization ] ) ;
+                  sh:message "MentionIdentification 은 sa:identifiesAs 로 sa:Person 또는 sa:Organization 을 정확히 1개 가리켜야 한다."@ko ] ;
+    sh:property [ sh:path sa:identificationMethod ; sh:minCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "MentionIdentification 은 sa:identificationMethod(근거의 방법)를 1개 이상 가져야 한다."@ko ] ;
+    sh:property [ sh:path sa:identificationEvidence ; sh:minCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "근거 누락: MentionIdentification 은 sa:identificationEvidence(근거 문서·구간)를 1개 이상 가리켜야 한다."@ko ] ;
+    sh:property [ sh:path sa:identificationStatus ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ( "candidate" "accepted" "rejected" "revoked" ) ;
+                  sh:message "sa:identificationStatus 는 candidate | accepted | rejected | revoked 중 정확히 1개여야 한다."@ko ] ;
+    sh:property [ sh:path sa:assessedAt ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:dateTime ;
+                  sh:message "MentionIdentification 은 sa:assessedAt(xsd:dateTime)을 정확히 1개 가져야 한다."@ko ] ;
+    # 대상은 계정 또는 언급 중 정확히 하나
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:prefixes sas:Prefixes ;
+        sh:message "MentionIdentification 의 대상은 sa:aboutAccount 와 sa:aboutMention 중 정확히 하나여야 한다."@ko ;
+        sh:select """
+            SELECT $this WHERE {
+                OPTIONAL { $this sa:aboutAccount ?a }
+                OPTIONAL { $this sa:aboutMention ?m }
+                FILTER( (BOUND(?a) && BOUND(?m)) || (!BOUND(?a) && !BOUND(?m)) )
+            }
+        """ ;
+    ] ;
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:prefixes sas:Prefixes ;
+        sh:message "sa:identificationMethod {?m} 이(가) identity-methods 스킴의 구체 방법이 아니다(강도 묶음 개념 자체는 방법이 아니다)."@ko ;
+        sh:select """
+            SELECT $this ?m WHERE {
+                $this sa:identificationMethod ?m .
+                FILTER NOT EXISTS { ?m skos:inScheme scheme:identity-methods ; skos:broader ?s }
+            }
+        """ ;
+    ] ;
+    # accepted 는 사람이 검토해야 한다
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:prefixes sas:Prefixes ;
+        sh:message "검토 누락: accepted 식별은 sa:reviewedBy(사람)를 가져야 한다(HITL)."@ko ;
+        sh:select """
+            SELECT $this WHERE {
+                $this sa:identificationStatus "accepted" .
+                FILTER NOT EXISTS { $this sa:reviewedBy ?r }
+            }
+        """ ;
+    ] ;
+    # accepted 근거 충분성: 강한 근거 1개 이상, 또는 서로 다른 방법 2개 이상
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:prefixes sas:Prefixes ;
+        sh:message "근거 부족: accepted 식별은 강한 근거 1개 이상 또는 서로 다른 방법 2개 이상이 필요하다(자기 소개 하나만으로는 안 된다)."@ko ;
+        sh:select """
+            SELECT $this WHERE {
+                $this sa:identificationStatus "accepted" .
+                FILTER NOT EXISTS { $this sa:identificationMethod ?m . ?m skos:broader concept:identity-method-strength-strong }
+                FILTER NOT EXISTS { $this sa:identificationMethod ?a , ?b . FILTER(?a != ?b) }
+            }
+        """ ;
+    ] .
+
+# ---------------------------------------------------------------------------------------------
+# Person — 프라이버시: 공인 근거가 있을 때만 만든다
+# ---------------------------------------------------------------------------------------------
+sas:PersonShape a sh:NodeShape ;
+    sh:targetClass sa:Person ;
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:prefixes sas:Prefixes ;
+        sh:message "공인 근거 없음: Person 은 강하거나 중간 근거(플랫폼 인증, 제3자 등록부, 양방향 링크, 조직 공식 소개)를 가진 accepted 식별이 있을 때만 만든다. 그렇지 않은 개인은 AgentMention·Account 로만 둔다."@ko ;
+        sh:select """
+            SELECT $this WHERE {
+                FILTER NOT EXISTS {
+                    ?c sa:identifiesAs $this ; sa:identificationStatus "accepted" ; sa:identificationMethod ?m .
+                    ?m skos:broader ?s .
+                    FILTER(?s IN (concept:identity-method-strength-strong, concept:identity-method-strength-medium))
+                }
+            }
+        """ ;
+    ] .
+
+# ---------------------------------------------------------------------------------------------
+# Membership — 시점에 묶인 사실: 유효 시간(memberSince·memberUntil)과 관찰 시간(prov:generatedAtTime)을 분리한다
+# ---------------------------------------------------------------------------------------------
+sas:MembershipShape a sh:NodeShape ;
+    sh:targetClass sa:Membership ;
+    sh:property [ sh:path org:member ; sh:minCount 1 ; sh:maxCount 1 ; sh:class sa:Person ;
+                  sh:message "Membership 은 org:member 로 sa:Person 을 정확히 1개 가리켜야 한다."@ko ] ;
+    sh:property [ sh:path org:organization ; sh:minCount 1 ; sh:maxCount 1 ; sh:class sa:Organization ;
+                  sh:message "Membership 은 org:organization 으로 sa:Organization 을 정확히 1개 가리켜야 한다."@ko ] ;
+    sh:property [ sh:path org:role ; sh:minCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "Membership 은 org:role(역할)을 가져야 한다."@ko ] ;
+    sh:property [ sh:path sa:memberSince ; sh:maxCount 1 ; sh:datatype xsd:date ;
+                  sh:message "sa:memberSince 는 xsd:date 1개여야 한다."@ko ] ;
+    sh:property [ sh:path sa:memberUntil ; sh:maxCount 1 ; sh:datatype xsd:date ;
+                  sh:message "sa:memberUntil 은 xsd:date 1개여야 한다."@ko ] ;
+    sh:property [ sh:path sa:startStatus ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ( "known" "unknown" ) ;
+                  sh:message "유효 시간 누락: sa:startStatus(known|unknown)를 정확히 1개 가져야 한다."@ko ] ;
+    sh:property [ sh:path sa:endStatus ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ( "ended" "open" "unknown" ) ;
+                  sh:message "유효 시간 누락: sa:endStatus(ended|open|unknown)를 정확히 1개 가져야 한다."@ko ] ;
+    sh:property [ sh:path prov:generatedAtTime ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:dateTime ;
+                  sh:message "관찰 시각 누락: Membership 은 prov:generatedAtTime(xsd:dateTime, 관찰 시간)을 정확히 1개 가져야 한다. 유효 시간(memberSince·memberUntil)과 다른 축이다."@ko ] ;
+    sh:property [ sh:path sa:conflictsWith ; sh:class sa:Membership ;
+                  sh:message "sa:conflictsWith 는 sa:Membership 을 가리켜야 한다."@ko ] ;
+    sh:property [ sh:path prov:hadPrimarySource ; sh:minCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "출처 누락: Membership 은 근거를 prov:hadPrimarySource 로 가리켜야 한다."@ko ] ;
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:prefixes sas:Prefixes ;
+        sh:message "sa:memberUntil 이 sa:memberSince 보다 앞선다."@ko ;
+        sh:select """
+            SELECT $this WHERE { $this sa:memberSince ?s ; sa:memberUntil ?u . FILTER(?u < ?s) }
+        """ ;
+    ] ;
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:prefixes sas:Prefixes ;
+        sh:message "시작 상태 불일치: startStatus=known 이면 memberSince 가 있어야 하고, unknown 이면 없어야 한다."@ko ;
+        sh:select """
+            SELECT $this WHERE {
+              { $this sa:startStatus "known" . FILTER NOT EXISTS { $this sa:memberSince ?d } }
+              UNION
+              { $this sa:startStatus "unknown" ; sa:memberSince ?d }
+            }
+        """ ;
+    ] ;
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:prefixes sas:Prefixes ;
+        sh:message "종료 상태 불일치: endStatus=ended 이면 memberUntil 이 있어야 하고, open|unknown 이면 없어야 한다."@ko ;
+        sh:select """
+            SELECT $this WHERE {
+              { $this sa:endStatus "ended" . FILTER NOT EXISTS { $this sa:memberUntil ?d } }
+              UNION
+              { $this sa:endStatus ?e ; sa:memberUntil ?d . FILTER(?e != "ended") }
+            }
+        """ ;
+    ] .
+
+# 현재 소속은 저장하지 않고 계산한다(파생 상태). memberOf 는 조회 결과이고 Membership 이 사실 기록이다.
+sas:NoStoredMembershipShape a sh:NodeShape ;
+    sh:targetSubjectsOf org:memberOf , sa:currentMemberOf ;
+    sh:property [ sh:path org:memberOf ; sh:maxCount 0 ;
+                  sh:message "파생값 저장 금지: org:memberOf 를 저장하지 않는다. 소속은 sa:Membership 으로 기록하고 현재 소속은 조회로 계산한다."@ko ] ;
+    sh:property [ sh:path sa:currentMemberOf ; sh:maxCount 0 ;
+                  sh:message "파생값 저장 금지: sa:currentMemberOf 를 저장하지 않는다. sa:Membership 으로 기록하고 조회로 계산한다."@ko ] .
+
+# ---------------------------------------------------------------------------------------------
+# 문서 유형의 성실도 기본값(prior): 공신력에는 문서 유형의 기본값을 두지 않는다
+#   공신력은 발행자에 붙는 값이다. 근거 있는 평가가 없으면 채우지 않고 모름으로 둔다.
+# ---------------------------------------------------------------------------------------------
+sas:DefaultDiligenceShape a sh:NodeShape ;
+    sh:targetSubjectsOf sa:defaultDiligence ;
+    sh:property [ sh:path sa:defaultDiligence ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "문서 유형의 성실도 기본값(sa:defaultDiligence)은 1개여야 한다."@ko ] ;
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:prefixes sas:Prefixes ;
+        sh:message "성실도 기본값 {?lv} 이(가) trust-levels 스킴의 개념이 아니다."@ko ;
+        sh:select """
+            SELECT $this ?lv WHERE {
+                $this sa:defaultDiligence ?lv .
+                FILTER NOT EXISTS { ?lv skos:inScheme scheme:trust-levels }
+            }
+        """ ;
+    ] ;
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:prefixes sas:Prefixes ;
+        sh:message "성실도 기본값은 문서 유형(source-types 스킴)의 개념에만 붙는다. 에이전트(사람·조직)에는 붙이지 않는다."@ko ;
+        sh:select """
+            SELECT $this WHERE {
+                $this sa:defaultDiligence ?lv .
+                FILTER NOT EXISTS { $this skos:inScheme scheme:source-types }
+            }
+        """ ;
+    ] .
+
+# ---------------------------------------------------------------------------------------------
+# 인스턴스 IRI 린트: skb-ontology 의 명명 게이트(N1~N4)가 모르는 이 KB 의 인스턴스 IRI 관례
+#   - IRI 는 대소문자를 구분하므로 소문자 슬러그·고정 길이 해시로 정규화한다(같은 대상이 두 표기로 쪼개지지 않게).
+#   - 블랭크 노드는 인스턴스가 될 수 없다. 공백·끝 슬래시·대문자 슬러그는 허용하지 않는다.
+#   - Account 는 핸들이 아니라 (플랫폼, 불변 ID)로 키를 만든다(위 AccountShape 의 SPARQL 이 일치를 확인한다).
+# ---------------------------------------------------------------------------------------------
+sas:PersonIriShape a sh:NodeShape ; sh:targetClass sa:Person ; sh:nodeKind sh:IRI ;
+    sh:pattern "^https?://[^/]+/(.+/)?person/[a-z0-9]+(-[a-z0-9]+)*$" ;
+    sh:message "IRI 형식: Person IRI 는 <base>/person/<소문자-슬러그> 형식이어야 한다(블랭크 노드·대문자·공백·끝 슬래시 금지)."@ko .
+sas:OrganizationIriShape a sh:NodeShape ; sh:targetClass sa:Organization ; sh:nodeKind sh:IRI ;
+    sh:pattern "^https?://[^/]+/(.+/)?org/[a-z0-9]+(-[a-z0-9]+)*$" ;
+    sh:message "IRI 형식: Organization IRI 는 <base>/org/<소문자-슬러그> 형식이어야 한다."@ko .
+sas:AccountIriShape a sh:NodeShape ; sh:targetClass sa:Account ; sh:nodeKind sh:IRI ;
+    sh:pattern "^https?://[^/]+/(.+/)?account/[a-z0-9-]+/[A-Za-z0-9_.:-]+$" ;
+    sh:message "IRI 형식: Account IRI 는 <base>/account/<플랫폼(소문자)>/<불변 ID> 형식이어야 한다."@ko .
+sas:AgentMentionIriShape a sh:NodeShape ; sh:targetClass sa:AgentMention ; sh:nodeKind sh:IRI ;
+    sh:pattern "^https?://[^/]+/(.+/)?mention/[0-9a-f]{16}$" ;
+    sh:message "IRI 형식: AgentMention IRI 는 <base>/mention/<소문자 16자 해시> 형식이어야 한다(문서·역할·이름으로 결정적으로 만든다)."@ko .
+sas:MentionIdentificationIriShape a sh:NodeShape ; sh:targetClass sa:MentionIdentification ; sh:nodeKind sh:IRI ;
+    sh:pattern "^https?://[^/]+/(.+/)?identification/[0-9a-f]{16}$" ;
+    sh:message "IRI 형식: MentionIdentification IRI 는 <base>/identification/<소문자 16자 해시> 형식이어야 한다."@ko .
+sas:MembershipIriShape a sh:NodeShape ; sh:targetClass sa:Membership ; sh:nodeKind sh:IRI ;
+    sh:pattern "^https?://[^/]+/(.+/)?membership/[0-9a-f]{16}$" ;
+    sh:message "IRI 형식: Membership IRI 는 <base>/membership/<소문자 16자 해시> 형식이어야 한다."@ko .
+
+# ---------------------------------------------------------------------------------------------
+# TrustFactorAssessment — 근거 있는 신뢰 요인 평가: 공신력(발행자)과 성실도(문서) (승인 2026-09-30)
+#   - 공신력과 성실도는 서로 독립인 두 요인이다. 한 평가는 한 요인만 다룬다. 신뢰도는 저장하지 않고 두 요인에서 계산한다.
+#   - 성실도의 대상은 문서, 공신력의 대상은 발행자 에이전트(Person·Organization)다.
+#   - 평가는 덮어쓰지 않고 추가한다. 현재 평가는 저장하지 않고 조회(effective_trust.rq)로 계산한다. 성실도는 평가가 없으면 문서 유형의 prior 를 쓰고, 공신력은 평가가 없으면 모름으로 둔다.
+#   - accepted 는 근거와 평가자(사람)가 있어야 한다. 근거 없는 평가는 등록하지 않는다.
+# ---------------------------------------------------------------------------------------------
+sas:TrustFactorAssessmentShape a sh:NodeShape ;
+    sh:targetClass sa:TrustFactorAssessment ;
+    sh:property [ sh:path sa:trustFactor ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "TrustFactorAssessment 는 sa:trustFactor 를 정확히 1개 가져야 한다(한 평가는 한 요인만 다룬다)."@ko ] ;
+    sh:property [ sh:path sa:factorLevel ; sh:minCount 1 ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "TrustFactorAssessment 는 sa:factorLevel 을 정확히 1개 가져야 한다."@ko ] ;
+    sh:property [ sh:path sa:aboutTopic ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "sa:aboutTopic 은 주제 개념 1개여야 한다(선택)."@ko ] ;
+    sh:property [ sh:path sa:assessesDocument ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "sa:assessesDocument 는 문서 IRI 1개여야 한다."@ko ] ;
+    sh:property [ sh:path sa:assessesAgent ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "sa:assessesAgent 는 에이전트 IRI 1개여야 한다."@ko ] ;
+    sh:property [ sh:path sa:assessmentStatus ; sh:minCount 1 ; sh:maxCount 1 ; sh:in ( "candidate" "accepted" "rejected" "revoked" ) ;
+                  sh:message "sa:assessmentStatus 는 candidate | accepted | rejected | revoked 중 정확히 1개여야 한다."@ko ] ;
+    sh:property [ sh:path prov:generatedAtTime ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:dateTime ;
+                  sh:message "관찰 시각 누락: TrustFactorAssessment 는 prov:generatedAtTime(xsd:dateTime)을 정확히 1개 가져야 한다."@ko ] ;
+    sh:property [ sh:path sa:supersedesAssessment ; sh:class sa:TrustFactorAssessment ;
+                  sh:message "sa:supersedesAssessment 는 sa:TrustFactorAssessment 를 가리켜야 한다."@ko ] ;
+    sh:sparql [
+        a sh:SPARQLConstraint ; sh:prefixes sas:Prefixes ;
+        sh:message "평가 대상은 정확히 하나여야 한다: sa:assessesDocument 와 sa:assessesAgent 중 하나만 둔다."@ko ;
+        sh:select """
+            SELECT $this WHERE {
+              { $this sa:assessesDocument ?d ; sa:assessesAgent ?a }
+              UNION
+              { FILTER NOT EXISTS { $this sa:assessesDocument ?d } FILTER NOT EXISTS { $this sa:assessesAgent ?a } }
+            }
+        """ ;
+    ] ;
+    sh:sparql [
+        a sh:SPARQLConstraint ; sh:prefixes sas:Prefixes ;
+        sh:message "sa:trustFactor 는 trust-factors 스킴의 개념이어야 한다."@ko ;
+        sh:select """
+            SELECT $this WHERE { $this sa:trustFactor ?x . FILTER NOT EXISTS { ?x skos:inScheme scheme:trust-factors } }
+        """ ;
+    ] ;
+    sh:sparql [
+        a sh:SPARQLConstraint ; sh:prefixes sas:Prefixes ;
+        sh:message "sa:factorLevel 은 trust-levels 스킴의 개념이어야 한다."@ko ;
+        sh:select """
+            SELECT $this WHERE { $this sa:factorLevel ?x . FILTER NOT EXISTS { ?x skos:inScheme scheme:trust-levels } }
+        """ ;
+    ] ;
+    sh:sparql [
+        a sh:SPARQLConstraint ; sh:prefixes sas:Prefixes ;
+        sh:message "요인과 대상이 어긋난다: 성실도는 sa:assessesDocument, 공신력은 sa:assessesAgent 를 대상으로 한다."@ko ;
+        sh:select """
+            SELECT $this WHERE {
+              { $this sa:trustFactor concept:trust-factor-diligence . FILTER NOT EXISTS { $this sa:assessesDocument ?d } }
+              UNION
+              { $this sa:trustFactor concept:trust-factor-authority . FILTER NOT EXISTS { $this sa:assessesAgent ?a } }
+            }
+        """ ;
+    ] ;
+    sh:sparql [
+        a sh:SPARQLConstraint ; sh:prefixes sas:Prefixes ;
+        sh:message "공신력의 대상은 sa:Person 또는 sa:Organization 이어야 한다."@ko ;
+        sh:select """
+            SELECT $this WHERE {
+              $this sa:assessesAgent ?a .
+              FILTER NOT EXISTS { ?a a sa:Person } FILTER NOT EXISTS { ?a a sa:Organization }
+            }
+        """ ;
+    ] ;
+    sh:sparql [
+        a sh:SPARQLConstraint ; sh:prefixes sas:Prefixes ;
+        sh:message "근거 없는 평가: accepted 평가는 sa:assessmentBasis(근거)와 sa:assessedBy(평가자)가 있어야 한다."@ko ;
+        sh:select """
+            SELECT $this WHERE {
+              $this sa:assessmentStatus "accepted" .
+              { FILTER NOT EXISTS { $this sa:assessmentBasis ?b } } UNION { FILTER NOT EXISTS { $this sa:assessedBy ?r } }
+            }
+        """ ;
+    ] ;
+    sh:sparql [
+        a sh:SPARQLConstraint ; sh:prefixes sas:Prefixes ;
+        sh:message "sa:aboutTopic 은 어휘 스킴에 속한 개념이어야 한다(임의 문자열이나 미정의 IRI 금지)."@ko ;
+        sh:select """
+            SELECT $this WHERE { $this sa:aboutTopic ?t . FILTER NOT EXISTS { ?t skos:inScheme ?s } }
+        """ ;
+    ] ;
+    sh:sparql [
+        a sh:SPARQLConstraint ; sh:prefixes sas:Prefixes ;
+        sh:message "대체 관계 위반: 대체하는 평가는 같은 대상과 같은 요인이어야 하고, 대체되는 평가보다 늦은 관찰 시각을 가져야 하며, 자기 자신으로 순환할 수 없다."@ko ;
+        sh:select """
+            SELECT $this WHERE {
+              { $this sa:supersedesAssessment+ $this }
+              UNION
+              { $this sa:supersedesAssessment ?old . $this sa:trustFactor ?x1 . ?old sa:trustFactor ?x2 . FILTER(?x1 != ?x2) }
+              UNION
+              { $this sa:supersedesAssessment ?old . $this sa:assessesDocument ?t1 . ?old sa:assessesDocument ?t2 . FILTER(?t1 != ?t2) }
+              UNION
+              { $this sa:supersedesAssessment ?old . $this sa:assessesAgent ?t1 . ?old sa:assessesAgent ?t2 . FILTER(?t1 != ?t2) }
+              UNION
+              { $this sa:supersedesAssessment ?old ; prov:generatedAtTime ?at1 . ?old prov:generatedAtTime ?at2 . FILTER(?at1 <= ?at2) }
+            }
+        """ ;
+    ] .
+
+# 파생값 비저장: 신뢰도(공신력 x 성실도)와 그 현재값을 저장하지 않는다. 평가를 추가하고 조회로 계산한다.
+sas:NoStoredTrustShape a sh:NodeShape ;
+    sh:targetSubjectsOf sa:currentTrust , sa:effectiveTrust ;
+    sh:property [ sh:path sa:currentTrust ; sh:maxCount 0 ;
+                  sh:message "파생값 저장 금지: sa:currentTrust 를 저장하지 않는다. TrustFactorAssessment 를 추가하고 조회로 계산한다."@ko ] ;
+    sh:property [ sh:path sa:effectiveTrust ; sh:maxCount 0 ;
+                  sh:message "파생값 저장 금지: sa:effectiveTrust 를 저장하지 않는다. TrustFactorAssessment 를 추가하고 조회로 계산한다."@ko ] .
+
+sas:TrustFactorAssessmentIriShape a sh:NodeShape ; sh:targetClass sa:TrustFactorAssessment ; sh:nodeKind sh:IRI ;
+    sh:pattern "^https?://[^/]+/(.+/)?trust-factor/[0-9a-f]{16}$" ;
+    sh:message "IRI 형식: TrustFactorAssessment IRI 는 <base>/trust-factor/<소문자 16자 해시> 형식이어야 한다."@ko .
