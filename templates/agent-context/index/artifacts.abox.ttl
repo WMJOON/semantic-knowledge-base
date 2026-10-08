@@ -1,0 +1,78 @@
+# SKB scaffold artifact registry (MSO v0.13.0 artifact layer). 규약 세 요소는 커밋 후 변경 금지(새 규약 + supersededBy).
+@prefix wf:   <https://mso.dev/ontology/workflow#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix art:  <https://example.org/skb-scaffold/artifact#> .
+
+art:source_docs a wf:RegisteredArtifact ;
+    wf:externalSource true ;
+    rdfs:label "원문 문서"@ko ;
+    rdfs:comment "수집 대상 원문(docling 변환본). 이 workflow 밖에서 공급된다."@ko ;
+    wf:hasArtifactType wf:Document ;
+    wf:consumerType wf:Hybrid ;
+    wf:inModule "skb-evidence-layer" ;
+    wf:hasConvention art:source_docs_conv1 .
+
+art:source_docs_conv1 a wf:ArtifactConvention ;
+    wf:namingConvention "[doc]" ;
+    wf:fileFormat "md" ;
+    wf:directoryTemplate "evidence/artifact/raw/" ;
+    wf:hasParam art:source_docs_p_doc .
+art:source_docs_p_doc a wf:ArtifactParam ; wf:paramName "doc" ; wf:paramType wf:AnyToken .
+
+art:seeds a wf:RegisteredArtifact ;
+    rdfs:label "증거 seeds"@ko ;
+    rdfs:comment "청크와 메타를 연결하는 seeds 카탈로그."@ko ;
+    wf:hasArtifactType wf:KnowledgeStore ;
+    wf:consumerType wf:Machine ;
+    wf:inModule "skb-evidence-layer" ;
+    wf:hasConvention art:seeds_conv1 .
+
+art:seeds_conv1 a wf:ArtifactConvention ;
+    wf:namingConvention "seeds" ;
+    wf:fileFormat "jsonl" ;
+    wf:directoryTemplate "evidence/catalog/" .
+
+art:semantic_graphs a wf:RegisteredArtifact ;
+    rdfs:label "온톨로지 TTL 그래프"@ko ;
+    rdfs:comment "도메인별 정본 Turtle(개념·관계·인스턴스)."@ko ;
+    wf:hasArtifactType wf:KnowledgeStore ;
+    wf:consumerType wf:Machine ;
+    wf:inModule "skb-ontology-layer" ;
+    wf:hasConvention art:semantic_graphs_conv1 .
+
+art:semantic_graphs_conv1 a wf:ArtifactConvention ;
+    wf:namingConvention "[cluster]" ;
+    wf:fileFormat "ttl" ;
+    wf:directoryTemplate "ontology/semantic/[cluster]/" ;
+    wf:hasParam art:semantic_graphs_p_cluster .
+art:semantic_graphs_p_cluster a wf:ArtifactParam ; wf:paramName "cluster" ; wf:paramType wf:AnyToken .
+
+art:reports a wf:RegisteredArtifact ;
+    rdfs:label "검증 보고서"@ko ;
+    rdfs:comment "정적 검증 결과 보고서."@ko ;
+    wf:hasArtifactType wf:Document ;
+    wf:consumerType wf:Hybrid ;
+    wf:inModule "skb-harness-layer" ;
+    wf:hasConvention art:reports_conv1 .
+
+art:reports_conv1 a wf:ArtifactConvention ;
+    wf:namingConvention "[report]" ;
+    wf:fileFormat "md" ;
+    wf:directoryTemplate "harness/reports/" ;
+    wf:hasParam art:reports_p_report .
+art:reports_p_report a wf:ArtifactParam ; wf:paramName "report" ; wf:paramType wf:AnyToken .
+
+art:answers a wf:RegisteredArtifact ;
+    rdfs:label "탐색·추론 답변"@ko ;
+    rdfs:comment "근거 경로와 함께 남기는 답변 노트."@ko ;
+    wf:hasArtifactType wf:Document ;
+    wf:consumerType wf:Human ;
+    wf:inModule "skb-report-layer" ;
+    wf:hasConvention art:answers_conv1 .
+
+art:answers_conv1 a wf:ArtifactConvention ;
+    wf:namingConvention "[answer]" ;
+    wf:fileFormat "md" ;
+    wf:directoryTemplate "report/" ;
+    wf:hasParam art:answers_p_answer .
+art:answers_p_answer a wf:ArtifactParam ; wf:paramName "answer" ; wf:paramType wf:AnyToken .

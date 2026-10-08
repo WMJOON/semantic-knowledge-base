@@ -1,0 +1,33 @@
+
+# canonical_root_hub.yaml
+#
+# ┌─────────────────────────────────────────────────────────┐
+# │  LOCKED — 에이전트/LLM 임의 수정 금지                      │
+# │  변경 시 반드시 사용자 명시 지시 + HITL 승인 필요             │
+# └─────────────────────────────────────────────────────────┘
+version: "1.2"
+locked: true
+
+domains: []
+
+# 스킬이 경로를 찾는 곳. 이 섹션이 없는 저장소는 이전 관례
+# (ontology/system/semantic, evidence/{md,raw,...})를 그대로 쓴다.
+layout:
+  semantic_dir: ontology/semantic
+  seeds_path: evidence/catalog/seeds.jsonl
+  raw_dir: evidence/artifact/raw
+  evidence_md_dir: evidence/chunk
+  artifact_dir: evidence/artifact
+  catalog_dir: evidence/catalog
+
+scan:
+  include: "ontology/semantic/**/*.ttl"
+  exclude:
+    - "ontology/semantic/**/*.shapes.ttl"
+    - "ontology/semantic/**/*.inferred.ttl"
+  orphan_exit_code: 1
+
+sync:
+  structural_ssot: ttl
+  projection_target: md
+  auto_apply_md_to_ttl: false

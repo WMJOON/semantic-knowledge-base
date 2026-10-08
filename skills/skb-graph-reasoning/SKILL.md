@@ -6,7 +6,7 @@ description: |
   파생 파일이 최신인지 알려 주고(status), 폐포 위에서 SPARQL 을 실행한다(query).
   정본 TTL 은 수정하지 않는다. 트리거: "추론", "OWL 추론", "reasoner", "비일관성 점검", "inferred", "서브클래스 전이", "SPARQL 질의".
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # skb-graph-reasoning (v0.1.0)

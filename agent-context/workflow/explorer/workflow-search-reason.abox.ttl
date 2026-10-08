@@ -12,7 +12,7 @@ w_search_reason:workflow a wf:Workflow ;
     skbx:category "explorer" ;
     skbx:mode "dry-run" ;
     skbx:maxRetry 1 ;
-    skbx:oracle "reasoning_trace_readiness" ;
+    skbx:oracle "ontology_readiness" ;
     skbx:oracleThreshold 0.85 ;
     skbx:hitlRequired false ;
     wf:has w_search_reason:start, w_search_reason:end, w_search_reason:s1, w_search_reason:s2 .
@@ -22,12 +22,12 @@ w_search_reason:s1 a wf:Node, wf:Execution, wf:Task ;
     wf:label "retrieve" ;
     wf:inWorkflow w_search_reason:workflow ;
     wf:hasSubject "system" ; wf:method "script" ;
-    skbx:tool "msm-graph-reasoning" ; skbx:action "search" .
+    skbx:tool "skb-semantic-search" ; skbx:action "status" .
 w_search_reason:r_start_s1 a wf:Edge, wf:Rail ; wf:from w_search_reason:start ; wf:railType "default" ; wf:to w_search_reason:s1 .
 w_search_reason:s2 a wf:Node, wf:Execution, wf:Task ;
     wf:label "reason" ;
     wf:inWorkflow w_search_reason:workflow ;
     wf:hasSubject "system" ; wf:method "script" ;
-    skbx:tool "msm-graph-reasoning" ; skbx:action "multihop" .
+    skbx:tool "skb-graph-reasoning" ; skbx:action "check" .
 w_search_reason:r_s1_s2 a wf:Edge, wf:Rail ; wf:from w_search_reason:s1 ; wf:railType "default" ; wf:to w_search_reason:s2 .
 w_search_reason:r_s2_end a wf:Edge, wf:Rail ; wf:from w_search_reason:s2 ; wf:railType "default" ; wf:to w_search_reason:end .

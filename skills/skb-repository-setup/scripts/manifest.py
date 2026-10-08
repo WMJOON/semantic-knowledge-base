@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Iterable, Literal
 
 
-FileKind = Literal["dir", "file_template", "file_empty", "file_executable"]
+FileKind = Literal["dir", "file_template", "file_template_new", "file_empty", "file_executable"]
 MarkerKind = Literal["yaml", "markdown", "shell", "none"]
 
 
@@ -139,9 +139,61 @@ BASE_FILES: tuple[Entry, ...] = (
 )
 
 
-def domain_entries(cluster: str) -> tuple[Entry, ...]:
+LAYOUTS = ("b1", "legacy")
+DEFAULT_LAYOUT = "b1"
+
+# b1 — 이름만 공개 도구 관례를 따르는 배치. 정본은 계속 TTL 이고, 스킬은 canonical_root_hub.yaml 의
+# layout: 섹션으로 경로를 찾는다(템플릿이 그 섹션을 선언한다). legacy 는 layout: 이 없던 이전 배치다.
+_B1_DROP_DIRS = {
+    "ontology/system/semantic",
+    "evidence/md",
+    "evidence/raw",
+    "agent-context/workflow/evidence",
+    "agent-context/workflow/ontology",
+    "agent-context/workflow/maintain",
+    "agent-context/workflow/explorer",
+}
+_B1_ADD_DIRS: tuple[str, ...] = (
+    "ontology/semantic",
+    "evidence/artifact",
+    "evidence/artifact/raw",
+    "evidence/chunk",
+    "evidence/catalog",
+)
+_LEGACY_ONLY_FILES = {
+    "agent-context/workflow/index.yaml",
+    "agent-context/workflow/evidence/evidence-collection.yaml",
+    "agent-context/workflow/ontology/ontology-construction.yaml",
+    "agent-context/workflow/maintain/validation.yaml",
+    "agent-context/workflow/explorer/search-reason.yaml",
+    "evidence/seeds.jsonl",
+    "canonical_root_hub.yaml",
+}
+WORKFLOW_TTLS = (
+    "workflow-evidence-collection",
+    "workflow-ontology-construction",
+    "workflow-validation",
+    "workflow-search-reason",
+)
+_B1_FILES: tuple[Entry, ...] = (
+    Entry("canonical_root_hub.yaml", "file_template", "canonical_root_hub.b1.yaml", "yaml"),
+    *(
+        Entry(f"agent-context/workflow/{n}.abox.ttl", "file_template_new", f"agent-context/workflow/{n}.abox.ttl")
+        for n in WORKFLOW_TTLS
+    ),
+    Entry("agent-context/index/artifacts.abox.ttl", "file_template_new", "agent-context/index/artifacts.abox.ttl"),
+    Entry("evidence/catalog/seeds.jsonl", "file_empty", None, "none"),
+    Entry(".gitignore", "file_template_new", "gitignore.template"),
+)
+
+
+def semantic_rel(layout: str = DEFAULT_LAYOUT) -> str:
+    return "ontology/semantic" if layout == "b1" else "ontology/system/semantic"
+
+
+def domain_entries(cluster: str, layout: str = DEFAULT_LAYOUT) -> tuple[Entry, ...]:
     """Create one valid asserted Turtle graph and derived projection folders."""
-    semantic = f"ontology/system/semantic/{cluster}"
+    semantic = f"{semantic_rel(layout)}/{cluster}"
     hub = f"projection/wikigraph/class/{cluster}"
     return (
         Entry(semantic, "dir"),
@@ -157,14 +209,22 @@ def domain_entries(cluster: str) -> tuple[Entry, ...]:
 def build_manifest(
     targets: Iterable[str] = ("claude",),
     domain: str | None = None,
+    layout: str = DEFAULT_LAYOUT,
 ) -> list[Entry]:
+    if layout not in LAYOUTS:
+        raise ValueError(f"unknown layout: {layout!r} (choose from {', '.join(LAYOUTS)})")
     out: list[Entry] = []
-    out.extend(Entry(p, "dir") for p in BASE_DIRS)
+    if layout == "b1":
+        dirs = [d for d in BASE_DIRS if d not in _B1_DROP_DIRS] + list(_B1_ADD_DIRS)
+        files = [f for f in BASE_FILES if f.path not in _LEGACY_ONLY_FILES] + list(_B1_FILES)
+    else:
+        dirs, files = list(BASE_DIRS), list(BASE_FILES)
+    out.extend(Entry(p, "dir") for p in dirs)
     if "codex" in targets:
         out.extend(Entry(p, "dir") for p in CODEX_DIRS)
-    out.extend(BASE_FILES)
+    out.extend(files)
     if domain:
-        out.extend(domain_entries(domain))
+        out.extend(domain_entries(domain, layout))
     return out
 
 

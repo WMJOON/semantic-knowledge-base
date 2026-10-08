@@ -1,5 +1,32 @@
 # Changelog
 
+## v1.6.0 (2026-10-09) — `skb init` aligned with the published tools
+
+### Added
+
+- **`skb init --layout b1|legacy`** (default `b1`). `b1` scaffolds `ontology/semantic/<domain>/`, `evidence/{artifact/raw,chunk,catalog}` and
+  declares those paths in a `layout:` section of `canonical_root_hub.yaml`. Turtle stays the canonical store; no JSONL registries are created.
+  `legacy` reproduces the previous tree byte for byte.
+- **TTL-only workflow templates** (`wf:`/`skbx:`): evidence-collection, ontology-construction, validation, search-reason, plus an
+  `agent-context/index/artifacts.abox.ttl` artifact registry. search-reason now runs real steps (`skb-semantic-search` status,
+  `skb-graph-reasoning` check) instead of the retired explorer tool.
+- **`.gitignore` template** excluding raw evidence, derived embeddings and inferred graphs, and run records. An existing `.gitignore` is never overwritten.
+- `harness/run.sh` for `skb-graph-reasoning` (check) and `skb-semantic-search` (status; a stale or missing index is reported, not failed).
+- Oracle `repository_integrity` (`skb-repository-setup`).
+- `validate_workflows.py` lints references: every `skbx:tool` / `tool:` must be a skill with `harness/run.sh`, every oracle an existing file.
+  It accepts TTL-only workflow sets.
+- `tests/test_scaffold_end_to_end.py`: init output is read and run by the published CLIs, the harness gives a real oracle score for each workflow,
+  and a KB without a `layout:` section keeps the old paths.
+
+### Changed
+
+- Every skill resolves the semantic directory and the seeds file through `layout:` (`skb-ontology`, `skb-graph-reasoning`, `skb-semantic-search`,
+  `skb-evidence` oracle and L0 validator). A KB without `layout:` behaves as before.
+- `layout.py` no longer ignores a declared `layout:` when PyYAML is missing (it reads the flat block and says so on stderr).
+- `validate_repository_setup.py` derives the required directories from the scaffold manifest instead of a second hand-kept list.
+- Legacy YAML workflow templates and the repository's own workflows now name existing tools and oracles (`ontology_readiness`,
+  `skb-semantic-search`, `skb-graph-reasoning`); the retired `msm-graph-reasoning` and three non-existent oracle names are gone.
+
 ## v1.5.0 (2026-10-08) — skb-evidence 1.2.5: source catalog, quote verification, source-agent registration
 
 ### Added

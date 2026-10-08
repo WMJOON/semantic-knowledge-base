@@ -16,6 +16,9 @@ TTL-only: TBox, RBox, ABox, registry membership, status, and provenance live in
 | Workflow migration/editing layer | YAML is allowed | `agent-context/workflow/` |
 | Human-readable view | derived Markdown | `projection/` |
 
+The paths above are the `legacy` layout. `skb init` scaffolds `b1` by default (`ontology/semantic/`, `evidence/{artifact/raw,chunk,catalog}`)
+and declares them in the `layout:` section of `canonical_root_hub.yaml`; a repository without that section keeps the paths above.
+
 YAML and JSONL never define ontology terms, relations, instances, axioms, registry
 membership, or provenance. Old ontology compilers remain migration history in the private
 development repository and are not part of the public TTL-only distribution.
@@ -23,7 +26,7 @@ development repository and are not part of the public TTL-only distribution.
 ## Skills
 
 - `skb-orchestration`: intent routing, governance, and HITL gates
-- `skb-repository-setup`: bootstrap a TTL-only KB layout
+- `skb-repository-setup`: bootstrap a TTL-only KB layout (`--layout b1|legacy`; the `layout:` section of `canonical_root_hub.yaml` tells every skill where things live)
 - `skb-evidence`: collect, convert and deduplicate source evidence; a source catalog (provenance, retrieval, chunk positions), quote verification, and source-agent registration with human-reviewed identity resolution
 - `skb-ontology`: add, list, validate, and report orphans/statistics over Turtle graphs
 - `skb-graph-reasoning`: OWL 2 RL reasoning (derived `*.inferred.ttl`), consistency check, SPARQL over the closure

@@ -22,6 +22,7 @@ WEIGHTS = {
 REQUIRED_TOP_DIRS = ("ontology", "evidence", "record-archive", "agent-context", "harness", "docs")
 REQUIRED_HUB_KEYS = ("version:", "locked:", "domains:", "scan:", "sync:")
 REQUIRED_SYNC = ("structural_ssot: ttl", "projection_target: md", "auto_apply_md_to_ttl: false")
+TTL_WORKFLOW_REQUIRED = ("a wf:Workflow", "skbx:category", "skbx:mode")
 WORKFLOW_REQUIRED = (
     "version:", "id:", "category:", "kind:", "mode:",
     "inputs:", "outputs:", "runtime:", "governance:",
@@ -47,18 +48,21 @@ def score(target: Path) -> dict:
         hub_ok = all(k in text for k in REQUIRED_HUB_KEYS) and all(s in text for s in REQUIRED_SYNC)
     breakdown["canonical_hub_valid"] = hub_ok
 
-    semantic_root = target / "ontology" / "system" / "semantic"
-    if semantic_root.exists() and any(semantic_root.rglob("*.ttl")):
-        breakdown["five_layer_directories"] = breakdown["five_layer_directories"] and True
-
     workflow_root = target / "agent-context" / "workflow"
     index = workflow_root / "index.yaml"
-    wfs_ok = index.exists() and "workflows:" in index.read_text(encoding="utf-8")
-    if wfs_ok:
-        for sub in workflow_root.rglob("*.yaml"):
-            if sub.name == "index.yaml":
-                continue
-            wfs_ok = wfs_ok and all(k in sub.read_text(encoding="utf-8") for k in WORKFLOW_REQUIRED)
+    ttl_workflows = sorted(workflow_root.glob("workflow-*.abox.ttl"))
+    if ttl_workflows:
+        # TTL(wf:/skbx:) 워크플로우: 각 파일이 워크플로우를 선언하고 실행 계약 속성을 갖고, artifact 레지스트리가 있다.
+        wfs_ok = (target / "agent-context" / "index" / "artifacts.abox.ttl").exists() and all(
+            all(k in f.read_text(encoding="utf-8") for k in TTL_WORKFLOW_REQUIRED) for f in ttl_workflows
+        )
+    else:
+        wfs_ok = index.exists() and "workflows:" in index.read_text(encoding="utf-8")
+        if wfs_ok:
+            for sub in workflow_root.rglob("*.yaml"):
+                if sub.name == "index.yaml":
+                    continue
+                wfs_ok = wfs_ok and all(k in sub.read_text(encoding="utf-8") for k in WORKFLOW_REQUIRED)
     breakdown["workflow_templates_valid"] = wfs_ok
 
     breakdown["memory_harness_skeleton_valid"] = (

@@ -1,6 +1,6 @@
 """OWL 2 RL reasoning over canonical Turtle (rdflib + owlrl). 순수 로직 — CLI 는 graph_reasoning.py.
 
-정본은 asserted TTL(ontology/system/semantic/<domain>/*.ttl)이고, 추론 결과(*.inferred.ttl)는 언제든 지우고 다시 만드는 파생물이다.
+정본은 asserted TTL(layout: 의 semantic_dir, 기본 ontology/system/semantic/<domain>/*.ttl)이고, 추론 결과(*.inferred.ttl)는 언제든 지우고 다시 만드는 파생물이다.
 OWL 2 RL 은 규칙 기반 프로파일이다: 서브클래스·서브프로퍼티 전이, 도메인/레인지 타이핑, inverse/symmetric/transitive,
 sameAs, 함수형 프로퍼티, 그리고 disjointWith·differentFrom·cardinality 위반 같은 비일관성 탐지를 다룬다.
 OWL DL 의 완전한 클래스 충족 가능성 검사(HermiT 등)는 하지 않는다.
@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import re
+import sys
 from collections import Counter
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
@@ -16,6 +17,9 @@ from typing import Dict, Iterable, List, Optional, Tuple
 import owlrl
 from rdflib import BNode, Graph, Literal, Namespace, URIRef
 from rdflib.namespace import DCTERMS, OWL, PROV, RDF, RDFS, XSD
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import skb_layout  # noqa: E402
 
 ERR = Namespace("http://www.daml.org/2002/03/agents/agent-ont#")  # owlrl 이 비일관성 메시지에 쓰는 어휘
 SKIP_SUFFIXES = (".shapes.ttl", ".inferred.ttl")
@@ -25,7 +29,7 @@ HEADER_HASH = re.compile(r"^# source-hash: (sha256:[0-9a-f]{64})\s*$", re.M)
 
 
 def semantic_root(target: Path) -> Path:
-    return Path(target).resolve() / "ontology" / "system" / "semantic"
+    return skb_layout.semantic_dir(target)
 
 
 def asserted_files(target: Path, domain: Optional[str] = None) -> List[Path]:

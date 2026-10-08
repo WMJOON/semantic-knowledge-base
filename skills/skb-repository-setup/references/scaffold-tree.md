@@ -2,6 +2,22 @@
 
 `skb init --apply`가 생성하는 최소 트리. SPEC §5.1 / §5.3.
 
+기본 배치는 `b1`이다. 아래 트리는 `legacy`(옛 배치)이고, `b1`은 달라지는 부분이 다음과 같다. `canonical_root_hub.yaml`의 `layout:`이 이 경로를 선언한다.
+
+```text
+ontology/semantic/{domain}/{domain}.ttl       # legacy: ontology/system/semantic/
+ontology/system/{kinetic,dynamic}/{cluster}.ttl
+evidence/artifact/raw/                         # legacy: evidence/raw/
+evidence/chunk/                                # legacy: evidence/md/
+evidence/catalog/seeds.jsonl                   # legacy: evidence/seeds.jsonl
+evidence/{captures,graphify}/
+agent-context/index/artifacts.abox.ttl         # artifact 레지스트리
+agent-context/workflow/workflow-{evidence-collection,ontology-construction,validation,search-reason}.abox.ttl
+.gitignore                                     # 원문·파생물·실행 기록 제외 (이미 있으면 유지)
+```
+
+b1은 YAML 워크플로우와 `workflow/index.yaml`을 만들지 않는다.
+
 ```text
 <repo-root>/
 ├── ontology/

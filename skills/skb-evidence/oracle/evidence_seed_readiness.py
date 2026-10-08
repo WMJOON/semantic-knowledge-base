@@ -26,9 +26,20 @@ TOOL_VERSION = "skb-evidence/1.0.0"
 DEFAULT_CHUNK_SIZE = 1200
 
 
+def _seeds_path(target: Path) -> Path:
+    """layout: 이 seeds_path 를 선언했으면 그 경로, 아니면 evidence/seeds.jsonl."""
+    scripts = Path(__file__).resolve().parents[1] / "scripts"
+    sys.path.insert(0, str(scripts))
+    try:
+        import layout as _layout
+        return _layout.resolve_layout(target)["seeds_path"]
+    finally:
+        sys.path.remove(str(scripts))
+
+
 def evaluate(target: Path, chunk_size: int = DEFAULT_CHUNK_SIZE) -> dict:
     """Return score dict with breakdown."""
-    seeds_path = target / "evidence" / "seeds.jsonl"
+    seeds_path = _seeds_path(target)
 
     if not seeds_path.exists():
         return {

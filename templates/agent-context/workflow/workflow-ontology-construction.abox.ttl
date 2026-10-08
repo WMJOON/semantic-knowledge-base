@@ -1,0 +1,25 @@
+# Ontology construction — MSO v0.7 TTL workflow (SSOT). 실행 계약은 skbx: 확장 속성으로 둔다.
+@prefix wf:   <https://mso.dev/ontology/workflow#> .
+@prefix skbx: <https://skb.dev/ontology/workflow-ext#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix art:  <https://example.org/skb-scaffold/artifact#> .
+@prefix ontology_construction: <https://example.org/skb-scaffold/workflow/ontology-construction#> .
+
+ontology_construction:workflow a wf:Workflow ;
+    wf:label "Ontology construction" ;
+    wf:description "seeds 에서 후보를 승격해 온톨로지 인스턴스를 만든다. TBox 변경은 HITL." ;
+    wf:workflowType "base" ;
+    skbx:category "ontology" ; skbx:mode "dry-run" ; skbx:maxRetry 1 ;
+    skbx:oracle "ontology_readiness" ; skbx:oracleThreshold 0.85 ;
+    wf:has ontology_construction:start, ontology_construction:run, ontology_construction:end .
+ontology_construction:start a wf:Node, wf:Start .
+ontology_construction:end a wf:Node, wf:End .
+ontology_construction:run a wf:Node, wf:Execution, wf:Task ;
+    wf:label "Ontology construction" ;
+    wf:inWorkflow ontology_construction:workflow ;
+    wf:hasSubject "system" ; wf:method "script" ;
+    skbx:tool "skb-ontology" ; skbx:action "add" .
+ontology_construction:rail_start_run a wf:Edge, wf:Rail ; wf:from ontology_construction:start ; wf:railType "default" ; wf:to ontology_construction:run .
+ontology_construction:rail_run_end a wf:Edge, wf:Rail ; wf:from ontology_construction:run ; wf:railType "default" ; wf:to ontology_construction:end .
+ontology_construction:stream_seeds_in a wf:Edge, wf:Stream ; wf:streamType "consumed_by" ; wf:from art:seeds ; wf:to ontology_construction:run .
+ontology_construction:stream_graphs_out a wf:Edge, wf:Stream ; wf:streamType "produces_to" ; wf:from ontology_construction:run ; wf:to art:semantic_graphs .

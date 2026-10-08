@@ -4,9 +4,30 @@
 from __future__ import annotations
 
 import re
+import sys
 from pathlib import Path
 
 from rdflib import Graph, Namespace, URIRef
+
+
+
+def _load_layout():
+    """layout.py 를 'skb_ontology_layout' 이름으로 올린다. skb-evidence 에도 layout.py 가 있어서
+    `import layout` 을 쓰면 한 프로세스에서 두 스킬이 서로의 모듈을 집는다(skb-evidence/scripts/layout.py 와 같은 이름·방식)."""
+    import importlib.util
+    cached = sys.modules.get("skb_ontology_layout")
+    if cached is not None:
+        return cached
+    spec = importlib.util.spec_from_file_location("skb_ontology_layout", Path(__file__).resolve().parent / "layout.py")
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules["skb_ontology_layout"] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+_layout = _load_layout()
+resolve_layout = _layout.resolve_layout
+read_layout_section = _layout.read_layout_section
 
 SKB = Namespace("https://semantic-knowledge-base.dev/ontology#")
 STANDARD_PREFIXES = (
@@ -19,7 +40,7 @@ STANDARD_PREFIXES = (
 
 
 def semantic_root(target: Path) -> Path:
-    return Path(target).resolve() / "ontology" / "system" / "semantic"
+    return resolve_layout(target)["semantic_dir"]
 
 
 def canonical_path(target: Path, domain: str) -> Path:

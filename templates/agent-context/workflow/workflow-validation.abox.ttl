@@ -1,0 +1,32 @@
+# KB validation — MSO v0.7 TTL workflow (SSOT). 실행 계약은 skbx: 확장 속성으로 둔다.
+@prefix wf:   <https://mso.dev/ontology/workflow#> .
+@prefix skbx: <https://skb.dev/ontology/workflow-ext#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix art:  <https://example.org/skb-scaffold/artifact#> .
+@prefix validation: <https://example.org/skb-scaffold/workflow/validation#> .
+
+validation:workflow a wf:Workflow ;
+    wf:label "KB validation" ;
+    wf:description "저장소 계층·레지스트리 정합을 정적으로 점검한다." ;
+    wf:workflowType "base" ;
+    skbx:category "maintain" ; skbx:mode "validate-only" ; skbx:maxRetry 1 ;
+    skbx:oracle "ontology_readiness" ; skbx:oracleThreshold 0.85 ;
+    wf:has validation:start, validation:run, validation:end, validation:confirm .
+validation:start a wf:Node, wf:Start .
+validation:end a wf:Node, wf:End .
+validation:confirm a wf:Node, wf:Execution, wf:Task ;
+    wf:label "결과 확인" ;
+    wf:inWorkflow validation:workflow ;
+    wf:hasSubject "human" ; wf:method "manual" ; wf:instruction "보고서를 읽고 확인한다." .
+validation:run a wf:Node, wf:Execution, wf:Task ;
+    wf:label "KB validation" ;
+    wf:inWorkflow validation:workflow ;
+    wf:hasSubject "system" ; wf:method "script" ;
+    skbx:tool "skb-ontology" ; skbx:action "validate" .
+validation:rail_start_run a wf:Edge, wf:Rail ; wf:from validation:start ; wf:railType "default" ; wf:to validation:run .
+validation:rail_run_confirm a wf:Edge, wf:Rail ; wf:from validation:run ; wf:railType "default" ; wf:to validation:confirm .
+validation:rail_confirm_end a wf:Edge, wf:Rail ; wf:from validation:confirm ; wf:railType "default" ; wf:to validation:end .
+validation:stream_graphs_in a wf:Edge, wf:Stream ; wf:streamType "consumed_by" ; wf:from art:semantic_graphs ; wf:to validation:run .
+validation:stream_seeds_in a wf:Edge, wf:Stream ; wf:streamType "consumed_by" ; wf:from art:seeds ; wf:to validation:run .
+validation:stream_reports_out a wf:Edge, wf:Stream ; wf:streamType "produces_to" ; wf:from validation:run ; wf:to art:reports .
+validation:stream_reports_confirm a wf:Edge, wf:Stream ; wf:streamType "consumed_by" ; wf:from art:reports ; wf:to validation:confirm .

@@ -118,7 +118,7 @@ def load_rows(a, kind):
             else:
                 rows.append((d[0], d[1]))
     else:
-        for l in open(target / "evidence" / "seeds.jsonl", encoding="utf-8"):
+        for l in open(C.skb_layout.seeds_path(target), encoding="utf-8"):
             d = json.loads(l)
             p = d.get("md_path")
             f = target / p if p else None

@@ -1,20 +1,29 @@
 ---
 name: skb-repository-setup
 description: |
-  SKB v1.1.0 Fat Skill — 신규 KB 프로젝트를 TTL-only 5-Layer 구조로 부트스트랩한다.
+  SKB v1.2.0 Fat Skill — 신규 KB 프로젝트를 TTL-only 5-Layer 구조로 부트스트랩한다.
   canonical_root_hub.yaml, ontology/system TTL, ontology/explain MD, evidence, record-archive,
   agent-context/workflow, agent-context/work-memory, harness/docs 골격을 생성한다.
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
-# skb-repository-setup (v1.1.0)
+# skb-repository-setup (v1.2.0)
 
 ## What
 
 신규 KB를 SKB v1.1.0의 TTL-only 5-Layer 토폴로지로 부트스트랩하는 Fat Skill.
 실제 entity/relation/instance/evidence 내용은 만들지 않는다 — 골격, 템플릿, 계약만 채운다.
-도메인 ontology의 최초 정본은 `ontology/system/semantic/<domain>/<domain>.ttl`로 생성한다.
+도메인 ontology의 최초 정본은 `ontology/semantic/<domain>/<domain>.ttl`로 생성한다(`--layout legacy`는 이전 배치 `ontology/system/semantic/`).
+
+## 배치 (`--layout`)
+
+| 값 | 의미 |
+|---|---|
+| `b1` (기본) | `ontology/semantic/`, `evidence/{artifact/raw,chunk,catalog}`. 정본은 계속 TTL이다. `canonical_root_hub.yaml`의 `layout:` 섹션이 이 경로를 선언하고, 모든 skb 스킬이 그 섹션으로 경로를 찾는다. 워크플로우는 TTL(`wf:`/`skbx:`)만 만들고 `agent-context/index/artifacts.abox.ttl`(artifact 레지스트리)와 `.gitignore`(원문·파생물·실행 기록 제외)를 함께 만든다. 이미 있는 `.gitignore`는 건드리지 않는다. |
+| `legacy` | `layout:` 없는 이전 배치(YAML 워크플로우, `ontology/system/semantic`, `evidence/{md,raw}`). 기존 KB와 같다. |
+
+`layout:`이 없는 기존 KB는 스킬이 이전과 같은 경로를 쓴다(바이트 단위로 같다). 정적 점검(`validate_workflows.py`)은 모든 `skbx:tool`이 `harness/run.sh`를 가진 실제 스킬이고 모든 oracle이 실제 파일인지 확인한다.
 
 `init --apply` 완료 시 `index.yaml`을 자동 생성·갱신한다.
 

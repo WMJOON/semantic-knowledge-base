@@ -8,8 +8,12 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import skb_layout  # noqa: E402
 
 MODEL = "mlx-community/embeddinggemma-2-bf16"
 DIM = 768
@@ -20,7 +24,7 @@ MAX_TOKENS = 512
 KINDS = ("concepts", "evidence")
 STORE_NAMES = {"concepts": "zvec_store_concepts_eg2", "evidence": "zvec_store_evidence_eg2"}
 FIELDS = {"concepts": ("iri", "label", "status", "scheme"), "evidence": ("seed_id", "title", "uri", "md_path")}
-SEMANTIC_DIR = "ontology/system/semantic"
+SEMANTIC_DIR = "ontology/system/semantic"  # layout: 이 없을 때의 기본값. 실제 경로는 skb_layout.semantic_dir
 SKIP_SUFFIXES = (".inferred.ttl", ".shapes.ttl")
 MANIFEST = "search_manifest.json"
 CONCEPTS_JSONL = "kb_concepts.jsonl"
@@ -94,8 +98,15 @@ def sha256_file(path: Path, chunk: int = 1 << 20) -> str:
     return h.hexdigest()
 
 
+def rel_to(target: Path, p: Path) -> str:
+    try:
+        return str(p.relative_to(target))
+    except ValueError:
+        return str(p)
+
+
 def semantic_ttl_files(target: Path) -> list[Path]:
-    root = target / SEMANTIC_DIR
+    root = skb_layout.semantic_dir(target)
     return sorted(p for p in root.rglob("*.ttl") if not p.name.endswith(SKIP_SUFFIXES)) if root.exists() else []
 
 
@@ -104,9 +115,9 @@ def source_fingerprint(target: Path, kind: str) -> str:
     h = hashlib.sha256()
     if kind == "concepts":
         for p in semantic_ttl_files(target):
-            h.update(str(p.relative_to(target)).encode() + b"\0" + sha256_file(p).encode() + b"\n")
+            h.update(rel_to(target, p).encode() + b"\0" + sha256_file(p).encode() + b"\n")
     elif kind == "evidence":
-        seeds = target / "evidence" / "seeds.jsonl"
+        seeds = skb_layout.seeds_path(target)
         if seeds.exists():
             h.update(sha256_file(seeds).encode())
     else:

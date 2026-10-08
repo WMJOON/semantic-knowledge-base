@@ -12,7 +12,7 @@ w_ontology_construction:workflow a wf:Workflow ;
     skbx:category "ontology" ;
     skbx:mode "dry-run" ;
     skbx:maxRetry 1 ;
-    skbx:oracle "ontology_mece_readiness" ;
+    skbx:oracle "ontology_readiness" ;
     skbx:oracleThreshold 0.85 ;
     skbx:hitlRequired true ;
     wf:has w_ontology_construction:start, w_ontology_construction:end, w_ontology_construction:s1 .

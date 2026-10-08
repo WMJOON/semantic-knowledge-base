@@ -36,7 +36,7 @@ description: |
   현재 accepted 인 MentionIdentification 만 identifications.ttl 로 투영한다(도구가 accepted 를 만드는 경로 없음). 카탈로그의
   authorshipState 는 저자 언급 수·accepted 해소 수에서 계산되고(authorMentionCount/authorResolvedCount), catalog-validate 가 재계산 일치를 게이트한다.
 metadata:
-  version: "1.2.5"
+  version: "1.2.6"
 ---
 
 # skb-evidence (v1.2.5)

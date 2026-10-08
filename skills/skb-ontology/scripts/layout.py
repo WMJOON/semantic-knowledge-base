@@ -60,8 +60,12 @@ def read_layout_section(target: Path, skill: str = "skb-ontology") -> dict:
     위해 다른 skb-* 스킬도 이 함수를 임포트해 쓴다.
     """
     hub_path = Path(target).resolve() / "canonical_root_hub.yaml"
-    if not hub_path.exists() or yaml is None:
+    if not hub_path.exists():
         return {}
+
+    if yaml is None:
+        # PyYAML 없이도 선언된 layout: 을 조용히 무시하지 않도록 평면 블록만 읽는다.
+        return _read_flat_layout(hub_path, skill)
 
     try:
         config = yaml.safe_load(hub_path.read_text(encoding="utf-8"))
@@ -74,6 +78,29 @@ def read_layout_section(target: Path, skill: str = "skb-ontology") -> dict:
 
     declared = config.get("layout") if isinstance(config, dict) else None
     return declared if isinstance(declared, dict) else {}
+
+
+def _read_flat_layout(hub_path: Path, skill: str) -> dict:
+    """PyYAML이 없을 때 최상위 `layout:` 블록의 `key: value` 줄만 읽는다."""
+    declared: dict[str, str] = {}
+    in_block = False
+    for raw in hub_path.read_text(encoding="utf-8").splitlines():
+        if not raw.strip() or raw.lstrip().startswith("#"):
+            continue
+        if not raw[0].isspace():
+            in_block = raw.split("#", 1)[0].strip() == "layout:"
+            continue
+        if in_block and ":" in raw:
+            key, _, value = raw.partition(":")
+            value = value.split(" #", 1)[0].strip().strip("'\"")
+            if value:
+                declared[key.strip()] = value
+    if declared:
+        print(
+            f"[{skill}] PyYAML 없음: canonical_root_hub.yaml 의 layout: 을 단순 파서로 읽음",
+            file=sys.stderr,
+        )
+    return declared
 
 
 def apply_declared(target: Path, defaults: dict, declared: dict) -> dict[str, Path]:

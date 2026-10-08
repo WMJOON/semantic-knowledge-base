@@ -25,7 +25,7 @@ def _today() -> str:
     return _dt.date.today().isoformat()
 
 
-def _msm_modules(domain: str | None) -> list[dict]:
+def _msm_modules(domain: str | None, layout: str = "legacy") -> list[dict]:
     """MSM v0.13.4 표준 모듈 정의."""
     return [
         {
@@ -47,7 +47,7 @@ def _msm_modules(domain: str | None) -> list[dict]:
             "key_files": ["registry/instance-ids.jsonl", "runtime/runtime.db"],
             "references": [
                 {"consumes": "skb-ontology-layer",
-                 "artifacts": ["source_refs", "ontology/system/**/*.ttl"]},
+                 "artifacts": ["source_refs", "ontology/**/*.ttl"]},
             ],
             "status": "active",
         },
@@ -63,7 +63,7 @@ def _msm_modules(domain: str | None) -> list[dict]:
                  "description": "human-readable Class projection"},
                 {"path": "explain/instance/", "role": "projection",
                  "description": "human-readable instance snapshot projection"},
-                {"path": "system/semantic/", "role": "graph",
+                {"path": "semantic/" if layout == "b1" else "system/semantic/", "role": "graph",
                  "description": "Turtle/RDF/OWL semantic graph + PROV-O projection"},
                 {"path": "system/kinetic/", "role": "graph",
                  "description": "Turtle transition/action rule graph"},
@@ -75,7 +75,7 @@ def _msm_modules(domain: str | None) -> list[dict]:
     ]
 
 
-def _scaffold_index(target: Path, name: str, domain: str | None) -> dict:
+def _scaffold_index(target: Path, name: str, domain: str | None, layout: str = "legacy") -> dict:
     """index.yaml 초안 dict 생성."""
     return {
         _MARKER_KEY: {
@@ -91,7 +91,7 @@ def _scaffold_index(target: Path, name: str, domain: str | None) -> dict:
             "updated":     _today(),
             "version":     "1.0.0",
         },
-        "modules": _msm_modules(domain),
+        "modules": _msm_modules(domain, layout),
     }
 
 
@@ -102,10 +102,10 @@ def _has_marker(data: dict) -> bool:
     return str(marker.get("skill", "")).startswith(_MARKER_VALUE_PREFIX)
 
 
-def _merge_msm_modules(existing_modules: list[dict], domain: str | None) -> list[dict]:
+def _merge_msm_modules(existing_modules: list[dict], domain: str | None, layout: str = "legacy") -> list[dict]:
     """기존 모듈 리스트에 MSM 모듈을 upsert (id 기준)."""
     kept = [m for m in existing_modules if m.get("id") not in _MSM_MODULE_IDS]
-    return kept + _msm_modules(domain)
+    return kept + _msm_modules(domain, layout)
 
 
 def gen_or_update_index(
@@ -113,6 +113,7 @@ def gen_or_update_index(
     name: str | None,
     domain: str | None,
     dry_run: bool = False,
+    layout: str = "legacy",
 ) -> str:
     """
     index.yaml 생성 또는 갱신.
@@ -129,7 +130,7 @@ def gen_or_update_index(
 
     # ── Case 1: 없음 → 신규 생성 ────────────────────────────────────────────
     if not index_path.exists():
-        data = _scaffold_index(target, proj_name, domain)
+        data = _scaffold_index(target, proj_name, domain, layout)
         if not dry_run:
             index_path.write_text(
                 yaml.dump(data, allow_unicode=True, sort_keys=False, default_flow_style=False),
@@ -150,7 +151,7 @@ def gen_or_update_index(
 
     # ── Case 2: 마커 있음 → MSM 모듈 병합 ──────────────────────────────────
     existing_modules = existing.get("modules", [])
-    merged = _merge_msm_modules(existing_modules, domain)
+    merged = _merge_msm_modules(existing_modules, domain, layout)
     existing["modules"] = merged
     existing[_MARKER_KEY]["generated_at"] = _today()
     existing[_MARKER_KEY]["version"]      = "1.2.0"
@@ -171,6 +172,7 @@ if __name__ == "__main__":
     p.add_argument("--name",    default=None)
     p.add_argument("--domain",  default=None)
     p.add_argument("--dry-run", action="store_true")
+    p.add_argument("--layout", choices=("b1", "legacy"), default="legacy")
     a = p.parse_args()
-    result = gen_or_update_index(Path(a.target), a.name, a.domain, a.dry_run)
+    result = gen_or_update_index(Path(a.target), a.name, a.domain, a.dry_run, a.layout)
     sys.exit(0 if result in ("created", "updated", "skipped") else 1)

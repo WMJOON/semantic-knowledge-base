@@ -28,7 +28,7 @@ def main() -> int:
         try:
             g = Graph().parse(f, format="turtle")
         except Exception as e:  # 파싱 실패는 숨기지 않고 보고한다
-            failed.append(f"{f.relative_to(target)} ({type(e).__name__})")
+            failed.append(f"{C.rel_to(target, f)} ({type(e).__name__})")
             continue
         for c in g.subjects(RDF.type, SKOS.Concept):
             if str(c) in seen:
@@ -40,7 +40,7 @@ def main() -> int:
             rows.append({"iri": str(c), "pref_en": lab(SKOS.prefLabel, "en"), "pref_ko": lab(SKOS.prefLabel, "ko"),
                          "alt": lab(SKOS.altLabel), "scope_note": " ".join(lab(SKOS.scopeNote)),
                          "status": status[0] if status else "", "scheme": scheme[0] if scheme else "",
-                         "file": str(f.relative_to(target))})
+                         "file": str(C.rel_to(target, f))})
     out.parent.mkdir(parents=True, exist_ok=True)
     with open(out, "w", encoding="utf-8") as fh:
         for r in rows:

@@ -1,0 +1,25 @@
+# Evidence collection — MSO v0.7 TTL workflow (SSOT). 실행 계약은 skbx: 확장 속성으로 둔다.
+@prefix wf:   <https://mso.dev/ontology/workflow#> .
+@prefix skbx: <https://skb.dev/ontology/workflow-ext#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix art:  <https://example.org/skb-scaffold/artifact#> .
+@prefix evidence_collection: <https://example.org/skb-scaffold/workflow/evidence-collection#> .
+
+evidence_collection:workflow a wf:Workflow ;
+    wf:label "Evidence collection" ;
+    wf:description "법령·문서 원문을 청크와 seeds 로 수집한다." ;
+    wf:workflowType "base" ;
+    skbx:category "evidence" ; skbx:mode "dry-run" ; skbx:maxRetry 1 ;
+    skbx:oracle "evidence_seed_readiness" ; skbx:oracleThreshold 0.85 ;
+    wf:has evidence_collection:start, evidence_collection:run, evidence_collection:end .
+evidence_collection:start a wf:Node, wf:Start .
+evidence_collection:end a wf:Node, wf:End .
+evidence_collection:run a wf:Node, wf:Execution, wf:Task ;
+    wf:label "Evidence collection" ;
+    wf:inWorkflow evidence_collection:workflow ;
+    wf:hasSubject "system" ; wf:method "script" ;
+    skbx:tool "skb-evidence" ; skbx:action "ingest" .
+evidence_collection:rail_start_run a wf:Edge, wf:Rail ; wf:from evidence_collection:start ; wf:railType "default" ; wf:to evidence_collection:run .
+evidence_collection:rail_run_end a wf:Edge, wf:Rail ; wf:from evidence_collection:run ; wf:railType "default" ; wf:to evidence_collection:end .
+evidence_collection:stream_source_docs_in a wf:Edge, wf:Stream ; wf:streamType "consumed_by" ; wf:from art:source_docs ; wf:to evidence_collection:run .
+evidence_collection:stream_seeds_out a wf:Edge, wf:Stream ; wf:streamType "produces_to" ; wf:from evidence_collection:run ; wf:to art:seeds .

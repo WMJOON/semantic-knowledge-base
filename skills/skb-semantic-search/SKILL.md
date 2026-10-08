@@ -6,7 +6,7 @@ description: |
   원천이 바뀌었는지 신선도를 점검한다(status). 정본(TTL, seeds.jsonl)은 읽기만 하고 수정하지 않는다.
   트리거: "의미 검색", "개념 검색", "evidence 검색", "비슷한 개념 찾아줘", "임베딩 인덱스", "재색인", "인덱스 최신인지".
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # skb-semantic-search (v0.1.0)

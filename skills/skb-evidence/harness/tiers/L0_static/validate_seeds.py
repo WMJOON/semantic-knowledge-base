@@ -32,7 +32,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 def main() -> int:
     args = parse_args(sys.argv[1:])
     target = Path(args.target).resolve()
-    seeds_path = target / "evidence" / "seeds.jsonl"
+    scripts = Path(__file__).resolve().parents[3] / "scripts"
+    sys.path.insert(0, str(scripts))
+    import layout as _layout  # noqa: E402
+    seeds_path = _layout.resolve_layout(target)["seeds_path"]
 
     if not seeds_path.exists():
         print(f"OK: seeds.jsonl not present at {target} (0 seeds — acceptable)")

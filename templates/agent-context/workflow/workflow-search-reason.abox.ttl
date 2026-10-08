@@ -1,0 +1,38 @@
+# Search and reason — MSO v0.7 TTL workflow (SSOT). 실행 계약은 skbx: 확장 속성으로 둔다.
+@prefix wf:   <https://mso.dev/ontology/workflow#> .
+@prefix skbx: <https://skb.dev/ontology/workflow-ext#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix art:  <https://example.org/skb-scaffold/artifact#> .
+@prefix search_reason: <https://example.org/skb-scaffold/workflow/search-reason#> .
+
+search_reason:workflow a wf:Workflow ;
+    wf:label "Search and reason" ;
+    wf:description "검색 인덱스 상태를 확인하고 OWL 2 RL 추론으로 논리 일관성을 점검한다." ;
+    wf:workflowType "base" ;
+    skbx:category "explorer" ; skbx:mode "dry-run" ; skbx:maxRetry 1 ;
+    skbx:oracle "ontology_readiness" ; skbx:oracleThreshold 0.85 ;
+    wf:has search_reason:start, search_reason:search, search_reason:run, search_reason:end, search_reason:confirm .
+search_reason:start a wf:Node, wf:Start .
+search_reason:end a wf:Node, wf:End .
+search_reason:search a wf:Node, wf:Execution, wf:Task ;
+    wf:label "Index status" ;
+    wf:inWorkflow search_reason:workflow ;
+    wf:hasSubject "system" ; wf:method "script" ;
+    skbx:tool "skb-semantic-search" ; skbx:action "status" .
+search_reason:run a wf:Node, wf:Execution, wf:Task ;
+    wf:label "Consistency check" ;
+    wf:inWorkflow search_reason:workflow ;
+    wf:hasSubject "system" ; wf:method "script" ;
+    skbx:tool "skb-graph-reasoning" ; skbx:action "check" .
+search_reason:confirm a wf:Node, wf:Execution, wf:Task ;
+    wf:label "결과 확인" ;
+    wf:inWorkflow search_reason:workflow ;
+    wf:hasSubject "human" ; wf:method "manual" ; wf:instruction "산출물을 읽고 확인한다." .
+search_reason:rail_start_search a wf:Edge, wf:Rail ; wf:from search_reason:start ; wf:railType "default" ; wf:to search_reason:search .
+search_reason:rail_search_run a wf:Edge, wf:Rail ; wf:from search_reason:search ; wf:railType "default" ; wf:to search_reason:run .
+search_reason:rail_run_confirm a wf:Edge, wf:Rail ; wf:from search_reason:run ; wf:railType "default" ; wf:to search_reason:confirm .
+search_reason:rail_confirm_end a wf:Edge, wf:Rail ; wf:from search_reason:confirm ; wf:railType "default" ; wf:to search_reason:end .
+search_reason:stream_graphs_in a wf:Edge, wf:Stream ; wf:streamType "consumed_by" ; wf:from art:semantic_graphs ; wf:to search_reason:search .
+search_reason:stream_seeds_in a wf:Edge, wf:Stream ; wf:streamType "consumed_by" ; wf:from art:seeds ; wf:to search_reason:search .
+search_reason:stream_answers_out a wf:Edge, wf:Stream ; wf:streamType "produces_to" ; wf:from search_reason:run ; wf:to art:answers .
+search_reason:stream_answers_confirm a wf:Edge, wf:Stream ; wf:streamType "consumed_by" ; wf:from art:answers ; wf:to search_reason:confirm .

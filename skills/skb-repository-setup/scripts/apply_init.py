@@ -14,7 +14,7 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 
-from manifest import build_manifest  # noqa: E402
+from manifest import DEFAULT_LAYOUT, LAYOUTS, build_manifest, semantic_rel  # noqa: E402
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
@@ -31,6 +31,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     p.add_argument("--templates", default=None)
     p.add_argument("--yes", action="store_true")
     p.add_argument("--plan", default=None, help="path to plan JSON; if omitted, runs plan_init")
+    p.add_argument("--layout", choices=LAYOUTS, default=DEFAULT_LAYOUT)
     p.add_argument("--run-id", default=None)
     return p.parse_args(argv)
 
@@ -60,6 +61,7 @@ def load_or_build_plan(args: argparse.Namespace) -> dict:
         plan_argv += ["--templates", args.templates]
     if args.run_id:
         plan_argv += ["--run-id", args.run_id]
+    plan_argv += ["--layout", args.layout]
     ns = plan_init.parse_args(plan_argv)
     return plan_init.build_plan(ns)
 
@@ -83,7 +85,7 @@ def write_trajectory(target: Path, run_id: str, event: dict) -> None:
     (traj_dir / f"run-{run_id}.jsonl").open("a", encoding="utf-8").write(line + "\n")
 
 
-def maybe_register_domain(target: Path, domain: str | None, hitl_ack: bool) -> bool:
+def maybe_register_domain(target: Path, domain: str | None, hitl_ack: bool, layout: str = DEFAULT_LAYOUT) -> bool:
     """Insert domain entry into canonical_root_hub.yaml.
 
     Returns True on success. Returns False (no-op) when hub is locked and the
@@ -102,7 +104,7 @@ def maybe_register_domain(target: Path, domain: str | None, hitl_ack: bool) -> b
     entry = (
         f"  - name: {domain}\n"
         f"    label: \"{label}\"\n"
-        f"    semantic_graph: \"ontology/system/semantic/{domain}/{domain}.ttl\"\n"
+        f"    semantic_graph: \"{semantic_rel(layout)}/{domain}/{domain}.ttl\"\n"
         f"    root_hub: \"projection/wikigraph/class/{domain}/{domain}__class.md\"\n"
         f"    description: \"{label} ontology cluster\"\n"
         f"    status: draft\n"
@@ -153,7 +155,7 @@ def apply(plan: dict, args: argparse.Namespace) -> int:
             out_path.parent.mkdir(parents=True, exist_ok=True)
             out_path.touch(exist_ok=True)
             continue
-        if item["kind"] in ("file_template", "file_executable"):
+        if item["kind"] in ("file_template", "file_template_new", "file_executable"):
             template_rel = item.get("template")
             if not template_rel:
                 continue
@@ -167,7 +169,7 @@ def apply(plan: dict, args: argparse.Namespace) -> int:
             continue
 
     # Register domain (after files exist) and emit HITL request if blocked.
-    if not maybe_register_domain(target, args.domain, hitl_ack):
+    if not maybe_register_domain(target, args.domain, hitl_ack, args.layout):
         write_trajectory(
             target,
             run_id,
@@ -211,6 +213,7 @@ def apply(plan: dict, args: argparse.Namespace) -> int:
             name=getattr(args, "name", None),
             domain=getattr(args, "domain", None),
             dry_run=not hitl_ack,
+            layout=args.layout,
         )
         write_trajectory(
             target, run_id,

@@ -1,5 +1,7 @@
 # Workflow Templates
 
+> **기본 배치(`b1`)의 워크플로우는 TTL(`wf:`/`skbx:`)이다.** `templates/agent-context/workflow/workflow-*.abox.ttl` 4종과 `templates/agent-context/index/artifacts.abox.ttl`이 init 산출물이며, 실제 스킬 단계로 이어진다: evidence-collection→`skb-evidence`, ontology-construction→`skb-ontology`, validation→`skb-ontology`, search-reason→`skb-semantic-search`(status)+`skb-graph-reasoning`(check). 아래 YAML 설명은 `--layout legacy`용이다.
+
 ## 포맷 — MSO 구조 baseline + `x_msm` 실행 확장 (UD-0004)
 
 MSM workflow 는 MSO `mso-workflow-design` 을 **구조 기준**으로 소비한다. 한 파일이

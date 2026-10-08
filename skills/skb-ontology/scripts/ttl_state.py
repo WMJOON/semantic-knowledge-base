@@ -13,7 +13,7 @@ from rdflib.namespace import OWL, PROV, SKOS
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from ttl_common import SKB  # noqa: E402
+from ttl_common import SKB, read_layout_section  # noqa: E402
 from ttl_validate import SKOS_LINKS, validate_target  # noqa: E402
 
 TERM_TYPES = {
@@ -27,8 +27,11 @@ TERM_TYPES = {
 
 
 def seed_records(target: Path) -> list[dict]:
-    for relative in ("evidence/seeds.jsonl", "evidence/catalog/seeds.jsonl"):
-        path = target / relative
+    declared = read_layout_section(target).get("seeds_path")
+    candidates = [Path(str(declared))] if declared else []
+    candidates += [Path("evidence/seeds.jsonl"), Path("evidence/catalog/seeds.jsonl")]
+    for relative in candidates:
+        path = relative if relative.is_absolute() else target / relative
         if not path.exists():
             continue
         records: list[dict] = []

@@ -29,7 +29,7 @@ def _uniq_run_id(target: Path) -> str:
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 
-from manifest import Entry, build_manifest, has_marker  # noqa: E402
+from manifest import DEFAULT_LAYOUT, LAYOUTS, Entry, build_manifest, has_marker  # noqa: E402
 
 
 REPO_ROOT_DEFAULT = SCRIPT_DIR.parents[2]
@@ -47,6 +47,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     p.add_argument("--with-skill-links", action="store_true")
     p.add_argument("--with-venv", action="store_true")
     p.add_argument("--templates", default=str(DEFAULT_TEMPLATES))
+    p.add_argument("--layout", choices=LAYOUTS, default=DEFAULT_LAYOUT,
+                   help="b1: ontology/semantic + evidence/{artifact,chunk,catalog} (layout: 선언), legacy: 이전 배치")
     p.add_argument("--run-id", default=None)
     return p.parse_args(argv)
 
@@ -68,6 +70,11 @@ def classify(target: Path, entry: Entry) -> dict:
         if not abs_path.exists():
             return {"action": "create", "path": entry.path, "kind": "file_empty"}
         return {"action": "keep", "path": entry.path, "kind": "file_empty"}
+    if entry.kind == "file_template_new":
+        # 사용자가 손볼 수 있는 파일(.gitignore, 워크플로우, 레지스트리): 없을 때만 만들고 있으면 건드리지 않는다.
+        if not abs_path.exists():
+            return {"action": "create", "path": entry.path, "kind": entry.kind, "template": entry.template}
+        return {"action": "keep", "path": entry.path, "kind": entry.kind, "template": entry.template}
     # template / executable
     if not abs_path.exists():
         return {
@@ -104,7 +111,7 @@ def classify(target: Path, entry: Entry) -> dict:
 def build_plan(args: argparse.Namespace) -> dict:
     target = Path(args.target).resolve()
     targets = tuple(t.strip() for t in args.targets.split(",") if t.strip())
-    manifest = build_manifest(targets=targets, domain=args.domain)
+    manifest = build_manifest(targets=targets, domain=args.domain, layout=args.layout)
     creates: list[dict] = []
     keeps: list[dict] = []
     conflicts: list[dict] = []
@@ -156,6 +163,7 @@ def build_plan(args: argparse.Namespace) -> dict:
             "with_skill_links": args.with_skill_links,
             "with_venv": args.with_venv,
             "templates": str(Path(args.templates).resolve()),
+            "layout": args.layout,
         },
         "creates": creates,
         "keeps": keeps,

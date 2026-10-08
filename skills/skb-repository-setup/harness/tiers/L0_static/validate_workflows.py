@@ -165,6 +165,45 @@ def check_workflow(path: Path) -> list[str]:
     return check_workflow_flat(path, text)
 
 
+SKILLS_ROOT = Path(__file__).resolve().parents[4]
+TTL_TOOL_RE = re.compile(r'skbx:tool\s+"([^"]+)"')
+TTL_ORACLE_RE = re.compile(r'skbx:oracle\s+"([^"]+)"')
+TTL_REQUIRED = ("a wf:Workflow", "skbx:category", "skbx:mode")
+
+
+def _oracle_exists(target: Path, name: str) -> bool:
+    if (target / "harness" / "oracle" / f"{name}.py").exists():
+        return True
+    return any(SKILLS_ROOT.glob(f"*/oracle/{name}.py"))
+
+
+def _tool_runnable(name: str) -> bool:
+    return (SKILLS_ROOT / name / "harness" / "run.sh").exists()
+
+
+def check_references(target: Path, tools: list[str], oracles: list[str]) -> list[str]:
+    """워크플로우가 가리키는 tool 은 harness/run.sh 가 있는 스킬이어야 하고, oracle 은 실제 파일이어야 한다.
+    없는 이름은 하네스에서 조용히 통과(vacuous PASS)하거나 중단되므로 정적 단계에서 잡는다."""
+    errs = [f"tool {t!r}: {SKILLS_ROOT.name}/{t}/harness/run.sh 가 없다" for t in dict.fromkeys(tools) if not _tool_runnable(t)]
+    errs += [f"oracle {o!r}: oracle/{o}.py 를 찾지 못했다" for o in dict.fromkeys(oracles) if not _oracle_exists(target, o)]
+    return errs
+
+
+def check_ttl_workflow(target: Path, path: Path) -> list[str]:
+    text = path.read_text(encoding="utf-8")
+    if "a msmwf:Workflow" in text and "a wf:Workflow" not in text:
+        return []  # 옛 msmwf: 어휘 파일(레거시 파서가 읽는다). wf:/skbx: 계약 검사 대상이 아니다.
+    errs = [f"missing {k}" for k in TTL_REQUIRED if k not in text]
+    return errs + check_references(target, TTL_TOOL_RE.findall(text), TTL_ORACLE_RE.findall(text))
+
+
+def check_yaml_references(target: Path, path: Path) -> list[str]:
+    text = path.read_text(encoding="utf-8")
+    tools = re.findall(r"^\s*(?:-\s*)?tool:\s*([^\s#]+)", text, re.MULTILINE)
+    oracles = re.findall(r"^\s*oracle:\s*([^\s#]+)", text, re.MULTILINE)
+    return check_references(target, [t.strip("\"'") for t in tools], [o.strip("\"'") for o in oracles])
+
+
 def _workflow_root(target: Path) -> Path:
     canonical = target / "agent-context" / "workflow"
     return canonical if canonical.exists() else target / "workflow"
@@ -181,7 +220,10 @@ def main() -> int:
         single = Path(args.workflow)
         if not single.is_absolute():
             single = target / single
-        errs = check_workflow(single)
+        if single.name.endswith(".abox.ttl"):
+            errs = check_ttl_workflow(target, single)
+        else:
+            errs = check_workflow(single) + check_yaml_references(target, single)
         if errs:
             print(f"FAIL: {single}", file=sys.stderr)
             for e in errs:
@@ -192,22 +234,30 @@ def main() -> int:
 
     workflow_root = _workflow_root(target)
     index = workflow_root / "index.yaml"
-    if not index.exists():
-        print("FAIL: agent-context/workflow/index.yaml not found", file=sys.stderr)
-        return 1
-    idx_text = index.read_text(encoding="utf-8")
-    for k in INDEX_REQUIRED_KEYS:
-        if k not in idx_text:
-            print(f"FAIL: {index.relative_to(target)} missing {k}", file=sys.stderr)
-            return 1
-
+    ttls = sorted(workflow_root.rglob("*.abox.ttl"))
     yamls = [p for p in workflow_root.rglob("*.yaml") if p.name != "index.yaml"]
-    if not yamls:
-        print(f"FAIL: no workflow yaml under {workflow_root.relative_to(target)}/", file=sys.stderr)
+    if not yamls and not ttls:
+        print(f"FAIL: no workflow (yaml or *.abox.ttl) under {workflow_root.relative_to(target)}/", file=sys.stderr)
         return 1
+    if yamls:
+        if not index.exists():
+            print("FAIL: agent-context/workflow/index.yaml not found", file=sys.stderr)
+            return 1
+        idx_text = index.read_text(encoding="utf-8")
+        for k in INDEX_REQUIRED_KEYS:
+            if k not in idx_text:
+                print(f"FAIL: {index.relative_to(target)} missing {k}", file=sys.stderr)
+                return 1
     total_errs = 0
     for p in yamls:
-        errs = check_workflow(p)
+        errs = check_workflow(p) + check_yaml_references(target, p)
+        if errs:
+            total_errs += len(errs)
+            print(f"FAIL: {p.relative_to(target)}", file=sys.stderr)
+            for e in errs:
+                print(f"  - {e}", file=sys.stderr)
+    for p in ttls:
+        errs = check_ttl_workflow(target, p)
         if errs:
             total_errs += len(errs)
             print(f"FAIL: {p.relative_to(target)}", file=sys.stderr)
@@ -215,7 +265,7 @@ def main() -> int:
                 print(f"  - {e}", file=sys.stderr)
     if total_errs:
         return 1
-    print(f"OK: {len(yamls)} workflow yaml(s) valid")
+    print(f"OK: {len(yamls)} workflow yaml(s), {len(ttls)} ttl workflow(s) valid")
     return 0
 
 

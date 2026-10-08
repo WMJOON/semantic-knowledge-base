@@ -39,5 +39,5 @@ x_msm:
   governance:
     hitl_required: true
     max_retry: 1
-    oracle: ontology_mece_readiness
+    oracle: ontology_readiness
     oracle_threshold: 0.85
