@@ -13,6 +13,6 @@
 | mode | 설명 |
 |------|------|
 | compatibility | v0.2.0 required_skills 누락을 warn으로 처리 |
-| v1-strict | v0.10.0 8개 스킬(`skb-repository-setup`, `skb-evidence`, `skb-ontology`, `skb-graph-reasoning`, `skb-semantic-search`, `skb-harness`, `skb-orchestration`) 모두 존재해야 함 |
+| v1-strict | v0.10.0 핵심 7개 스킬(`skb-repository-setup`, `skb-evidence`, `skb-ontology`, `skb-graph-reasoning`, `skb-semantic-search`, `skb-harness`, `skb-orchestration`) 모두 존재해야 함 |
 
 본 v0.10.0-β 단계는 compatibility 모드만 검증한다. v1-strict는 `skb-orchestration-v0.10.0-SPEC` 확정 후 활성화 (RS-OI-2).

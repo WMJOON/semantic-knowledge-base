@@ -14,11 +14,15 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 
 import _yaml_lite as yaml  # noqa: E402
-from workflow_ttl import parse_index_ttl  # noqa: E402
+from workflow_ttl import parse_index_ttl, scan_workflow_ttls  # noqa: E402
 
 
 def resolve(target: Path, workflow_id: str) -> dict | None:
     roots = (target / "agent-context" / "workflow", target / "workflow")
+    for root in roots:
+        for wf in scan_workflow_ttls(root):
+            if wf.get("id") == workflow_id:
+                return wf
     for root in roots:
         ttl_path = root / "index.ttl"
         if ttl_path.exists():

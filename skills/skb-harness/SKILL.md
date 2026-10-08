@@ -5,7 +5,7 @@ description: |
   trajectory event ontology 기록, 5-axis 계측, memory 2-tier 운영을 담당한다.
   정책 판정은 하지 않는다 (skb-orchestration 책임).
 metadata:
-  version: "1.1.0"
+  version: "1.1.1"
 ---
 
 # skb-harness (v1.0.0)

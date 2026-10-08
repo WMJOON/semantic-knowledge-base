@@ -5,7 +5,7 @@ description: |
   CC 계약·HITL 정책·5-axis gate를 강제한다. skb-harness의 측정값을 소비해
   gate_decision을 emit. PreToolUse hook으로 위험 동작을 차단.
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
 ---
 
 # skb-orchestration (v1.0.0)

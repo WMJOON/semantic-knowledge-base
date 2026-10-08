@@ -10,7 +10,9 @@ import json
 from pathlib import Path
 from typing import Any
 
-MSMWF_URI = "https://msm.dev/ontology/workflow#"
+MSMWF_URI = "https://msm.dev/ontology/workflow#"  # legacy flat vocabulary (read-only compatibility)
+WF_URI = "https://mso.dev/ontology/workflow#"  # MSO v0.7 Rail/Stream — workflow SSOT
+SKBX_URI = "https://skb.dev/ontology/workflow-ext#"  # SKB execution-contract extension on top of wf:
 
 
 def _safe(value: str) -> str:
@@ -98,10 +100,127 @@ def serialize_workflow_ttl(data: dict[str, Any]) -> str:
     return workflow_dict_to_graph(data).serialize(format="turtle")
 
 
+def workflow_slug(path: Path) -> str:
+    """workflow-<slug>.abox.ttl -> <slug> (MSO naming convention)."""
+    name = path.name
+    for suffix in (".abox.ttl", ".ttl"):
+        if name.endswith(suffix):
+            name = name[: -len(suffix)]
+            break
+    return name[len("workflow-"):] if name.startswith("workflow-") else name
+
+
+def _local(node) -> str:
+    text = str(node)
+    for sep in ("#", "/"):
+        if sep in text:
+            text = text.rsplit(sep, 1)[1]
+    return text
+
+
+def parse_workflow_v07(g, path: Path) -> dict[str, Any] | None:
+    """Read an MSO v0.7 (wf:) workflow ABox plus the skbx: execution contract.
+
+    Contract (all optional, on the wf:Workflow node): skbx:category, skbx:mode,
+    skbx:tool, skbx:maxRetry, skbx:oracle, skbx:oracleThreshold, skbx:hitlRequired.
+    Steps are the wf:Execution nodes that carry skbx:tool (+ skbx:action), ordered by
+    a default-Rail walk from the wf:Start node. hitl_required defaults to "any
+    Execution with wf:hasSubject 'human'".
+    """
+    _, _, _, Namespace, RDF, _ = _require_rdflib()
+    WF = Namespace(WF_URI)
+    X = Namespace(SKBX_URI)
+    subjects = list(g.subjects(RDF.type, WF.Workflow))
+    if not subjects:
+        return None
+    subj = sorted(subjects, key=str)[0]
+
+    def one(pred):
+        vals = list(g.objects(subj, pred))
+        return vals[0].toPython() if vals else None
+
+    nodes = set(g.objects(subj, WF.has))
+    for n in g.subjects(WF.inWorkflow, subj):
+        nodes.add(n)
+    out: dict[str, Any] = {
+        "path": str(path),
+        "raw": path.read_text(encoding="utf-8"),
+        "id": one(X.id) or workflow_slug(path),
+        "version": one(WF.version),
+        "category": one(X.category),
+        "mode": one(X.mode),
+        "status": one(WF.status),
+        "format": "wf-v07",
+    }
+    # ordered walk over default Rails from Start
+    start = next((n for n in nodes if (n, RDF.type, WF.Start) in g), None)
+    order: list = []
+    seen = set()
+    queue = [start] if start is not None else []
+    rails = {}
+    for r in g.subjects(RDF.type, WF.Rail):
+        for f in g.objects(r, WF["from"]):
+            rails.setdefault(f, []).extend(g.objects(r, WF.to))
+    while queue:
+        n = queue.pop(0)
+        if n in seen:
+            continue
+        seen.add(n)
+        order.append(n)
+        queue.extend(sorted(rails.get(n, []), key=str))
+    for n in sorted(nodes, key=str):
+        if n not in seen:
+            order.append(n)
+    steps = []
+    humans = False
+    for n in order:
+        if (n, RDF.type, WF.Execution) not in g:
+            continue
+        if any(str(v) == "human" for v in g.objects(n, WF.hasSubject)):
+            humans = True
+        tool = next(iter(g.objects(n, X.tool)), None)
+        if tool is None:
+            continue
+        action = next(iter(g.objects(n, X.action)), None)
+        steps.append({"step_id": _local(n), "tool": str(tool), "action": str(action) if action else "default"})
+    out["pipeline"] = steps
+    out["kind"] = "pipeline" if len(steps) > 1 else "single"
+    out["tool"] = one(X.tool) or (steps[0]["tool"] if len(steps) == 1 else None)
+    hitl = one(X.hitlRequired)
+    gov: dict[str, Any] = {"hitl_required": bool(hitl) if hitl is not None else humans}
+    for key, pred in (("max_retry", X.maxRetry), ("oracle", X.oracle), ("oracle_threshold", X.oracleThreshold)):
+        v = one(pred)
+        if v is not None:
+            gov[key] = float(v) if hasattr(v, "as_integer_ratio") or type(v).__name__ == "Decimal" else v
+    out["governance"] = gov
+    return out
+
+
+def scan_workflow_ttls(root: Path) -> list[dict[str, Any]]:
+    """Workflow entries discovered from workflow-*.abox.ttl (no index file needed)."""
+    entries = []
+    if not root.exists():
+        return entries
+    for p in sorted(root.rglob("workflow-*.abox.ttl")):
+        if "drafts" in p.parts or "generated" in p.parts:
+            continue
+        try:
+            meta = parse_workflow_ttl(p)
+        except Exception:
+            continue
+        if not meta.get("id"):
+            continue
+        entries.append({"id": meta["id"], "path": str(p), "category": meta.get("category"), "kind": meta.get("kind")})
+    return entries
+
+
 def parse_workflow_ttl(path: Path) -> dict[str, Any]:
     _, Graph, _, Namespace, RDF, _ = _require_rdflib()
     W = Namespace(MSMWF_URI)
     g = Graph().parse(str(path), format="turtle")
+    v07 = parse_workflow_v07(g, path)
+    if v07 is not None:
+        return v07
     subjects = list(g.subjects(RDF.type, W.Workflow))
     if not subjects:
         return {"path": str(path), "raw": path.read_text(encoding="utf-8")}

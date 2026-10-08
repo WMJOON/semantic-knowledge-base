@@ -18,7 +18,7 @@ SKILL_HOME = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SKILL_HOME / "router"))
 
 import _yaml_lite as yaml  # noqa: E402
-from workflow_ttl import parse_index_ttl, parse_workflow_ttl  # noqa: E402
+from workflow_ttl import parse_index_ttl, parse_workflow_ttl, scan_workflow_ttls  # noqa: E402
 
 
 def _workflow_roots(target: Path) -> list[Path]:
@@ -31,7 +31,7 @@ def check_workflow_id_uniqueness(target: Path) -> list[dict]:
     locations: dict[str, list[str]] = {}
     for root in _workflow_roots(target):
         for p in root.rglob("*.ttl"):
-            if p.name == "index.ttl":
+            if p.name == "index.ttl" or "drafts" in p.parts or "generated" in p.parts:
                 continue
             try:
                 wid = parse_workflow_ttl(p).get("id")
@@ -91,7 +91,9 @@ def check_registry_alignment(target: Path) -> list[dict]:
             if not full.exists():
                 violations.append({"contract": "workflow_index_path", "detail": f"missing file: {pth}"})
         return violations
-    return [{"contract": "workflow_index_present", "detail": "agent-context/workflow/index.ttl missing"}]
+    if any(scan_workflow_ttls(root) for root in _workflow_roots(target)):
+        return []  # MSO v0.7: workflow-*.abox.ttl files are discovered by scan; no index file
+    return [{"contract": "workflow_index_present", "detail": "no workflow-*.abox.ttl or workflow index found"}]
 
 
 def check_canonical_hub_locked(target: Path) -> list[dict]:
@@ -109,7 +111,7 @@ def check_pack_config(pack: dict) -> list[dict]:
     if pack.get("version") != "v0.10.0":
         violations.append({"contract": "pack_config_version", "detail": pack.get("version")})
     core = (pack.get("skills") or {}).get("core") or []
-    if len(set(core)) != 8:
+    if len(set(core)) != 7:  # skb-maintain was dissolved in v1.3.0 (8 -> 7)
         violations.append({"contract": "pack_config_core_count", "detail": len(set(core))})
     mode = (pack.get("migration") or {}).get("mode")
     if mode not in ("compatibility", "strict-soft", "v1-strict"):
