@@ -1,0 +1,59 @@
+x_msm_generated:
+  skill: skb-repository-setup
+  version: "1.2.1"
+
+project:
+  name: "{{KB_NAME}}"
+  id: "{{KB_NAME}}"
+  description: "{{KB_NAME}} KB — MSM workflow assets aligned to MSO agent-context."
+  owner: OWNER
+  updated: "1970-01-01"
+  version: "1.0.0"
+
+modules:
+  - id: agent-context
+    path: ../
+    description: Agent-facing operational context for MSO workflow and MSM runtime contracts.
+    subdirs:
+      - path: index/
+        role: scaffold
+        description: MSO scaffold index for agent-context.
+      - path: workflow/
+        role: workflow
+        description: MSO canonical workflow definitions and MSM x_msm execution extensions.
+  - id: skb-ontology-layer
+    path: ontology/
+    description: Ontology layer — canonical Turtle graphs per domain (SHACL shapes, SKOS concepts).
+    subdirs:
+      - path: semantic/
+        role: graph
+        description: Per-domain canonical Turtle (layout.semantic_dir).
+      - path: system/kinetic/
+        role: graph
+        description: Transition and action rule graph.
+      - path: system/dynamic/
+        role: graph
+        description: Event, state and derived-value graph.
+    status: active
+  - id: skb-evidence-layer
+    path: evidence/
+    description: Evidence layer — source documents, chunks and the seeds catalog.
+    subdirs:
+      - path: artifact/
+        role: source
+        description: Unconverted originals and converted raw documents.
+      - path: chunk/
+        role: data
+        description: Chunked Markdown evidence units.
+      - path: catalog/
+        role: data
+        description: Seeds registry and derived catalog.
+    status: active
+  - id: skb-harness-layer
+    path: harness/
+    description: Harness — tiers, fixtures, trajectory and reports.
+    status: active
+  - id: skb-report-layer
+    path: report/
+    description: Reports and answer notes produced by search-and-reason workflows.
+    status: active

@@ -43,6 +43,24 @@ def test_layout_section_declares_the_paths(kb):
     assert not (kb / "ontology/system/semantic").exists() and not (kb / "evidence/raw").exists()
 
 
+def test_artifact_registry_modules_are_declared_in_index(kb):
+    """레지스트리의 wf:inModule 은 agent-context/index/index.yaml 의 module id 여야 한다(MSO 교차층 검증과 같은 규칙)."""
+    import re
+
+    import yaml
+
+    modules = {m["id"]: m["path"] for m in yaml.safe_load((kb / "agent-context/index/index.yaml").read_text(encoding="utf-8"))["modules"]}
+    text = (kb / "agent-context/index/artifacts.abox.ttl").read_text(encoding="utf-8")
+    used = set(re.findall(r'wf:inModule\s+"([^"]+)"', text))
+    assert used and used <= set(modules), used - set(modules)
+    # 각 규약의 directoryTemplate 은 자기 모듈 경로 아래에 있어야 한다
+    for block in re.findall(r'(art:\w+ a wf:RegisteredArtifact.*?)(?=\nart:\w+ a wf:RegisteredArtifact|\Z)', text, re.S):
+        mod = re.search(r'wf:inModule\s+"([^"]+)"', block).group(1)
+        conv = re.search(r'wf:hasConvention\s+(art:\w+)', block).group(1)
+        d = re.search(re.escape(conv) + r' a wf:ArtifactConvention.*?wf:directoryTemplate\s+"([^"]+)"', text, re.S).group(1)
+        assert d.startswith(modules[mod]), (conv, d, modules[mod])
+
+
 def test_required_dirs_validator_passes(kb):
     r = sh(sys.executable, LAYOUT_VALIDATOR, "--target", kb)
     assert r.returncode == 0, r.stderr

@@ -168,6 +168,7 @@ _LEGACY_ONLY_FILES = {
     "agent-context/workflow/explorer/search-reason.yaml",
     "evidence/seeds.jsonl",
     "canonical_root_hub.yaml",
+    "agent-context/index/index.yaml",
 }
 WORKFLOW_TTLS = (
     "workflow-evidence-collection",
@@ -181,6 +182,8 @@ _B1_FILES: tuple[Entry, ...] = (
         Entry(f"agent-context/workflow/{n}.abox.ttl", "file_template_new", f"agent-context/workflow/{n}.abox.ttl")
         for n in WORKFLOW_TTLS
     ),
+    # artifact 레지스트리의 wf:inModule 이 가리키는 층 모듈을 선언한다(MSO artifact 교차층 검증).
+    Entry("agent-context/index/index.yaml", "file_template", "agent-context/index/index.b1.yaml", "yaml"),
     Entry("agent-context/index/artifacts.abox.ttl", "file_template_new", "agent-context/index/artifacts.abox.ttl"),
     Entry("evidence/catalog/seeds.jsonl", "file_empty", None, "none"),
     Entry(".gitignore", "file_template_new", "gitignore.template"),

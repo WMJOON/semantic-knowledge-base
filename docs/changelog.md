@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.6.1 (2026-10-09) — b1 scaffold: declare the layer modules the artifact registry points to
+
+### Fixed
+
+- The b1 `agent-context/index/index.yaml` now declares `skb-ontology-layer`, `skb-evidence-layer`, `skb-harness-layer` and `skb-report-layer`
+  (with their paths). The artifact registry's `wf:inModule` and directory templates referred to modules the index did not list, so the
+  MSO artifact-layer check reported 5 cross-layer violations (it is not available in CI, so v1.6.0 did not catch it).
+  `test_scaffold_end_to_end.py` now checks that every `wf:inModule` is declared and that each directory template lies under its module path.
+
 ## v1.6.0 (2026-10-09) — `skb init` aligned with the published tools
 
 ### Added

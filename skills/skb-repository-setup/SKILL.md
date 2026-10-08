@@ -1,14 +1,14 @@
 ---
 name: skb-repository-setup
 description: |
-  SKB v1.2.0 Fat Skill — 신규 KB 프로젝트를 TTL-only 5-Layer 구조로 부트스트랩한다.
+  SKB v1.2.1 Fat Skill — 신규 KB 프로젝트를 TTL-only 5-Layer 구조로 부트스트랩한다.
   canonical_root_hub.yaml, ontology/system TTL, ontology/explain MD, evidence, record-archive,
   agent-context/workflow, agent-context/work-memory, harness/docs 골격을 생성한다.
 metadata:
-  version: "1.2.0"
+  version: "1.2.1"
 ---
 
-# skb-repository-setup (v1.2.0)
+# skb-repository-setup (v1.2.1)
 
 ## What
 
