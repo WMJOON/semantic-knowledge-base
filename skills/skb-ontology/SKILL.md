@@ -5,7 +5,7 @@ description: |
   canonical domain representation is RDF/OWL Turtle. Use for class, property,
   individual, taxonomy, provenance, SHACL, naming, duplicate, and link-integrity work.
 metadata:
-  version: "1.2.0"
+  version: "1.3.0"
 ---
 
 # SKB Ontology
@@ -22,8 +22,8 @@ migration. It defines the canonical layout, vocabulary, naming contract, and gat
 1. Locate `ontology/system/semantic/<domain>/*.ttl`.
 2. Edit Turtle directly or use `skb-ontology add` for a managed term/assertion.
 3. Run `skb-ontology validate --target REPO [--domain DOMAIN]`.
-4. Run `skb-ontology materialize --target REPO --domain DOMAIN --apply` only when an
-   inferred projection is needed.
+4. Run `skb-graph-reasoning reason --target REPO --domain DOMAIN --apply` (separate skill, OWL 2 RL)
+   only when an inferred projection is needed.
 
 Gate order is fixed: Turtle parse → registry/link completeness → naming and duplicate
 checks → SHACL → reasoning. Never reason over a graph that failed an earlier gate.
@@ -59,8 +59,9 @@ skb-ontology add --target REPO --domain prompt-token --kind triple \
 
 skb-ontology list --target REPO [--domain DOMAIN] [--kind class] [--json]
 skb-ontology validate --target REPO [--domain DOMAIN]
-skb-ontology reason --target REPO --domain DOMAIN [--apply]
-skb-ontology materialize --target REPO --domain DOMAIN [--gates-only] [--apply]
+skb-ontology orphans --target REPO [--domain DOMAIN] [--json]    # accepted/stable terms in no semantic relation
+skb-ontology stats --target REPO [--domain DOMAIN] [--json]      # counts, status, evidence coverage, relation density
+# reasoning moved: skb-graph-reasoning {reason|check|stats|status|query}  (`skb-ontology reason|materialize` delegate to it)
 ```
 
 `compile`, `abox-compile`, JSONL `project`, YAML `rbox/axiom`, and inferred JSONL are

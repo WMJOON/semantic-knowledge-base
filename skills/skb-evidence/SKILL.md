@@ -13,7 +13,7 @@ description: |
   의 source: 필드로 seed.uri를 원본 URL로 복원 (원격 fetch 콘텐츠는 신뢰하지 않고 local
   file 한정). ingest 경로 전체(hermes-agent 포함 과거 산출물)에 영향, consumer KB TS-0010 기반.
 metadata:
-  version: "1.1.2"
+  version: "1.1.3"
 ---
 
 # skb-evidence (v1.1.2)
@@ -41,7 +41,7 @@ evidence seed를 생산하는 Fat Skill.
 | CLI — capture | `scripts/skb-evidence capture --url URL --target REPO` (opt-in; requires playwright) |
 | CLI — convert | `scripts/skb-evidence convert --source URI --target REPO` (opt-in; requires docling) |
 | CLI — ingest | `scripts/skb-evidence ingest --target REPO --source URI [...] [--render] [--apply]` (opt-in; requires docling, `--render` 시 playwright-cli) |
-| CLI — verify | `scripts/skb-evidence verify --target REPO` |
+| CLI — verify | `scripts/skb-evidence verify --target REPO [--id ID] [--orphans [--strict]]` — `--orphans` also reports `evidence/md` notes that no seed references |
 | CLI — list | `scripts/skb-evidence list --target REPO` |
 | CLI — graphify ETL | `scripts/graphify_to_skb.py graph.json [--output-dir OUT] [--sigma 2.0]` |
 | Harness | `harness/run.sh --skill skb-evidence --tier L0 --mode validate-only --target REPO` |

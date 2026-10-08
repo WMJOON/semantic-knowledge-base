@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""skb-maintain parent_alignment — scan parent-node alignment.
+"""skb-explain parent_alignment — scan parent-node alignment of the Markdown projection.
 
+Moved here from the former skb-maintain skill (dissolved in v1.3.0).
 v0.11.0 신규 스킬. 6가지 검증 규칙 (Rule 1~5 + Rule 3-bis 단일부모)을 read-only로 적용.
 
 Usage:
@@ -32,7 +33,7 @@ from dataclasses import dataclass, field, asdict
 from pathlib import Path
 from typing import Any
 
-TOOL_VERSION = "skb-maintain/1.1.0-scan"
+TOOL_VERSION = "skb-explain/parent-alignment-1.0"
 
 # --------------------------------------------------------------------------
 # Frontmatter parser (stdlib-only)

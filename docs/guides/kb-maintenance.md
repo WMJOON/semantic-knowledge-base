@@ -3,94 +3,33 @@
 > Ontology drift 판단의 기준은 `ontology/system/semantic/**/*.ttl`입니다. explain Markdown과
 > JSON report는 파생 산출물이므로 정본 TTL을 고친 뒤 재생성합니다.
 
-`skb-maintain`이 담당합니다. scan → analyze → rewrite → report 순서로 진행합니다.
+전용 유지보수 스킬(`skb-maintain`)은 v1.3.0에서 제거됐습니다. 점검은 각 데이터의 소유 스킬이 맡고,
+**수정은 항상 사람이 판단한 뒤 `skb-ontology`로** 합니다. 점검 도구는 정본을 고치지 않습니다.
 
 ---
 
-## 언제 유지보수가 필요한가
+## 증상별 점검
 
-| 증상 | 적용 |
+| 증상 | 명령 |
 |------|------|
-| orphan 노드 (wikilink 0개) | `scan --check orphan` |
-| 노트가 너무 길어졌다 | `scan --check length` |
-| 같은 내용이 여러 곳에 흩어졌다 | `scan --check redundancy` |
-| 새 evidence를 추가했는데 ontology에 미반영 | `scan --check drift` |
-| KB 전체 상태 리포트가 필요하다 | `report` |
+| TTL 정합(등록, 링크, 이름, 중복, SHACL) | `skb-ontology validate --target my-kb [--domain D]` |
+| 어떤 관계에도 없는 accepted 용어 | `skb-ontology orphans --target my-kb [--domain D]` |
+| 용어 수, status 분포, evidence 커버리지, 관계 밀도 | `skb-ontology stats --target my-kb [--domain D] [--json]` |
+| 정의끼리 모순되는가 | `skb-graph-reasoning check --target my-kb` |
+| seed가 가리키지 않는 evidence md 노트 | `skb-evidence verify --target my-kb --orphans` |
+| 검색 인덱스가 최신인가 | `skb-semantic-search status --target my-kb` |
+| Markdown 투영의 부모 노드 규칙 | `python3 skills/skb-explain/scripts/parent_alignment.py --target my-kb` |
 
----
+## 권장 순서
 
-## 기본 명령
+1. `skb-ontology validate` — 실패가 있으면 다른 점검보다 먼저 고칩니다.
+2. `skb-ontology orphans` / `stats` — 후보를 사람이 검토합니다(자동 수정 없음).
+3. `skb-graph-reasoning check` — 모순을 확인합니다. `xsd_artifacts`는 데이터형 표기 문제이지 논리 모순이 아닙니다.
+4. 수정은 `skb-ontology add` 또는 TTL 직접 편집으로 하고 1번을 다시 돌립니다.
+5. 파생물 갱신: `skb-graph-reasoning reason --apply`, `skb-semantic-search index`.
 
-```bash
-# 상태 스캔
-skills/skb-maintain/scripts/skb-maintain scan \
-  --target my-kb [--check orphan|drift|length|redundancy]
+## 하네스 워크플로우로 돌릴 때
 
-# 통계 분석
-skills/skb-maintain/scripts/skb-maintain analyze --target my-kb
-
-# rewrite (dry-run 먼저)
-skills/skb-maintain/scripts/skb-maintain rewrite \
-  --target my-kb --node ontology/explain/concept/ai_agent/md/concept__rlhf.md \
-  --dry-run
-
-# 리포트
-skills/skb-maintain/scripts/skb-maintain report --target my-kb
-```
-
----
-
-## 시나리오 1: 새 evidence 추가 후 ontology 업데이트
-
-```
-1. skb-evidence collect → evidence/seeds.jsonl 갱신
-2. skb-maintain scan --check drift
-   → ontology 노드 중 새 evidence를 미반영한 노드 목록
-3. skb-maintain rewrite --dry-run → 변경 사항 미리보기
-4. skb-maintain rewrite --apply → 승인된 노드만 적용
-5. memory/task-context/work-log/ 에 변경 이력 기록
-```
-
----
-
-## 시나리오 2: orphan 노드 연결
-
-```
-1. skb-maintain scan --check orphan
-   → wikilink 0개 노드 목록
-2. skb-ontology list --target my-kb → TTL registry에서 연결 후보 탐색
-3. skb-ontology add --kind triple ... --apply
-4. skb-ontology validate --target my-kb
-5. skb-maintain scan --check orphan (재확인)
-```
-
----
-
-## 시나리오 3: KB 전체 상태 점검
-
-```bash
-skills/skb-maintain/scripts/skb-maintain report --target my-kb
-# → report/maintenance/ 에 리포트 저장
-#   - entity 수, orphan 수, drift 비율
-#   - 최근 변경 이력 요약
-```
-
----
-
-## 거버넌스 통합
-
-`skb-harness`가 유지보수 실행 결과를 trajectory에 기록합니다.
-
-```
-memory/task-context/work-log/        ← 단기 작업 이력
-memory/task-context/decision-history/ ← 결정 사항
-harness/trajectory/                  ← 5-Axis 계측값
-```
-
-위험도 High 변경은 `skb-orchestration`의 HITL 게이트를 통과해야 합니다.
-
-| 위험도 | 처리 |
-|--------|------|
-| Low | 자동 반영 |
-| Medium | dry-run 확인 후 적용 |
-| High | HITL 승인 필수 (`skb-orchestrate cc-check`) |
+`maintain` 카테고리 워크플로우(`agent-context/workflow/maintain/validation.yaml`)는 `x_msm.tool: skb-ontology`를 씁니다.
+`skb-ontology/oracle/ontology_readiness.py`는 TTL 유효성, 용어 고아, evidence 커버리지, 관계 밀도, 허브 잠금을 0~1 점수로 환산하며,
+워크플로우의 oracle 로 지정하면 하네스가 형제 스킬의 `oracle/` 에서 찾아 실행합니다(임계값은 워크플로우의 `oracle_threshold`).

@@ -4,6 +4,12 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+# Without ripgrep the checks below would be skipped and the audit would print PASS. Fail instead.
+if ! command -v rg >/dev/null 2>&1; then
+  echo "FAIL: ripgrep (rg) is required for the public release audit" >&2
+  exit 1
+fi
+
 fail=0
 
 if rg -l -I \

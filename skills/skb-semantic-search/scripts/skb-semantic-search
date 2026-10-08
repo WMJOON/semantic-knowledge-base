@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# skb-semantic-search — CLI entrypoint (index | search | status | extract)
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PY="${SKB_SEARCH_PYTHON:-python3}"
+case "${1:-}" in
+  extract) shift; exec "${SKB_RDF_PYTHON:-python3}" "$SCRIPT_DIR/extract_concepts.py" "$@" ;;
+  index|search|status) exec "$PY" -I "$SCRIPT_DIR/semantic_search.py" "$@" ;;
+  *) echo "usage: skb-semantic-search {index|search|status|extract} ..." >&2; exit 2 ;;
+esac

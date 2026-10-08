@@ -84,27 +84,32 @@ skills/skb-ontology/scripts/skb-ontology list --target my-kb
 
 ---
 
-### `skb-maintain`
+### `skb-graph-reasoning`
 
-**무엇을 하나:** KB 상태를 유지합니다. orphan 탐지·drift 평가·rewrite·통계 분석을 담당합니다.
-
-**이런 상황에서 쓰세요:**
-- "KB orphan 노드 찾아줘"
-- "노트 품질이 낮아진 것 같은데 점검해줘"
-- "KB 상태 리포트 생성해줘"
+**무엇을 하나:** 정본 TTL 위에서 OWL 2 RL 추론(rdflib + owlrl, Java 불필요)을 수행합니다. 파생 사실 생성, 비일관성 점검, 폐포 위 SPARQL을 담당합니다.
 
 ```bash
-# 상태 스캔
-skills/skb-maintain/scripts/skb-maintain scan --target my-kb
-
-# 통계 분석
-skills/skb-maintain/scripts/skb-maintain analyze --target my-kb
-
-# 리포트
-skills/skb-maintain/scripts/skb-maintain report --target my-kb
+skills/skb-graph-reasoning/scripts/skb-graph-reasoning check  --target my-kb
+skills/skb-graph-reasoning/scripts/skb-graph-reasoning reason --target my-kb --domain my-domain --apply
+skills/skb-graph-reasoning/scripts/skb-graph-reasoning status --target my-kb --domain my-domain
 ```
 
-→ [SKILL.md](../skills/skb-maintain/SKILL.md) · [core.md](../skills/skb-maintain/core.md)
+→ [SKILL.md](../skills/skb-graph-reasoning/SKILL.md)
+
+### `skb-semantic-search`
+
+**무엇을 하나:** SKOS 개념과 evidence 청크의 의미 검색 인덱스(EmbeddingGemma 2 + zvec)를 만들고 메타데이터 필터·문서 단위 묶음으로 검색합니다. 인덱스 신선도를 점검합니다.
+
+```bash
+skills/skb-semantic-search/scripts/skb-semantic-search index  concepts --target my-kb
+skills/skb-semantic-search/scripts/skb-semantic-search search concepts "query" --target my-kb
+skills/skb-semantic-search/scripts/skb-semantic-search status --target my-kb
+```
+
+→ [SKILL.md](../skills/skb-semantic-search/SKILL.md)
+
+> `skb-maintain`은 v1.3.0에서 제거됐습니다. 용어 고아·통계는 `skb-ontology orphans|stats`, seed 없는 md 점검은
+> `skb-evidence verify --orphans`, parent-alignment는 `skb-explain/scripts/parent_alignment.py`로 옮겼습니다.
 
 ---
 
@@ -154,7 +159,8 @@ skills/skb-orchestration/skb-orchestrate thresholds --category ontology
 | `skb-repository-setup` | [SKILL.md](../skills/skb-repository-setup/SKILL.md) | [references/scaffold-tree.md](../skills/skb-repository-setup/references/scaffold-tree.md) |
 | `skb-evidence` | [SKILL.md](../skills/skb-evidence/SKILL.md) | [workflow/evidence/](../workflow/evidence/) |
 | `skb-ontology` | [SKILL.md](../skills/skb-ontology/SKILL.md) | [core.md](../skills/skb-ontology/core.md) |
-| `skb-maintain` | [SKILL.md](../skills/skb-maintain/SKILL.md) | [core.md](../skills/skb-maintain/core.md) |
+| `skb-graph-reasoning` | [SKILL.md](../skills/skb-graph-reasoning/SKILL.md) | — |
+| `skb-semantic-search` | [SKILL.md](../skills/skb-semantic-search/SKILL.md) | — |
 | `skb-harness` | [SKILL.md](../skills/skb-harness/SKILL.md) | [references/tier-contract.md](../skills/skb-harness/references/tier-contract.md) |
 | `skb-orchestration` | [SKILL.md](../skills/skb-orchestration/SKILL.md) | [references/router-trigger-map.yaml](../skills/skb-orchestration/references/router-trigger-map.yaml) |
 

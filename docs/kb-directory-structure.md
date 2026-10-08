@@ -40,7 +40,7 @@ concept__descriptive-statistics              ← 하위 Concept (HITL 필수)
 - **하위 Instance** = 패턴화된 대량 사례 → 자동화 효율 우선 → 동적 처리
 
 > [!note] Enforcement
-> 정책의 자동 강제(가드, 검증)는 v1.2.0에서 `skb-ontology` HITL 가드 및 `skb-maintain` instance 티어 검증으로 구현 예정. v1.1.1은 문서화 레이어.
+> 정책의 자동 강제(가드, 검증)는 v1.2.0에서 `skb-ontology` HITL 가드 및 instance 티어 검증으로 구현 예정. v1.1.1은 문서화 레이어.
 
 ---
 
@@ -321,7 +321,7 @@ Status 승격
   draft → experimental → validated
       ↓
 parent_alignment scan
-  (skb-maintain: D-1~D-7 6규칙 검증)
+  (D-1~D-7 6규칙 검증은 예정)
 ```
 
 ---

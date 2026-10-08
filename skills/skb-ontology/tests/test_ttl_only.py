@@ -14,7 +14,6 @@ CLI = SCRIPTS / "skb-ontology"
 sys.path.insert(0, str(SCRIPTS))
 
 import ttl_add  # noqa: E402
-import ttl_reason  # noqa: E402
 import ttl_validate  # noqa: E402
 from ttl_common import SKB, canonical_path, load_graph, write_graph  # noqa: E402
 
@@ -114,19 +113,6 @@ class TTLOnlyOntologyTest(unittest.TestCase):
         _, graph, failures = ttl_validate.validate_target(self.root, self.domain)
         self.assertEqual([], failures)
         self.assertIn((EX.emotional, SKOS.related, EX.hanjiCraft), graph)
-
-    def test_reasoning_output_is_turtle(self):
-        self.assertEqual(0, self.add("--kind", "class", "--iri", str(EX.Agent), "--label", "에이전트"))
-        self.assertEqual(0, self.add("--kind", "class", "--iri", str(EX.Person), "--label", "사람"))
-        self.assertEqual(0, self.add(
-            "--kind", "individual", "--iri", str(EX.alice), "--label", "앨리스", "--type", str(EX.Person),
-        ))
-        path = canonical_path(self.root, self.domain)
-        graph = load_graph([path])
-        graph.add((EX.Person, RDFS.subClassOf, EX.Agent))
-        write_graph(path, graph)
-        inferred = ttl_reason.reason(self.root, self.domain)
-        self.assertIn((EX.alice, RDF.type, EX.Agent), inferred)
 
     def test_legacy_compiler_is_not_an_active_cli_path(self):
         result = subprocess.run(

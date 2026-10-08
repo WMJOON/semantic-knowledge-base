@@ -16,9 +16,8 @@
       "skb-repository-setup",
       "skb-evidence",
       "skb-ontology",
-      "skb-maintain",
-      "msm-graph-reasoning",
-      "msm-semantic-search",
+      "skb-graph-reasoning",
+      "skb-semantic-search",
       "skb-harness",
       "skb-orchestration"
     ],

@@ -5,7 +5,7 @@ description: |
   are rendered into human-readable Markdown/Base generated artifacts.
   Obsidian/Base output remains a supported compatibility target (구 msm-obsidian-projection 은 v1.0.0 에서 폐기).
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # skb-explain
@@ -46,6 +46,15 @@ Everything below describes the intended design, not current behaviour.
 3. Render generated Markdown snapshots for humans.
 4. Render Base-compatible indexes when the target vault supports them.
 5. Preserve generated-artifact markers and refuse unsafe overwrites.
+
+## Implemented tools
+
+| Tool | Command |
+|------|---------|
+| Parent-node alignment scan (read-only, Markdown projection) | `python3 scripts/parent_alignment.py --target REPO [--root ontology/explain/concept] [--format json\|markdown] [--accept-hub-suffix]` |
+
+`parent_alignment.py` moved here from the former `skb-maintain`. It checks the human-readable projection
+(`{name}__class.md` parent nodes, `belongs_to` frontmatter, bidirectional indexing), which TTL/SHACL does not see.
 
 ## Non-Goals
 

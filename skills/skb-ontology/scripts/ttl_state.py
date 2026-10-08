@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared TTL-only ontology state for skb-maintain."""
+"""Shared TTL-only ontology state: term counts, status distribution, semantic orphans, evidence coverage."""
 
 from __future__ import annotations
 
@@ -11,9 +11,7 @@ from pathlib import Path
 from rdflib import RDF, RDFS, Graph, URIRef
 from rdflib.namespace import OWL, PROV, SKOS
 
-SKILLS = Path(__file__).resolve().parents[2]
-ONTOLOGY_SCRIPTS = SKILLS / "skb-ontology" / "scripts"
-sys.path.insert(0, str(ONTOLOGY_SCRIPTS))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from ttl_common import SKB  # noqa: E402
 from ttl_validate import SKOS_LINKS, validate_target  # noqa: E402

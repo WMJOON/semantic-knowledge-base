@@ -1,5 +1,49 @@
 # Changelog
 
+## v1.3.0 (2026-10-08) — OWL reasoner, semantic search, skb-maintain dissolved
+
+### Added
+
+- `skb-graph-reasoning` 0.1.0: OWL 2 RL reasoner over canonical Turtle (`rdflib` + `owlrl`, no Java).
+  `reason` writes a derived `<domain>/<name>.inferred.ttl` (with a `source-hash` header so `status` can tell fresh from stale),
+  `check` reports logical inconsistencies, `stats` counts what is derived per kind, `query` runs SPARQL over the closure.
+  Refuses to write when asserted TTL fails validation or the graph is inconsistent. Reflexive/standard-vocabulary noise is dropped,
+  and `xsd:decimal`/`xsd:string` value-space clashes (same lexical form used as string and number) are reported as `xsd_artifacts`,
+  not as inconsistencies.
+- `skb-semantic-search` 0.1.0: semantic index and search over SKOS concepts and evidence chunks (EmbeddingGemma 2 + zvec).
+  Metadata filters (`--uri`, `--uri-contains`, `--scheme`, `--status`), `--group-by-doc`, deprecated concepts excluded by default,
+  and `status` (fresh/stale/missing from source fingerprints, model, dimension, partial builds).
+- `skb-ontology orphans` and `skb-ontology stats` (read-only reports), `oracle/ontology_readiness.py`
+  (score from TTL validity, orphans, evidence coverage, relation density, hub lock).
+- `skb-evidence verify --orphans [--strict]`: also reports `evidence/md` notes that no seed references.
+- `skb-explain/scripts/parent_alignment.py`: Markdown-projection parent-node scan, moved from `skb-maintain`.
+- `tests/test_standalone_skb.py`: runs the CLIs and the harness from a copy of `skills/skb-*` only, with an empty `HOME`.
+
+### Changed
+
+- `skb-harness`: the oracle loader now also searches `<skills>/*/oracle/<name>.py` and passes only the arguments the function accepts.
+  Before, oracles shipped by skills were never loaded and a missing oracle silently scored 1.0; the result now carries
+  `details.warning` and `details.searched` so a vacuous PASS is visible. Skill lookup is
+  `SKB_SKILL_<NAME>_HOME` (legacy alias `MSM_SKILL_<NAME>_HOME`) → sibling → `~/.claude/skills`, `~/.agents/skills`, `~/.gemini/config/skills` → legacy.
+  The `skb-repository-setup` entrypoint is `scripts/skb` (legacy `scripts/msm` still accepted).
+- `skb-ontology reason|materialize` now delegate to `skb-graph-reasoning reason`.
+- The `maintain` workflows (`workflow-validation.abox.ttl`, legacy YAML, template) use `tool: skb-ontology`.
+
+### Fixed
+
+- `scripts/public_release_audit.sh` printed `PASS` without checking anything when `rg` was missing. It now fails if ripgrep is not installed,
+  and CI installs it when the runner lacks it.
+- `skb-evidence` could not be imported from the public tree: `scripts/layout.py` loads `skb-ontology/scripts/layout.py`,
+  which v1.2.0 removed together with the legacy compiler. The module is restored.
+
+### Removed
+
+- `skb-maintain`. Its checks moved to their owners: orphans and statistics to `skb-ontology`, seed-less notes to
+  `skb-evidence verify --orphans`, parent alignment to `skb-explain`. Its `rewrite` command only refused to apply changes,
+  and its `drift` scan only called `skb-ontology validate`; both are gone.
+- `skb-ontology/scripts/ttl_reason.py`, `ttl_materialize.py` (replaced by `skb-graph-reasoning`).
+
+---
 ## v1.2.0 (2026-09-28) — Legacy compiler removal + guarded migration bridge
 
 ### Removed

@@ -12,8 +12,8 @@
 |---------|----------|---------|
 | evidence | `agent-context/workflow/evidence/` | `skb-evidence` |
 | ontology | `agent-context/workflow/ontology/` | `skb-ontology` |
-| maintain | `agent-context/workflow/maintain/` | `skb-maintain` |
-| explorer | `agent-context/workflow/explorer/` | `msm-graph-reasoning` (v1.x 예정) |
+| maintain | `agent-context/workflow/maintain/` | `skb-ontology` |
+| explorer | `agent-context/workflow/explorer/` | `skb-graph-reasoning` |
 
 ---
 
@@ -107,8 +107,8 @@ skills/skb-orchestration/skb-orchestrate run \
 또는 직접 호출:
 
 ```bash
-skills/skb-maintain/scripts/skb-maintain scan --target my-kb
-skills/skb-maintain/scripts/skb-maintain report --target my-kb
+skills/skb-ontology/scripts/skb-ontology validate --target my-kb
+skills/skb-ontology/scripts/skb-ontology stats --target my-kb
 ```
 
 ---

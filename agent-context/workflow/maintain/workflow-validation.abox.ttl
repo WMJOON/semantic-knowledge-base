@@ -22,6 +22,6 @@ w_validation:s1 a wf:Node, wf:Execution, wf:Task ;
     wf:label "run" ;
     wf:inWorkflow w_validation:workflow ;
     wf:hasSubject "system" ; wf:method "script" ;
-    skbx:tool "skb-maintain" ; skbx:action "default" .
+    skbx:tool "skb-ontology" ; skbx:action "default" .
 w_validation:r_start_s1 a wf:Edge, wf:Rail ; wf:from w_validation:start ; wf:railType "default" ; wf:to w_validation:s1 .
 w_validation:r_s1_end a wf:Edge, wf:Rail ; wf:from w_validation:s1 ; wf:railType "default" ; wf:to w_validation:end .

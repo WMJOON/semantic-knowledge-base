@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Score TTL graph validity, provenance coverage, connectivity, and hub state."""
+"""Oracle ontology_readiness: score TTL graph validity, provenance coverage, connectivity, and hub state.
+
+하네스 oracle 계약: evaluate(target, run_context=None) -> {"score", "passed", "details"}.
+"""
 
 from __future__ import annotations
 
@@ -11,7 +14,7 @@ import re
 import sys
 from pathlib import Path
 
-SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
+SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"  # skb-ontology/scripts
 sys.path.insert(0, str(SCRIPTS))
 
 from ttl_state import ontology_state  # noqa: E402
@@ -19,7 +22,7 @@ from ttl_state import ontology_state  # noqa: E402
 LOCKED_RE = re.compile(r"^\s*locked\s*:\s*true\s*$", re.MULTILINE)
 
 
-def evaluate(target: Path, domain: str | None = None) -> dict:
+def score_target(target: Path, domain: str | None = None) -> dict:
     state = ontology_state(target, domain)
     hub = target / "canonical_root_hub.yaml"
     hub_ok = hub.exists() and bool(LOCKED_RE.search(hub.read_text("utf-8")))
@@ -45,6 +48,13 @@ def evaluate(target: Path, domain: str | None = None) -> dict:
     }
 
 
+def evaluate(target: Path, run_context: dict | None = None, domain: str | None = None) -> dict:
+    """하네스 oracle 계약 어댑터. gate 가 pass 일 때만 passed=True (score >= 0.85)."""
+    result = score_target(Path(target).resolve(), domain)
+    return {"score": result["score"], "passed": result["gate"] == "pass",
+            "details": {"gate": result["gate"], "breakdown": result["breakdown"], "metrics": result["metrics"]}}
+
+
 def emit(target: Path, identifier: str, result: dict) -> None:
     directory = target / "harness" / "trajectory"
     directory.mkdir(parents=True, exist_ok=True)
@@ -52,7 +62,7 @@ def emit(target: Path, identifier: str, result: dict) -> None:
         "run_id": identifier,
         "ts": dt.datetime.now(tz=dt.timezone.utc).isoformat(),
         "event_type": "oracle_evaluation",
-        "oracle": "maintain_drift_readiness",
+        "oracle": "ontology_readiness",
         **result,
     }
     path = directory / f"run-{identifier}.jsonl"
@@ -69,7 +79,7 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--domain")
     parser.add_argument("--run-id")
     args = parser.parse_args(argv)
-    result = evaluate(args.target.resolve(), args.domain)
+    result = score_target(args.target.resolve(), args.domain)
     if args.run_id:
         emit(args.target.resolve(), args.run_id, result)
     json.dump(result, sys.stdout, indent=2, ensure_ascii=False)

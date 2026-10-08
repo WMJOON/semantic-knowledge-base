@@ -20,7 +20,19 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(prog="verify")
     p.add_argument("--target", default=".", help="KB root path")
     p.add_argument("--id", default=None, help="Verify single seed by id")
+    p.add_argument("--orphans", action="store_true", help="Also report evidence/md notes that no seed references (the reverse direction of 'md_path not found')")
+    p.add_argument("--strict", action="store_true", help="Treat --orphans findings as failures instead of warnings")
     return p.parse_args(argv)
+
+
+def orphan_md_notes(seeds: list[dict], target: Path) -> list[str]:
+    """evidence/md notes (KB-relative) that no seed's md_path points to."""
+    target = Path(target).resolve()  # resolve_layout returns resolved absolute paths (macOS /var -> /private/var)
+    referenced = {str(s.get("md_path")) for s in seeds if s.get("md_path")}
+    md_dir = _layout_mod.resolve_layout(target)["evidence_md_dir"]
+    if not md_dir.exists():
+        return []
+    return sorted(str(p.relative_to(target)) for p in md_dir.rglob("*.md") if str(p.relative_to(target)) not in referenced)
 
 
 def main(argv: list[str]) -> int:
@@ -74,6 +86,17 @@ def main(argv: list[str]) -> int:
                 failures.append(f"{sid}: md_path not found: {md_rel}")
         else:
             failures.append(f"{sid}: missing md_path field")
+
+    if args.orphans and not args.id:
+        orphans = orphan_md_notes(seeds, target)
+        if orphans:
+            shown = orphans[:20]
+            msg = f"{len(orphans)} md note(s) not referenced by seeds.jsonl" + (
+                f" (first {len(shown)}: {', '.join(shown)})" if len(orphans) > len(shown) else f": {', '.join(shown)}")
+            if args.strict:
+                failures.append(msg)
+            else:
+                print(f"WARN: {msg}", file=sys.stderr)
 
     if failures:
         for f in failures:

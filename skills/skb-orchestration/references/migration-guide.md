@@ -21,8 +21,8 @@ SPEC: skb-orchestration-v0.10.0-SPEC §3, §12.
 | `msm-kb-graph` (추론) | `skb-graph-reasoning` |
 | `msm-kb-graph` (검색) | `skb-semantic-search` |
 | `msm-mece-validator` | `skb-ontology` |
-| `msm-kb-rewrite` | `skb-maintain` |
-| `msm-data-analysis` | `skb-maintain` |
+| `msm-kb-rewrite` | `skb-ontology` (`skb-maintain` was dissolved in v1.3.0) |
+| `msm-data-analysis` | `skb-ontology stats` / `orphans` |
 | `msm-rdf-owl-bridge` | `skb-graph-reasoning` |
 | `msm-obsidian-cli` | (글로벌 유지) |
 

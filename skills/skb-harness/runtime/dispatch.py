@@ -73,32 +73,41 @@ def _locate_skill(name: str) -> Path | None:
     Priority (sibling first — version-matched dev tree wins over potentially
     stale globals; in production the install puts the same version at both
     spots):
-      1) MSM_SKILL_<UPPER_SNAKE>_HOME env var
+      1) SKB_SKILL_<UPPER_SNAKE>_HOME env var   (legacy alias: MSM_SKILL_<UPPER_SNAKE>_HOME)
       2) Sibling of skb-harness in the same skills/ directory
-      3) ~/.claude/skills/<name>
+      3) ~/.claude/skills, ~/.agents/skills, ~/.gemini/config/skills  (provider skill roots)
+      4) ~/.skill-modules/msm-skills/<name>      (legacy install location)
+    skb-* 만 있는 디렉토리에서도 msm-* 스킬이나 레거시 경로 없이 동작해야 한다.
     """
-    env_key = f"MSM_SKILL_{name.replace('-', '_').upper()}_HOME"
-    override = os.environ.get(env_key)
-    if override and Path(override).exists():
-        return Path(override).resolve()
+    key = name.replace("-", "_").upper()
+    for env_key in (f"SKB_SKILL_{key}_HOME", f"MSM_SKILL_{key}_HOME"):
+        override = os.environ.get(env_key)
+        if override and Path(override).exists():
+            return Path(override).resolve()
     sibling = SCRIPT_DIR.parents[1] / name
     if sibling.exists():
         return sibling.resolve()
-    home = Path.home() / ".skill-modules" / "msm-skills" / name
-    if home.exists():
-        return home.resolve()
+    for root in (
+        Path.home() / ".claude" / "skills",
+        Path.home() / ".agents" / "skills",
+        Path.home() / ".gemini" / "config" / "skills",
+        Path.home() / ".skill-modules" / "msm-skills",
+    ):
+        candidate = root / name
+        if candidate.exists():
+            return candidate.resolve()
     return None
 
 
 def _exec_skill(skill_home: Path, skill: str, target: Path, mode: str) -> tuple[int, dict[str, Any]]:
     """Invoke a skill's primary entrypoint and collect a tiny output summary."""
     # Convention: each skill exposes `scripts/<name>` (bash CLI) or `harness/run.sh`.
-    # skb-repository-setup uses `scripts/msm`; others may differ.
+    # skb-repository-setup uses `scripts/skb` (legacy name: `scripts/msm`); others may differ.
     started = time.monotonic()
     outputs: dict[str, Any] = {}
     if skill == "skb-repository-setup":
-        cli = skill_home / "scripts" / "msm"
-        if cli.exists():
+        cli = next((c for c in (skill_home / "scripts" / "skb", skill_home / "scripts" / "msm") if c.exists()), None)
+        if cli is not None:
             cmd = [str(cli), "init", "--target", str(target)]
             if mode == "validate-only":
                 cmd.append("--validate-only")

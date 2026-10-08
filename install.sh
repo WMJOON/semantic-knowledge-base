@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SKB v1.1.0 — install symlinks into ~/.{claude,codex,antigravity}/skills/
+# SKB v1.3.0 — install symlinks into ~/.{claude,codex,antigravity}/skills/
 # Usage:
 #   ./install.sh                Claude Code only (default)
 #   ./install.sh --codex        Codex only
@@ -14,8 +14,9 @@ SKB_SKILLS=(
   skb-orchestration
   skb-evidence
   skb-harness
-  skb-maintain
   skb-ontology
+  skb-graph-reasoning
+  skb-semantic-search
   skb-record-archive
   skb-repository-setup
 )
@@ -32,7 +33,7 @@ for arg in "$@"; do
 done
 [[ ${#TARGETS[@]} -eq 0 ]] && TARGETS=(claude)
 
-echo "SKB v1.1.0 Install"
+echo "SKB v1.3.0 Install"
 echo "  Skills  : ${SKB_SKILLS[*]}"
 echo "  Targets : ${TARGETS[*]}"
 echo ""

@@ -20,8 +20,18 @@ case "$sub" in
   validate)     exec "$PY" "$SCRIPT_DIR/ttl_validate.py" "$@" ;;
   completeness) exec "$PY" "$SCRIPT_DIR/ttl_validate.py" "$@" ;;
   lint-iri)     exec "$PY" "$SCRIPT_DIR/ttl_validate.py" "$@" ;;
-  reason)       exec "$PY" "$SCRIPT_DIR/ttl_reason.py" "$@" ;;
-  materialize)  exec "$PY" "$SCRIPT_DIR/ttl_materialize.py" "$@" ;;
+  orphans)      exec "$PY" "$SCRIPT_DIR/ttl_report.py" orphans "$@" ;;
+  stats)        exec "$PY" "$SCRIPT_DIR/ttl_report.py" stats "$@" ;;
+  reason|materialize)
+    # OWL 2 RL reasoning moved to the skb-graph-reasoning skill (v1.3.0).
+    REASONER="${SKB_SKILL_SKB_GRAPH_REASONING_HOME:-$SKILL_DIR/../skb-graph-reasoning}/scripts/skb-graph-reasoning"
+    if [[ -x "$REASONER" ]]; then
+      echo "NOTE: 'skb-ontology $sub' is now 'skb-graph-reasoning reason' (materialize ~ reason --apply)." >&2
+      exec "$REASONER" reason "$@"
+    fi
+    echo "'$sub' moved to the skb-graph-reasoning skill, which was not found next to skb-ontology." >&2
+    exit 2
+    ;;
   shapes-validate) exec "$PY" "$SCRIPT_DIR/shapes_validate.py" "$@" ;;
   migrate-legacy)
     exec "$PY" "$SCRIPT_DIR/migrate_legacy_to_ttl.py" "$@"
@@ -41,9 +51,11 @@ Commands:
   add          Add a class, property, individual, or reified assertion directly to Turtle
   list         List registry terms from Turtle
   validate     Parse → completeness/link → naming/dedup → SHACL
-  reason       Validate, then emit a derived *.inferred.ttl graph
-  materialize  Validate and reason without a YAML/JSON intermediate
+  reason       -> skb-graph-reasoning reason (OWL 2 RL, derived *.inferred.ttl)
+  materialize  -> same as reason; pass --apply to write the derived file
   shapes-validate  Validate explicitly selected Turtle and SHACL files
+  orphans      List accepted/stable terms that sit in no semantic relation (read-only)
+  stats        Term counts, status distribution, evidence coverage, relation density (read-only)
 
 Retired active paths:
   YAML/JSONL compile, abox-compile, project, rbox compile, axiom YAML authoring,
