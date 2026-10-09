@@ -4,6 +4,20 @@ SKB is an agent-consumable knowledge-base skill pack. Its ontology domain data i
 TTL-only: TBox, RBox, ABox, registry membership, status, and provenance live in
 `ontology/system/semantic/**/*.ttl`.
 
+## Repository layout
+
+```text
+docs/        guides and the changelog
+skills/      the skill pack; each skill carries its own scripts, tests and assets
+tests/       cross-skill tests
+install.sh   symlinks the skills into your agent runtime
+README.md  LICENSE  requirements.txt
+```
+
+This repository holds no knowledge-base data of its own. `skb-repository-setup` (`skb init`) builds the knowledge-base
+tree in the repository you point it at, from the templates in `skills/skb-repository-setup/assets/templates/`, so the skill
+works even when it is the only one installed.
+
 ## Canonical boundary
 
 | Data | Canonical format | Location |

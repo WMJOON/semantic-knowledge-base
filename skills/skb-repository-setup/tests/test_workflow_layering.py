@@ -11,7 +11,7 @@ MSM workflow 는 MSO mso-workflow-design 을 **구조 기준**으로 소비한�
      MSM 이 x_msm 을 못 읽으면 실행이 조용히 죽는 실패모드를 차단한다.
   2. **구조 검증 위임** (MSO 부재 시 skip): 모든 MSM workflow yaml 이 현재 MSO
      wf_node(schema) + wf_to_ttl(SHACL/DAG) 를 통과하는지. 실패 = MSO 스키마 drift
-     → graphify-etl(또는 변환 규칙) 동기화 필요.
+     → 워크플로 템플릿(또는 변환 규칙) 동기화 필요.
 
 실행: python3 -m pytest tests/ -q   (pyyaml; 구조검증엔 rdflib/pyshacl 권장)
 """
@@ -21,15 +21,14 @@ from pathlib import Path
 
 import pytest
 
-# parents: [0]tests [1]skb-repository-setup [2]skills [3]repository
-#          [4]11_semantic-knowledge-base [5]integration repository root
+# parents: [0]tests [1]skb-repository-setup [2]skills [3]repository root [4]parent of the checkout
 _REPO = Path(__file__).resolve().parents[3]
-_MONOREPO = Path(__file__).resolve().parents[5]
+_MONOREPO = Path(__file__).resolve().parents[4]
 _MSO_SCRIPTS = (
     _MONOREPO
     / "00_multi-swarm-orchestrator/repository/skills/mso-workflow-design/scripts"
 )
-_WF_DIR = _REPO / "agent-context" / "workflow"
+_WF_DIR = Path(__file__).resolve().parents[1] / "assets" / "templates" / "agent-context" / "workflow"   # init 이 복사하는 템플릿
 
 
 def _workflow_yamls() -> list[Path]:
@@ -46,8 +45,8 @@ def _import_parsers():
 
 # ── 1. 파서 라운드트립 (항상 실행) ────────────────────────────────────────────
 def test_converted_workflow_parser_roundtrip():
-    """변환된 graphify-etl 이 MSM 파서로 silent-None 없이 복원돼야 한다."""
-    wf = _WF_DIR / "evidence" / "graphify-etl.yaml"
+    """init 이 복사하는 evidence-collection 템플릿이 MSM 파서로 silent-None 없이 복원돼야 한다."""
+    wf = _WF_DIR / "evidence" / "evidence-collection.yaml"
     assert wf.exists(), f"기준 워크플로 부재: {wf}"
     workflow_parser, workflow_meta = _import_parsers()
 
@@ -56,13 +55,13 @@ def test_converted_workflow_parser_roundtrip():
     assert p["mode"] == "dry-run", p["mode"]
     assert p["category"] == "evidence", p["category"]
     assert p["tool"] == "skb-evidence", p["tool"]
-    assert p["id"] == "evidence.graphify.etl", p["id"]
+    assert p["id"] == "evidence-collection", p["id"]
     assert p["version"] == "1.0", p["version"]
     assert p["status"] == "draft", p["status"]
     assert p["governance"].get("hitl_required") is False, p["governance"]
     assert p["governance"].get("max_retry") == 1, p["governance"]
     assert p["governance"].get("oracle") == "evidence_seed_readiness", p["governance"]
-    assert p["governance"].get("oracle_threshold") == 0.0, p["governance"]
+    assert p["governance"].get("oracle_threshold") == 0.85, p["governance"]
     # kind=single → tool dispatch 가능해야 함 (dispatch._exec_workflow)
     assert p["tool"], "kind=single 인데 tool 미복원 → step_aborted(missing_tool_field)"
 

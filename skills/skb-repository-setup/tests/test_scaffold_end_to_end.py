@@ -141,3 +141,16 @@ def test_kb_without_layout_section_keeps_old_paths(tmp_path):
     assert r.returncode == 0 and "triples=1 " in r.stdout
     assert sh(sys.executable, LINT, "--target", root).returncode == 0
     assert sh(sys.executable, LAYOUT_VALIDATOR, "--target", root).returncode == 0
+
+
+def test_init_runs_from_the_skill_alone(tmp_path):
+    """스킬 디렉토리만 복사해도(저장소 루트·다른 스킬 없이) init 이 KB 골격을 만든다: 템플릿은 스킬의 assets 에 있다."""
+    import shutil
+    solo = tmp_path / "only-this-skill" / "skb-repository-setup"
+    shutil.copytree(SKILL, solo, ignore=shutil.ignore_patterns("__pycache__", "tests", ".pytest_cache"))
+    assert (solo / "assets" / "templates" / "canonical_root_hub.yaml").is_file()
+    target = tmp_path / "kb"
+    r = sh(sys.executable, solo / "scripts" / "apply_init.py", "--target", target, "--name", "demo", "--domain", "demo", "--yes")
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert (target / "canonical_root_hub.yaml").is_file()
+    assert sorted((target / "agent-context" / "workflow").rglob("workflow-*.abox.ttl"))

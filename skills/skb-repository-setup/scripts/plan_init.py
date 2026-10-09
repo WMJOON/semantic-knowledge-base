@@ -32,8 +32,7 @@ sys.path.insert(0, str(SCRIPT_DIR))
 from manifest import DEFAULT_LAYOUT, LAYOUTS, Entry, build_manifest, has_marker  # noqa: E402
 
 
-REPO_ROOT_DEFAULT = SCRIPT_DIR.parents[2]
-DEFAULT_TEMPLATES = REPO_ROOT_DEFAULT / "templates"
+DEFAULT_TEMPLATES = SCRIPT_DIR.parent / "assets" / "templates"   # 스킬 안에 있어 스킬만 설치해도 init 이 돈다
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:

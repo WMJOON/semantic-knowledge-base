@@ -234,7 +234,7 @@ def apply(plan: dict, args: argparse.Namespace) -> int:
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
     if not args.templates:
-        args.templates = str(SCRIPT_DIR.parents[2] / "templates")
+        args.templates = str(SCRIPT_DIR.parent / "assets" / "templates")
     plan = load_or_build_plan(args)
     return apply(plan, args)
 

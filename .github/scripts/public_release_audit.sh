@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
 
 # Without ripgrep the checks below would be skipped and the audit would print PASS. Fail instead.
@@ -16,7 +16,7 @@ if rg -l -I \
   -e '/Users/[^/[:space:]"`]+' \
   -e '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' \
   -e 'tail[0-9a-f]+\.ts\.net' \
-  --glob '!scripts/public_release_audit.sh' \
+  --glob '!.github/scripts/public_release_audit.sh' \
   . >/dev/null; then
   echo "FAIL: personal path, email, or private host pattern found" >&2
   fail=1
@@ -32,7 +32,7 @@ if rg -l -I \
   -e 'sk-[A-Za-z0-9_-]{20,}' \
   -e 'AIza[0-9A-Za-z_-]{30,}' \
   -e 'eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}' \
-  --glob '!scripts/public_release_audit.sh' \
+  --glob '!.github/scripts/public_release_audit.sh' \
   . >/dev/null; then
   echo "FAIL: credential or token pattern found" >&2
   fail=1

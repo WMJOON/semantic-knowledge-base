@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.8.0 (2026-10-09) — repository root slimmed; `skb init` runs from the skill alone
+
+### Changed
+
+- **Repository root now holds only** `docs/`, `skills/`, `tests/`, `.github/`, `install.sh`, `requirements.txt`, `README.md`, `LICENSE`.
+  The repository no longer ships a knowledge-base instance of its own: the root `agent-context/`, `archive/` (retired YAML workflows),
+  `record-archive/`, `canonical_root_hub.yaml` and the placeholder `harness/` were removed. `skb init` creates those in the target repository.
+- **`templates/` moved into the skill** as `skills/skb-repository-setup/assets/templates/` (the same pattern as the reference MSO repository).
+  `plan_init.py` / `apply_init.py` default to that path, so `skb init` no longer depends on the repository root and works when only
+  `skb-repository-setup` is installed. A new test copies the skill alone and runs `init`.
+- `scripts/public_release_audit.sh` moved to `.github/scripts/` (the workflow and the script's root detection were updated).
+- `tests/test_public_workflows_parse.py` became `tests/test_shipped_workflow_templates.py`: it now checks the workflow templates that `init`
+  copies, builds the KB root from them, and expects `cc_check` to be clean (the known duplicate-id xfail disappeared with the retired files).
+
+### Compatibility
+
+- Skill CLIs and their contracts are unchanged. Only people who read the removed root directories directly are affected.
+
 ## v1.7.0 (2026-10-09) — publisher candidates in `identity propose`, publisher kinds in the `source-agents` pack
 
 ### Added
