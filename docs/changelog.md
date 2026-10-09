@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — provenance design stance (docs only)
+
+- Added `docs/guides/provenance-stance.md` (Korean): the claim-is-not-fact premise, a table mapping metadata terms to the canonical names,
+  what is implemented vs. proposed (SoftwareAgent filter, hash lookup and original-channel retrieval are not implemented), and the
+  "what not to send to an AI" cost view. A short section in the README links to it. No code, TBox or SHACL change.
+
 ## v1.6.1 (2026-10-09) — b1 scaffold: declare the layer modules the artifact registry points to
 
 ### Fixed

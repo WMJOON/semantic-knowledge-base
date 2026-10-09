@@ -23,6 +23,17 @@ YAML and JSONL never define ontology terms, relations, instances, axioms, regist
 membership, or provenance. Old ontology compilers remain migration history in the private
 development repository and are not part of the public TTL-only distribution.
 
+## Design stance
+
+Every document is an author's *claim*, not a fact, and each processing step (`prov:Activity`)
+moves it further from the physical world. SKB therefore keeps what a document *declares*
+(observation) apart from what we *conclude* (interpretation), and computes trust by query
+instead of storing it. Resolving provenance with deterministic lookups is also cheaper than
+asking an LLM to judge each claim, so the design question is as much "what should not be
+sent to an AI" as "what should be". See the
+[provenance stance guide](docs/guides/provenance-stance.md) (Korean) for the metadata
+mapping and for which policies are implemented and which are still proposals.
+
 ## Skills
 
 - `skb-orchestration`: intent routing, governance, and HITL gates
