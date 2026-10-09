@@ -26,7 +26,13 @@
         <https://skb.dev/ontology/source-agents/concept#trust-factor-diligence>,
         <https://skb.dev/ontology/source-agents/concept#trust-level-high>,
         <https://skb.dev/ontology/source-agents/concept#trust-level-low>,
-        <https://skb.dev/ontology/source-agents/concept#trust-level-medium> .
+        <https://skb.dev/ontology/source-agents/concept#trust-level-medium>,
+        <https://skb.dev/ontology/source-agents/concept#publisher-kind-repository>,
+        <https://skb.dev/ontology/source-agents/concept#publisher-kind-preprint-repository>,
+        <https://skb.dev/ontology/source-agents/concept#publisher-kind-institutional-repository>,
+        <https://skb.dev/ontology/source-agents/concept#publisher-kind-journal-publisher>,
+        <https://skb.dev/ontology/source-agents/concept#publisher-kind-government-agency>,
+        <https://skb.dev/ontology/source-agents/concept#publisher-kind-web-publisher> .
 
 <https://skb.dev/ontology/source-agents/concept#identity-method-bidirectional-link> a skos:Concept ;
     rdfs:label "Bidirectional Link"@en ;
@@ -224,3 +230,71 @@
 
 <https://skb.dev/ontology/source-agents/proposal/2026-10-06-source-agents-port> a prov:Entity .
 
+<https://skb.dev/ontology/source-agents/concept-scheme/publisher-kinds> a skos:ConceptScheme ;
+    skos:prefLabel "발행기관 유형"@ko .
+
+<https://skb.dev/ontology/source-agents/concept#publisher-kind-repository> a skos:Concept ;
+    rdfs:label "Publisher Kind Repository"@en ;
+    dcterms:identifier "concept:publisher-kind-repository" ;
+    skos:topConceptOf <https://skb.dev/ontology/source-agents/concept-scheme/publisher-kinds> ;
+    skos:inScheme <https://skb.dev/ontology/source-agents/concept-scheme/publisher-kinds> ;
+    skos:prefLabel "Publisher Kind Repository"@en,
+        "발행기관 유형 저장소"@ko ;
+    skos:scopeNote "문서나 논문을 모아 공개하는 저장소·아카이브. 편집 심사를 거치는 출판사와 구분한다. 유형은 분류일 뿐 신뢰도를 정하지 않는다."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-09-publisher-kinds> ;
+    skb:status "draft" .
+
+<https://skb.dev/ontology/source-agents/concept#publisher-kind-preprint-repository> a skos:Concept ;
+    rdfs:label "Publisher Kind Preprint Repository"@en ;
+    dcterms:identifier "concept:publisher-kind-preprint-repository" ;
+    skos:broader <https://skb.dev/ontology/source-agents/concept#publisher-kind-repository> ;
+    skos:inScheme <https://skb.dev/ontology/source-agents/concept-scheme/publisher-kinds> ;
+    skos:prefLabel "Publisher Kind Preprint Repository"@en,
+        "발행기관 유형 프리프린트 저장소"@ko ;
+    skos:scopeNote "심사 전 원고를 공개하는 저장소. 게시 자체가 내용의 검증을 뜻하지 않는다. 유형은 분류일 뿐 신뢰도를 정하지 않는다."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-09-publisher-kinds> ;
+    skb:status "draft" .
+
+<https://skb.dev/ontology/source-agents/concept#publisher-kind-institutional-repository> a skos:Concept ;
+    rdfs:label "Publisher Kind Institutional Repository"@en ;
+    dcterms:identifier "concept:publisher-kind-institutional-repository" ;
+    skos:broader <https://skb.dev/ontology/source-agents/concept#publisher-kind-repository> ;
+    skos:inScheme <https://skb.dev/ontology/source-agents/concept-scheme/publisher-kinds> ;
+    skos:prefLabel "Publisher Kind Institutional Repository"@en,
+        "발행기관 유형 기관 저장소"@ko ;
+    skos:scopeNote "대학 등 기관이 소속 구성원의 학위논문·연구물을 보관하는 저장소. 유형은 분류일 뿐 신뢰도를 정하지 않는다."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-09-publisher-kinds> ;
+    skb:status "draft" .
+
+<https://skb.dev/ontology/source-agents/concept#publisher-kind-journal-publisher> a skos:Concept ;
+    rdfs:label "Publisher Kind Journal Publisher"@en ;
+    dcterms:identifier "concept:publisher-kind-journal-publisher" ;
+    skos:topConceptOf <https://skb.dev/ontology/source-agents/concept-scheme/publisher-kinds> ;
+    skos:inScheme <https://skb.dev/ontology/source-agents/concept-scheme/publisher-kinds> ;
+    skos:prefLabel "Publisher Kind Journal Publisher"@en,
+        "발행기관 유형 학술 출판사"@ko ;
+    skos:scopeNote "학술지나 논문 플랫폼을 운영하며 논문을 출판하는 주체. 유형은 분류일 뿐 신뢰도를 정하지 않는다."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-09-publisher-kinds> ;
+    skb:status "draft" .
+
+<https://skb.dev/ontology/source-agents/concept#publisher-kind-government-agency> a skos:Concept ;
+    rdfs:label "Publisher Kind Government Agency"@en ;
+    dcterms:identifier "concept:publisher-kind-government-agency" ;
+    skos:topConceptOf <https://skb.dev/ontology/source-agents/concept-scheme/publisher-kinds> ;
+    skos:inScheme <https://skb.dev/ontology/source-agents/concept-scheme/publisher-kinds> ;
+    skos:prefLabel "Publisher Kind Government Agency"@en,
+        "발행기관 유형 정부 기관"@ko ;
+    skos:scopeNote "공공 행정을 수행하는 정부 기관이 발행한 자료의 발행 주체. 유형은 분류일 뿐 신뢰도를 정하지 않는다."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-09-publisher-kinds> ;
+    skb:status "draft" .
+
+<https://skb.dev/ontology/source-agents/concept#publisher-kind-web-publisher> a skos:Concept ;
+    rdfs:label "Publisher Kind Web Publisher"@en ;
+    dcterms:identifier "concept:publisher-kind-web-publisher" ;
+    skos:topConceptOf <https://skb.dev/ontology/source-agents/concept-scheme/publisher-kinds> ;
+    skos:inScheme <https://skb.dev/ontology/source-agents/concept-scheme/publisher-kinds> ;
+    skos:prefLabel "Publisher Kind Web Publisher"@en,
+        "발행기관 유형 웹 게시 주체"@ko ;
+    skos:scopeNote "개인·프로그램·사전 사이트처럼 웹으로 자료를 게시하는 주체. 편집·심사 절차는 확인하지 않는다. 유형은 분류일 뿐 신뢰도를 정하지 않는다."@ko ;
+    prov:hadPrimarySource <https://skb.dev/ontology/source-agents/proposal/2026-10-09-publisher-kinds> ;
+    skb:status "draft" .

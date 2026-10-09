@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """SPEC §8.1 + integration-SPEC §4.2: workflow yaml schema check.
 
-Two formats are validated (MSO is the structural baseline — see UD-0004):
+Two formats are validated (MSO is the structural baseline):
 
   · **MSO module + x_msm** (current) — structure under `module:`/named phases is
     delegated to MSO `mso-workflow-design` (`wf_node` schema + `wf_to_ttl`

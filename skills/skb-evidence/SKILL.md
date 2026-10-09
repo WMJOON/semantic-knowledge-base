@@ -39,7 +39,7 @@ metadata:
   version: "1.2.6"
 ---
 
-# skb-evidence (v1.2.5)
+# skb-evidence (v1.2.6)
 
 ## What
 
@@ -68,12 +68,33 @@ evidence seed를 생산하는 Fat Skill.
 | CLI — list | `scripts/skb-evidence list --target REPO [--catalog] [--format table\|json\|ids]` — `--catalog` 는 문서 단위(발행자·URL·청크 수·시점) |
 | CLI — verify-quotes | `scripts/skb-evidence verify-quotes --claims claims.json [--target REPO] [--report report.md]` |
 | CLI — catalog | `scripts/skb-evidence catalog --target REPO [--base IRI] [--publishers FILE] [--enricher legal-kr] [--apply]` (rdflib 필요). `--publishers` 는 저장소가 소유하는 발행자 규칙(배포처 `publisher`와 원 발행처 `issuer` 분리), `--enricher` 는 도메인 확장 어휘(`ecl:`)와 청크 `locators` 를 켠다 |
-| CLI — register | `scripts/skb-evidence register --target REPO [--base IRI] [--apply \| --check]` (rdflib, pyshacl 필요) |
+| CLI — register | `scripts/skb-evidence register --target REPO [--base IRI] [--source URL ...] [--apply \| --check]` (rdflib, pyshacl 필요). `--source` 없이 돌리면 원문이 있는 모든 문서가 대상이다 |
 | CLI — identity | `scripts/skb-evidence identity propose\|apply\|check --target REPO [--apply]` (rdflib, pyshacl 필요) |
 | CLI — catalog-validate | `scripts/skb-evidence catalog-validate --target REPO` (rdflib, pyshacl 필요) |
 | CLI — graphify ETL | `scripts/graphify_to_skb.py graph.json [--output-dir OUT] [--sigma 2.0]` |
 | Harness | `harness/run.sh --skill skb-evidence --tier L0 --mode validate-only --target REPO` |
 | Workflow | `agent-context/workflow/evidence/graphify-etl.abox.ttl` |
+
+## 수집 뒤 발행기관·작성자 정리 절차 (고정)
+
+출처를 새로 수집할 때마다 같은 순서로 정리한다. 각 단계의 산출물과 사람이 개입하는 지점이 정해져 있다.
+
+| 단계 | 명령 | 산출물 | 사람 개입 |
+|---|---|---|---|
+| 1 수집 | `ingest --apply` (필요하면 `--render`) | `evidence/raw/*.md`, `seeds.jsonl` | 본문이 없는 껍데기·메뉴 페이지는 raw 와 seed 를 지운다 |
+| 2 카탈로그 | `catalog --publishers evidence/catalog/publishers.yaml --apply` | `catalog.ttl`, `chunks.jsonl` | 발행자 이름 규칙 파일은 저장소가 소유한다 |
+| 3 등록 | `register --source URL ... --apply` | `evidence/registrations/*.ttl` (작성자·발행 주체·계정 언급) | 이번에 수집한 URL 로 범위를 한정한다 |
+| 4 신원 후보 | `identity propose --apply` | `evidence/identity/review-queue.jsonl` | 큐는 후보일 뿐이다 |
+| 5 신원 결정 | 사람이 `decisions.jsonl` 작성 후 `identity apply --apply` | `identifications.ttl` | **사람만** 승격한다. reviewer 는 사람 이름이어야 한다 |
+| 6 검증 | `catalog-validate`, `register --check`, `identity check` | 통과/실패 | |
+
+규칙:
+- 범위: 3단계는 `--source` 없이 돌리면 저장소 전체를 다시 쓴다. 수집 단위(URL 목록)로 한정한다.
+- 발행자 이름의 출처를 구분한다. 문서가 선언한 발행 주체는 `curation: known`, 호스트에서 도출한 이름은 `curation: auto` 로 둔다. 도출한 이름을 확정된 것처럼 `known` 으로 적지 않는다. 호스트에서 도출한 발행 주체는 등록에서 언급을 만들지 않는다.
+- 작성자 메타데이터가 없는 문서는 본문에서 저자를 추정해 채우지 않는다. `unresolved` 로 남기고 사람이 결정한다.
+- 발행기관은 `source-agents` 도메인 팩의 `publisher-kinds` 분류(저장소·프리프린트 저장소·기관 저장소·학술 출판사·정부 기관·웹 게시 주체)와 `sa:publisherKind` 로 유형을 달 수 있다. 유형은 분류일 뿐 신뢰도를 정하지 않는다.
+- 발행기관은 별도 도메인으로 따로 만들지 않는다. 문서가 선언한 발행 주체와 저자 이름은 `identity propose` 가 후보(`publisher_cluster`, `mention_cluster`)로 올리고, 사람이 `Organization`/`Person` 으로 결정할 때만 `sa:Organization`/`sa:Person` 이 생긴다.
+- `identity propose` 의 발행 주체 후보는 `--max-clusters` 상한을 받지 않는다(조직 수가 적고 문서마다 반복된다). 같은 이름이 같은 조직이라는 보장은 없으므로 병합은 사람이 한다.
 
 ## Triggers
 

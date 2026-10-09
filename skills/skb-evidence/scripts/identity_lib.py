@@ -7,6 +7,7 @@ from pathlib import Path
 SA_NS = "https://skb.dev/ontology/source-agents#"
 CONCEPT_NS = "https://skb.dev/ontology/source-agents/concept#"
 ROLE_AUTHOR = CONCEPT_NS + "source-agent-role-author"
+ROLE_PUBLISHER = CONCEPT_NS + "source-agent-role-publisher"
 PACK = Path(__file__).resolve().parents[2] / "skb-ontology" / "references" / "domains" / "source-agents"
 AGENT_LIKE = ("claude", "codex", "gpt", "gemma", "gemini", "luna", "llm", "agent", "bot", "assistant", "copilot", "sol")
 

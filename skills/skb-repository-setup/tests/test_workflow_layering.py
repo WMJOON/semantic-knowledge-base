@@ -1,4 +1,4 @@
-"""MSM workflow ↔ MSO 레이어링 가드 (UD-0004).
+"""MSM workflow ↔ MSO 레이어링 가드.
 
 MSM workflow 는 MSO mso-workflow-design 을 **구조 기준**으로 소비한다:
   · `module:` + named phase(step.label/instruction/directories) = MSO 구조

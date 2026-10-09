@@ -2,7 +2,7 @@
 
 > **SKB(semantic-knowledge-base, 구 MSM)가 publish 하고 에이전트 실행 계층이 소비하는**
 > knowledge artifact 계약. 첫 소비자는 MSO execution 이며, 계약 자체는 provider-neutral 하다.
-> 이력: MSM v2.0.0 redirection ADR(superseded) → TOA(철회) → SKB 로 흡수 (UD-0010).
+> 이력: MSM v2.0.0 redirection ADR(superseded) → TOA(철회) → SKB 로 흡수.
 > status: draft — optimizer ContextPack 배선 PoC 결과를 반영해 v0.2 로 갱신한다.
 
 ## 당사자와 방향

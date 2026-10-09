@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.7.0 (2026-10-09) — publisher candidates in `identity propose`, publisher kinds in the `source-agents` pack
+
+### Added
+
+- **`skb-evidence identity propose`** now also queues the publisher a document declared (`target_kind: publisher_cluster`), grouped by
+  normalized name. Publishers inferred from the host (`publisher_source: domain-derived`) are never proposed, publisher rows are not
+  capped by `--max-clusters`, and nothing is promoted without a human entry in `decisions.jsonl`. Before this, only accounts and author
+  name clusters were queued, so a declared publisher had no route to `sa:Organization`. Tests: `test_identity_publisher.py`.
+- **`source-agents` domain pack:** a `publisher-kinds` concept scheme (repository, preprint repository, institutional repository, journal
+  publisher, government agency, web publisher) and the `sa:publisherKind` property for `sa:Organization`. A kind classifies; it does not set trust.
+- **`skb-evidence` SKILL.md:** the fixed procedure after collecting sources (collect → catalog with `--publishers` → register scoped with
+  `--source` → identity candidates → human decision → validate), including the rule that a name declared by the document is `curation: known`
+  while a host-derived name stays `auto`.
+
+### Changed
+
+- Removed the last internal record identifiers from comments and docs (`skb-repository-setup` layering notes, the agent-consumption contract).
+
 ## Unreleased — provenance design stance (docs only)
 
 - Added `docs/guides/provenance-stance.md` (Korean): the claim-is-not-fact premise, a table mapping metadata terms to the canonical names,

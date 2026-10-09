@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """저자 신원 해소(HITL): propose → (사람이 결정) → apply → check.
 
-  propose  등록(evidence/registrations)에서 결정적 후보 큐를 만든다(evidence/identity/review-queue.jsonl). 모델·네트워크 없음.
+  propose  등록(evidence/registrations)에서 결정적 후보 큐를 만든다(evidence/identity/review-queue.jsonl). 계정, 저자 이름 군집, 발행 주체 이름 군집이 후보다. 모델·네트워크 없음.
   apply    사람이 쓴 evidence/identity/decisions.jsonl 만 읽어 현재 accepted 인 식별을 evidence/identity/identifications.ttl 로 투영한다.
   check    identifications.ttl 이 결정 로그의 투영과 같은지(손 편집 탐지) + 도메인 SHACL 을 다시 확인한다.
 
@@ -179,9 +179,22 @@ def propose(reg, ident, decisions_state: dict, max_clusters: int) -> list[dict]:
                      "reason": "이름이 같은 저자 언급(동일인 보장 없음)", "hint": "같은 이름이 다른 사람일 수 있다"})
     crow.sort(key=lambda r: (-r["documents"], r["declared_name"].casefold(), r["targets"][0]))
     rows += crow[:max_clusters]
-    rows.sort(key=lambda r: (r["target_kind"] != "account", -r["documents"], r.get("handle") or r.get("declared_name") or ""))
+    # 발행 주체 후보: 문서가 발행 주체로 선언한 이름(domain-derived 는 mention 이 없다)을 이름으로 묶는다. 계정으로 해소 가능한 것은 제외.
+    # 발행 주체는 저자와 달리 소수의 조직이 여러 문서에 반복되므로 상한을 두지 않는다. 같은 이름이 같은 조직이라는 보장은 없다.
+    pclusters: dict = collections.defaultdict(list)
+    for m in reg.subjects(SA.mentionRole, URIRef(L.ROLE_PUBLISHER)):
+        if m in resolved or str(m) in settled or any(True for _ in reg.objects(m, SA.observedAccount)):
+            continue
+        pclusters[L.norm_name(str(next(reg.objects(m, SA.declaredName), "")))].append(m)
+    prow = [{"targets": sorted(str(m) for m in ms), "target_kind": "publisher_cluster", "documents": len({docs[m] for m in ms}),
+             "declared_name": str(next(reg.objects(ms[0], SA.declaredName), "")), "declared_affiliation": None,
+             "reason": "문서가 발행 주체로 선언한 이름(동일 조직 보장 없음)", "hint": "호스트에서 도출한 이름은 여기에 없다. 조직 정체성은 사람이 결정한다"}
+            for n, ms in pclusters.items()]
+    prow.sort(key=lambda r: (-r["documents"], r["declared_name"].casefold(), r["targets"][0]))
+    rows += prow
+    rows.sort(key=lambda r: ({"account": 0, "publisher_cluster": 1}.get(r["target_kind"], 2), -r["documents"], r.get("handle") or r.get("declared_name") or ""))
     for r in rows:
-        r["total_clusters"] = len(crow) if r["target_kind"] == "mention_cluster" else None
+        r["total_clusters"] = len(crow) if r["target_kind"] == "mention_cluster" else (len(prow) if r["target_kind"] == "publisher_cluster" else None)
     return rows
 
 
