@@ -1,5 +1,32 @@
 # Changelog
 
+## Unreleased — skb-semantic-search 0.3.0 · 0.4.0 (2026-10-25)
+
+### Added
+
+- **TBox 색인** (`index tbox`): `owl:Class`, `rdfs:Class`, `owl:ObjectProperty`, `owl:DatatypeProperty`를 임베딩한다. 언어 태그가 없는 라벨은 영문 대표 이름으로 쓴다.
+- **라벨 색인**: prefLabel, altLabel, hiddenLabel을 검색 키로 쓴다. hiddenLabel은 화면에 보이지 않는다.
+- **하이브리드 검색** (기본: concepts, tbox): 벡터 순위와 BM25 키워드 순위를 상호 순위 결합으로 합친다. `--mode vector|hybrid|keyword`로 고른다.
+- **정확 일치 순위**: 정규화한 질의가 라벨이나 대체 라벨과 같으면 융합에 별도 순위를 준다.
+- **`expand`**: TBox 검색 결과에 domain, range, 상하위 관계를 따라간 이웃을 덧붙인다. `--max-add`로 개수를 제한한다.
+- **SPARQL 템플릿**: `references/sparql-templates.json`의 자주 묻는 구조 아홉 개. `sparql-search`로 찾고, `sparql-run`으로 IRI 슬롯만 채워 읽기 전용 SELECT를 실행한다. `q:텍스트` 바인딩은 TBox IRI로 해석한다.
+- **`eval`**: 정답 세트로 모드별 top1, top3, top10, MRR을 잰다. 자연 질문 정답 세트를 `references/eval-natural-gold.jsonl`에 둔다.
+
+### Changed
+
+- 융합 가중치는 벡터 1.5, 키워드 1.0, 정확 일치 2.0이다. 세 정답 세트의 평균 MRR로 골랐다.
+- 추출기(`extract_concepts.py`)는 개념과 TBox 요소를 함께 낸다. 숨은 라벨을 읽는다.
+
+### Compatibility
+
+- 기존 `index concepts`와 `search`의 기본 동작은 하이브리드로 바뀌었다. 키워드 텍스트가 없는 기존 색인은 벡터만 쓰고 경고를 낸다. 다시 색인하면 하이브리드를 쓴다.
+- 임베딩 모델과 zvec이 없는 환경에서는 `--mode keyword`를 쓴다. SPARQL 템플릿은 벡터 없이도 동작한다.
+
+### Known limits
+
+- 자연 질문 정답 세트는 31개라 표본이 작다. 대체 라벨과 정의문 세트는 질의가 KB 본문에서 나와 키워드에 유리하다.
+- 예상 질문을 문서 쪽 텍스트에 넣는 보강(`skos:example` 권장)은 아직 구현하지 않았다.
+
 ## v1.8.0 (2026-10-09) — repository root slimmed; `skb init` runs from the skill alone
 
 ### Changed
