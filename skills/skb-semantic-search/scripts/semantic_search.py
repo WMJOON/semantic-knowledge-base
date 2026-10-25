@@ -207,12 +207,15 @@ def _load_sidecar(sd, kind):
 
 
 def _run_search(a, sd, col, flt, fetch, mode):
-    """벡터 순위와 키워드 순위를 상호 순위 결합으로 합친다. 키워드 색인이 없으면 벡터만 쓴다."""
-    vec = _vector_hits(col, a.kind, a.query, flt, fetch)
+    """mode: vector | hybrid | keyword. hybrid 는 벡터 순위와 키워드 순위를 상호 순위 결합으로 합친다.
+    키워드 색인이 없으면 hybrid 는 벡터만, keyword 는 오류로 끝낸다."""
+    side = _load_sidecar(sd, a.kind) if mode != "vector" else None
+    vec = _vector_hits(col, a.kind, a.query, flt, fetch) if mode in ("vector", "hybrid") else []
     if mode == "vector":
         return [h for _, h in vec], "vector"
-    side = _load_sidecar(sd, a.kind)
     if side is None:
+        if mode == "keyword":
+            sys.exit("키워드 색인이 없다 (index 를 다시 실행)")
         print("⚠ 키워드 색인이 없어 벡터 검색만 쓴다 (index 를 다시 실행)", file=sys.stderr)
         return [h for _, h in vec], "vector"
     ids = None
@@ -221,14 +224,20 @@ def _run_search(a, sd, col, flt, fetch, mode):
         ids = [i for i, e in side.items() if H.concept_match(e, statuses, a.include_deprecated, a.scheme)]
     bm = H.Bm25({i: H.bm25_tokens(e) for i, e in side.items()})
     kw = bm.rank(a.query, ids=ids, limit=fetch)
+    ex = H.exact_ids(a.query, side, ids)
+    w = H.HYBRID_WEIGHTS
+    if mode == "keyword":
+        fused = H.rrf_fuse([ex, kw], weights=[w["exact"], w["keyword"]])[:fetch]
+    else:
+        fused = H.rrf_fuse([ex, [i for i, _ in vec], kw], weights=[w["exact"], w["vector"], w["keyword"]])[:fetch]
     vmap = dict(vec)
     hits = []
-    for i, sc in H.rrf_fuse([[i for i, _ in vec], kw])[:fetch]:
+    for i, sc in fused:
         h = {f: side[i].get(f, "") for f in C.FIELDS[a.kind]}
         h["sim"] = vmap[i]["sim"] if i in vmap else None
         h["rrf"] = round(sc, 5)
         hits.append(h)
-    return hits, "hybrid"
+    return hits, mode
 
 
 def _score(h):
@@ -286,6 +295,46 @@ def cmd_expand(a):
 
 
 # ---- SPARQL 템플릿
+def _resolve_q(a, text, kind, tbox_rows):
+    """q:텍스트 를 IRI 로. 색인이 있으면 하이브리드(벡터+키워드), 없으면 키워드(정확 일치 우선)."""
+    import ss_sparql as S
+    sd = store_dir(a)
+    if (sd / C.TBOX_JSONL).exists() and H.texts_path(sd, "tbox").exists() and (sd / C.STORE_NAMES["tbox"]).exists():
+        try:
+            col = _zvec(sd, "tbox", create=False)
+            ns = argparse.Namespace(kind="tbox", query=text, status=None, include_deprecated=False, scheme=None)
+            hits, used = _run_search(ns, sd, col, None, 50, "hybrid")
+            cands = [h["iri"] for h in hits if h.get("tkind") == kind]
+            if cands:
+                return cands[0], cands[:5], used
+        except SystemExit as e:  # 벡터 쪽을 쓸 수 없으면 키워드로 내려간다
+            print(f"⚠ 하이브리드 해석 불가, 키워드로 대체: {e}", file=sys.stderr)
+    try:
+        iri, cands = S.resolve_tbox(text, tbox_rows, kind)
+    except ValueError as e:
+        sys.exit(str(e))
+    return iri, cands, "keyword"
+
+
+def cmd_eval(a):
+    """정답 세트(query -> iri)로 TBox 해석 재현율을 잰다. 모드별 top1·top3·top10·MRR."""
+    sd = store_dir(a)
+    gold = [json.loads(l) for l in open(a.gold, encoding="utf-8")]
+    col = _zvec(sd, "tbox", create=False) if any(m != "keyword" for m in a.modes) else None
+    fetch = min(max(a.k, 10) * 8, 300)
+    for mode in a.modes:
+        ranks = []
+        for g in gold:
+            ns = argparse.Namespace(kind="tbox", query=g["query"], status=None, include_deprecated=False, scheme=None)
+            hits, _ = _run_search(ns, sd, col, None, fetch, mode)
+            ids = [h["iri"] for h in hits]
+            ranks.append(ids.index(g["iri"]) + 1 if g["iri"] in ids else None)
+        n = len(ranks)
+        top = lambda k: sum(1 for r in ranks if r and r <= k) / n
+        mrr = sum((1 / r) if r else 0.0 for r in ranks) / n
+        out(f"  {mode:8s} n={n} top1={top(1):.3f} top3={top(3):.3f} top10={top(10):.3f} mrr={mrr:.3f}")
+
+
 def cmd_sparql_search(a):
     import ss_sparql as S
     tpls = S.load_templates()
@@ -329,13 +378,10 @@ def cmd_sparql_run(a):
         if value.startswith("q:"):
             if kind == "instance":
                 sys.exit(f"{slot} 는 개체라서 q: 검색을 쓸 수 없다. IRI 를 직접 넣어라")
-            try:
-                iri, cands = S.resolve_tbox(value[2:], tbox_rows, kind)
-            except ValueError as e:
-                sys.exit(str(e))
-            chosen[slot] = {"iri": iri, "candidates": cands}
+            iri, cands, used = _resolve_q(a, value[2:], kind, tbox_rows)
+            chosen[slot] = {"iri": iri, "candidates": cands, "mode": used}
         else:
-            chosen[slot] = {"iri": value, "candidates": []}
+            chosen[slot] = {"iri": value, "candidates": [], "mode": "iri"}
     try:
         query = S.fill(t, {s: chosen[s]["iri"] for s in chosen})
         S.assert_read_only(query)
@@ -391,7 +437,7 @@ def main():
     p = sub.add_parser("index", parents=[common]); p.add_argument("kind", choices=C.KINDS); p.add_argument("--limit", type=int); p.set_defaults(fn=cmd_index)
     p = sub.add_parser("search", parents=[common]); p.add_argument("kind", choices=C.KINDS); p.add_argument("query")
     p.add_argument("-k", type=int, default=5); p.add_argument("--json", action="store_true")
-    p.add_argument("--mode", choices=["vector", "hybrid"], default=None, help="기본: concepts·tbox 는 hybrid, evidence 는 vector")
+    p.add_argument("--mode", choices=["vector", "hybrid", "keyword"], default=None, help="기본: concepts·tbox 는 hybrid, evidence 는 vector")
     p.add_argument("--status", help="concepts: 쉼표로 구분한 status 목록"); p.add_argument("--include-deprecated", action="store_true")
     p.add_argument("--scheme", help="concepts: skos:inScheme IRI")
     p.add_argument("--uri", help="evidence: 이 문서(uri)로 제한"); p.add_argument("--uri-contains", help="evidence: uri 에 이 문자열이 있는 문서로 제한")
@@ -399,8 +445,11 @@ def main():
     p.set_defaults(fn=cmd_search)
     p = sub.add_parser("expand", parents=[common]); p.add_argument("query")
     p.add_argument("-k", type=int, default=5); p.add_argument("--max-add", type=int, default=10)
-    p.add_argument("--mode", choices=["vector", "hybrid"], default=None); p.add_argument("--json", action="store_true")
+    p.add_argument("--mode", choices=["vector", "hybrid", "keyword"], default=None); p.add_argument("--json", action="store_true")
     p.set_defaults(fn=cmd_expand)
+    p = sub.add_parser("eval", parents=[common]); p.add_argument("--gold", required=True, help="JSONL: {query, iri}")
+    p.add_argument("--modes", nargs="+", default=["keyword", "vector", "hybrid"], choices=["keyword", "vector", "hybrid"])
+    p.add_argument("-k", type=int, default=10); p.set_defaults(fn=cmd_eval)
     p = sub.add_parser("status", parents=[common]); p.add_argument("--json", action="store_true"); p.set_defaults(fn=cmd_status)
     p = sub.add_parser("sparql-search"); p.add_argument("query"); p.add_argument("-k", type=int, default=3)
     p.add_argument("--json", action="store_true"); p.set_defaults(fn=cmd_sparql_search)

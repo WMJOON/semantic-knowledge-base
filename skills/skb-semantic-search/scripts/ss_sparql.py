@@ -88,14 +88,24 @@ def tbox_side(r: dict) -> dict:
             "hidden": list(r.get("hidden") or []), "note": r.get("note") or ""}
 
 
+norm_label = H.norm_label
+
+
 def resolve_tbox(text: str, tbox_rows: list[dict], kind: str, limit: int = 5) -> tuple[str, list[str]]:
-    """q:텍스트 를 kind(class|property) 의 IRI 로 바꾼다. 1순위 IRI 와 후보 목록을 돌려준다."""
+    """q:텍스트 를 kind(class|property) 의 IRI 로 바꾼다. 1순위 IRI 와 후보 목록을 돌려준다.
+
+    정확 일치(정규화 후 같은 라벨·대체 라벨·숨은 라벨)가 있으면 키워드 점수보다 먼저 쓴다.
+    """
     cands = [r for r in tbox_rows if r.get("tkind") == kind]
+    q = norm_label(text)
+    exact = [r["iri"] for r in cands
+             if q and any(norm_label(x) == q for x in (list(r.get("pref_en") or []) + list(r.get("pref_ko") or [])
+                                                      + list(r.get("alt") or []) + list(r.get("hidden") or [])))]
     docs = {r["iri"]: H.bm25_tokens(tbox_side(r)) for r in cands}
-    ids = H.Bm25(docs).rank(text, limit=limit)
-    if not ids:
+    ranked = list(dict.fromkeys(exact + H.Bm25(docs).rank(text, limit=limit)))[:limit]
+    if not ranked:
         raise ValueError(f"'{text}' 에 맞는 {kind} 가 없다")
-    return ids[0], ids
+    return ranked[0], ranked
 
 
 def load_graph(target: Path):

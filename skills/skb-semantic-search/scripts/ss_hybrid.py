@@ -14,6 +14,9 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 RRF_K = 60
+# 융합 가중치. 정답 세트 3종(대체 라벨, 정의문, 자연 질문)의 평균 MRR 기준으로 고른 값.
+# 자연 질문 세트(31개)에서 벡터 1.5 가 가장 좋았고, 정확 일치 2.0 은 대체 라벨 질의를 1위로 올린다.
+HYBRID_WEIGHTS = {"vector": 1.5, "keyword": 1.0, "exact": 2.0}
 BM25_K1 = 1.2
 BM25_B = 0.75
 TEXTS_NAME = "texts_{kind}.jsonl"
@@ -32,6 +35,26 @@ def tokenize(text: str) -> list[str]:
         if _HANGUL.fullmatch(w) and len(w) >= 3:
             toks.extend(w[i:i + 2] for i in range(len(w) - 1))
     return toks
+
+
+def norm_label(text: str) -> str:
+    """정확 일치 비교용 정규화: 소문자, 공백과 구두점 제거."""
+    return re.sub(r"[\s\-_·.,/()'\"]+", "", (text or "").lower())
+
+
+def exact_ids(query: str, side_by_id: dict, ids=None) -> list[str]:
+    """정규화한 질의가 라벨(이름 조각), 대체 라벨, 숨은 라벨 중 하나와 같은 항목 id 목록."""
+    q = norm_label(query)
+    if not q:
+        return []
+    pool = side_by_id.keys() if ids is None else ids
+    out = []
+    for i in pool:
+        e = side_by_id[i]
+        names = [n for n in (e.get("label") or "").split(" / ")] + list(e.get("alt") or []) + list(e.get("hidden") or [])
+        if any(norm_label(n) == q for n in names):
+            out.append(i)
+    return out
 
 
 def concept_match(row: dict, statuses=None, include_deprecated=False, scheme=None) -> bool:
@@ -85,11 +108,13 @@ class Bm25:
         return [i for i, _ in sorted(scores.items(), key=lambda kv: -kv[1])][:limit]
 
 
-def rrf_fuse(rankings: list[list[str]], k: int = RRF_K) -> list[tuple[str, float]]:
+def rrf_fuse(rankings: list[list[str]], k: int = RRF_K, weights: list[float] | None = None) -> list[tuple[str, float]]:
+    """상호 순위 결합. weights 가 없으면 동일 가중."""
     scores: dict[str, float] = defaultdict(float)
-    for ranking in rankings:
+    for n, ranking in enumerate(rankings):
+        w = 1.0 if weights is None else weights[n]
         for r, i in enumerate(ranking, 1):
-            scores[i] += 1.0 / (k + r)
+            scores[i] += w / (k + r)
     return sorted(scores.items(), key=lambda kv: -kv[1])
 
 
