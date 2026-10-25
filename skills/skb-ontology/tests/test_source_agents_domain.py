@@ -20,7 +20,7 @@ class DomainPackTest(unittest.TestCase):
     def setUp(self):
         self.td = tempfile.TemporaryDirectory()
         self.t = Path(self.td.name)
-        d = self.t / "ontology/system/semantic/source-agents"
+        d = self.t / "ontology/semantic/source-agents"
         d.mkdir(parents=True)
         for f in PACK.glob("*.ttl"):
             shutil.copy(f, d / f.name)
@@ -38,7 +38,7 @@ class DomainPackTest(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
     def test_term_without_provenance_is_caught(self):
-        p = self.t / "ontology/system/semantic/source-agents/source-agents.ttl"
+        p = self.t / "ontology/semantic/source-agents/source-agents.ttl"
         t = p.read_text(encoding="utf-8")
         i = t.index("sa:Person a owl:Class")
         j = t.index("skb:status", i)

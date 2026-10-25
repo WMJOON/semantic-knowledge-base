@@ -135,7 +135,7 @@ def test_resolve_tbox_returns_top_iri_and_candidates_by_kind():
 
 def test_run_select_on_small_graph_and_load_graph_skips_bad_files(tmp_path):
     rdflib = pytest.importorskip("rdflib")
-    ttl_dir = tmp_path / "ontology" / "system" / "semantic" / "x"
+    ttl_dir = tmp_path / "ontology" / "semantic" / "x"
     ttl_dir.mkdir(parents=True)
     (ttl_dir / "ok.ttl").write_text(
         "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .\n"

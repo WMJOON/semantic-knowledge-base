@@ -17,13 +17,13 @@ def _load():
 
 def test_default_without_hub(tmp_path):
     lay = _load().resolve_layout(tmp_path)
-    assert lay["semantic_dir"] == tmp_path.resolve() / "ontology" / "system" / "semantic"
+    assert lay["semantic_dir"] == tmp_path.resolve() / "ontology" / "semantic"
 
 
 def test_default_without_layout_section(tmp_path):
     (tmp_path / "canonical_root_hub.yaml").write_text("domains: {}\n", encoding="utf-8")
     lay = _load().resolve_layout(tmp_path)
-    assert lay["semantic_dir"] == tmp_path.resolve() / "ontology" / "system" / "semantic"
+    assert lay["semantic_dir"] == tmp_path.resolve() / "ontology" / "semantic"
 
 
 def test_declared_relative_and_absolute(tmp_path):
@@ -40,7 +40,7 @@ def test_declared_relative_and_absolute(tmp_path):
 def test_invalid_yaml_warns_and_defaults(tmp_path, capsys):
     (tmp_path / "canonical_root_hub.yaml").write_text("layout: [unclosed\n", encoding="utf-8")
     lay = _load().resolve_layout(tmp_path)
-    assert lay["semantic_dir"] == tmp_path.resolve() / "ontology" / "system" / "semantic"
+    assert lay["semantic_dir"] == tmp_path.resolve() / "ontology" / "semantic"
     assert "파싱 실패" in capsys.readouterr().err
 
 

@@ -27,7 +27,7 @@ graph.json (nodes: code + concept + document)
 evidence/graphify/entity_candidates.jsonl   ← concept 노드만
 evidence/graphify/relation_candidates.jsonl ← concept 간 엣지
     ↓ 후보 검토 + skb-ontology add --apply
-ontology/system/semantic/{domain}/{domain}.ttl         ← registry/link gate 후 승격
+ontology/semantic/{domain}/{domain}.ttl         ← registry/link gate 후 승격
 ```
 
 ---
@@ -47,7 +47,7 @@ ontology/system/semantic/{domain}/{domain}.ttl         ← registry/link gate �
 구조를 먼저 설계하고 evidence를 채웁니다.
 
 ```
-skb init (ontology/system/semantic 골격)
+skb init (ontology/semantic 골격)
     ↓
 skb-ontology add --kind class (TTL TBox 클래스 등록)
     ↓
@@ -85,7 +85,7 @@ status 승격
 ## 핵심 규칙
 
 **Rule 1. ontology ≠ evidence**
-- `ontology/system/semantic/**/*.ttl` = 클래스·관계·인스턴스 정본
+- `ontology/semantic/**/*.ttl` = 클래스·관계·인스턴스 정본
 - `ontology/explain/**/*.md` = 사람을 위한 파생 projection
 - `evidence/` = 정당화 근거 (justification)
 

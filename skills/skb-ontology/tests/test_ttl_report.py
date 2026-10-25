@@ -47,7 +47,7 @@ def test_orphans_cli_lists_unconnected_accepted_terms(tmp_path, capsys):
 
 def test_dangling_link_makes_report_exit_nonzero(tmp_path):
     target = fixture_target(tmp_path)
-    path = target / "ontology/system/semantic/demo/demo.ttl"
+    path = target / "ontology/semantic/demo/demo.ttl"
     path.write_text(path.read_text("utf-8") + "\n<https://example.org/kb#alice> <https://example.org/kb#memberOf> <https://example.org/kb#missing> .\n", encoding="utf-8")
     assert ttl_report.main(["stats", "--target", str(target), "--domain", "demo"]) == 1
     assert any("dangling object-property target" in f for f in ontology_state(target, "demo")["failures"])

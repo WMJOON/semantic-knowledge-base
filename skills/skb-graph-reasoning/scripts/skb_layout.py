@@ -3,7 +3,8 @@
 두 스킬이 skb-ontology 없이도 도는 독립성을 지키려고 같은 파일을 각각 둔다.
 `tests/test_skb_layout_copies.py` 가 두 복사본이 같은 내용인지 확인한다. 고칠 때는 둘을 함께 고친다.
 
-layout: 이 없는 KB 는 이전과 같은 경로(ontology/system/semantic, evidence/seeds.jsonl)를 돌려받는다.
+layout: 이 없는 KB 는 ontology/semantic 을 쓰되, 그 경로가 없고 이전 배치(ontology/system/semantic)만 있으면 이전 경로를 돌려받는다
+(마이그레이션 전 KB 의 읽기 호환).
 """
 from __future__ import annotations
 
@@ -15,7 +16,8 @@ try:
 except ImportError:  # pragma: no cover
     yaml = None
 
-DEFAULT_SEMANTIC_DIR = ("ontology", "system", "semantic")
+DEFAULT_SEMANTIC_DIR = ("ontology", "semantic")
+LEGACY_SEMANTIC_DIR = ("ontology", "system", "semantic")  # 이전 배치. layout: 이 없고 이 경로만 있을 때 읽는다
 DEFAULT_SEEDS_PATH = ("evidence", "seeds.jsonl")
 
 
@@ -61,7 +63,14 @@ def _resolve(target: Path, key: str, default: tuple) -> Path:
 
 
 def semantic_dir(target: Path) -> Path:
-    return _resolve(target, "semantic_dir", DEFAULT_SEMANTIC_DIR)
+    target = Path(target).resolve()
+    if read_layout(target).get("semantic_dir"):
+        return _resolve(target, "semantic_dir", DEFAULT_SEMANTIC_DIR)
+    current = target.joinpath(*DEFAULT_SEMANTIC_DIR)
+    legacy = target.joinpath(*LEGACY_SEMANTIC_DIR)
+    if not current.exists() and legacy.exists():
+        return legacy
+    return current
 
 
 def seeds_path(target: Path) -> Path:

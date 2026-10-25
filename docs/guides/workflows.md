@@ -134,7 +134,7 @@ python skills/skb-orchestration/router/migrate_workflows_to_ttl.py agent-context
 ```
 
 이 절은 workflow definition의 일회성 migration에만 해당한다. ontology domain data는
-`ontology/system/semantic/**/*.ttl`만 정본이며 YAML 동기화 경로를 두지 않는다.
+`ontology/semantic/**/*.ttl`만 정본이며 YAML 동기화 경로를 두지 않는다.
 
 ---
 

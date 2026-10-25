@@ -16,7 +16,7 @@ from ttl_validate import validate_target  # noqa: E402
 
 @pytest.mark.parametrize("layout,canonical", [
     ("b1", "ontology/semantic/demo/demo.ttl"),
-    ("legacy", "ontology/system/semantic/demo/demo.ttl"),
+    ("legacy", "ontology/semantic/demo/demo.ttl"),
 ])
 def test_init_creates_valid_turtle_without_ontology_jsonl(tmp_path, layout, canonical):
     rc = apply_init.main([
@@ -36,4 +36,4 @@ def test_init_creates_valid_turtle_without_ontology_jsonl(tmp_path, layout, cano
 def test_default_layout_is_b1(tmp_path):
     assert apply_init.main(["--target", str(tmp_path), "--name", "Demo", "--domain", "demo", "--yes"]) == 0
     assert (tmp_path / "ontology/semantic/demo/demo.ttl").exists()
-    assert not (tmp_path / "ontology/system/semantic").exists()
+    assert not (tmp_path / "ontology/system").exists()

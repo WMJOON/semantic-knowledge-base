@@ -5,7 +5,7 @@ description: |
   canonical domain representation is RDF/OWL Turtle. Use for class, property,
   individual, taxonomy, provenance, SHACL, naming, duplicate, and link-integrity work.
 metadata:
-  version: "1.5.0"
+  version: "1.6.0"
 ---
 
 # SKB Ontology
@@ -19,7 +19,7 @@ migration. It defines the canonical layout, vocabulary, naming contract, and gat
 
 ## Active workflow
 
-1. Locate `ontology/system/semantic/<domain>/*.ttl`.
+1. Locate `ontology/semantic/<domain>/*.ttl`.
 2. Edit Turtle directly or use `skb-ontology add` for a managed term/assertion.
 3. Run `skb-ontology validate --target REPO [--domain DOMAIN]`.
 4. Run `skb-graph-reasoning reason --target REPO --domain DOMAIN --apply` (separate skill, OWL 2 RL)

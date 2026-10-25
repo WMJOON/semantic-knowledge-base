@@ -6,7 +6,7 @@ description: |
   파생 파일이 최신인지 알려 주고(status), 폐포 위에서 SPARQL 을 실행한다(query).
   정본 TTL 은 수정하지 않는다. 트리거: "추론", "OWL 추론", "reasoner", "비일관성 점검", "inferred", "서브클래스 전이", "SPARQL 질의".
 metadata:
-  version: "0.2.0"
+  version: "0.3.0"
 ---
 
 # skb-graph-reasoning (v0.1.0)
@@ -39,7 +39,7 @@ OWL 2 RL 이 다루는 것: 서브클래스·서브프로퍼티 전이, `rdfs:do
 | `scripts/skb-graph-reasoning status --target KB --domain D [--json]` | `fresh \| stale \| missing`, fresh 가 아니면 종료 코드 1 |
 | `scripts/skb-graph-reasoning query --target KB [--domain D] (--sparql Q \| --file F) [--no-closure] [--json] [--limit N]` | 폐포 위 SPARQL. ASK 는 종료 코드 0/1 |
 
-`--rdfs` 는 RDFS 규칙을 함께 적용한다. `--domain` 은 `ontology/system/semantic/` 아래 경로다(예: `academic/finance`).
+`--rdfs` 는 RDFS 규칙을 함께 적용한다. `--domain` 은 `ontology/semantic/` 아래 경로다(예: `academic/finance`).
 
 ## 환경
 

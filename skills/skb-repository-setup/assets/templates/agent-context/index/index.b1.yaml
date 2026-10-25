@@ -28,10 +28,10 @@ modules:
       - path: semantic/
         role: graph
         description: Per-domain canonical Turtle (layout.semantic_dir).
-      - path: system/kinetic/
+      - path: kinetic/
         role: graph
         description: Transition and action rule graph.
-      - path: system/dynamic/
+      - path: dynamic/
         role: graph
         description: Event, state and derived-value graph.
     status: active

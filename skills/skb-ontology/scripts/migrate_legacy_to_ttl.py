@@ -202,7 +202,7 @@ def self_validate(target: Path, domain: str, graph: Graph) -> list[str]:
         tmp_root = Path(tmp)
         for shape_path in shapes_files(target, domain):
             rel = shape_path.relative_to(semantic_root(target))
-            dest = tmp_root / "ontology" / "system" / "semantic" / rel
+            dest = tmp_root / "ontology" / "semantic" / rel
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy(shape_path, dest)
         write_graph(canonical_path(tmp_root, domain), graph)

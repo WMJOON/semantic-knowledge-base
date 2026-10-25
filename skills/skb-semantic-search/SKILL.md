@@ -6,7 +6,7 @@ description: |
   원천이 바뀌었는지 신선도를 점검한다(status). 정본(TTL, seeds.jsonl)은 읽기만 하고 수정하지 않는다.
   트리거: "의미 검색", "개념 검색", "evidence 검색", "비슷한 개념 찾아줘", "임베딩 인덱스", "재색인", "인덱스 최신인지".
 metadata:
-  version: "0.4.0"
+  version: "0.5.0"
 ---
 
 # skb-semantic-search (v0.4.0)
@@ -17,7 +17,7 @@ KB 의 두 정본을 임베딩해 질의로 찾는 **파생 인덱스**와 그 C
 
 | 인덱스 | 원천(정본) | 한 항목 | 임베딩 텍스트 |
 |---|---|---|---|
-| `concepts` | `ontology/system/semantic/**/*.ttl` 의 `skos:Concept` | 개념 1개 | `prefLabel(en/ko) (altLabel): scopeNote` |
+| `concepts` | `ontology/semantic/**/*.ttl` 의 `skos:Concept` | 개념 1개 | `prefLabel(en/ko) (altLabel): scopeNote` |
 | `evidence` | `evidence/seeds.jsonl` + `evidence/md/*.md` | 청크 1개 | frontmatter 를 뺀 본문 |
 
 인덱스는 `<KB>/embedding/zvec_store_{concepts,evidence}_eg2/` 와 `search_manifest.json` 에 둔다. **언제든 지우고 다시 만들 수 있는 파생물**이라 git 에 올리지 않는다.

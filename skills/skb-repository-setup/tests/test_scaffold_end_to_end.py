@@ -40,7 +40,7 @@ def test_layout_section_declares_the_paths(kb):
         assert key in hub
     for d in ("ontology/semantic/demo", "evidence/artifact/raw", "evidence/chunk", "evidence/catalog"):
         assert (kb / d).is_dir()
-    assert not (kb / "ontology/system/semantic").exists() and not (kb / "evidence/raw").exists()
+    assert not (kb / "ontology/system").exists() and not (kb / "evidence/raw").exists()
 
 
 def test_artifact_registry_modules_are_declared_in_index(kb):
@@ -130,12 +130,12 @@ def test_existing_gitignore_is_left_alone(tmp_path):
 
 
 def test_kb_without_layout_section_keeps_old_paths(tmp_path):
-    """layout: 이 없는 KB(옛 배치)는 이전과 똑같이 ontology/system/semantic 을 읽는다."""
+    """layout: 이 없는 KB(옛 배치)는 이전과 똑같이 ontology/semantic 을 읽는다."""
     root = tmp_path / "old"
     r = sh(sys.executable, APPLY, "--target", root, "--name", "old", "--domain", "demo", "--layout", "legacy", "--yes")
     assert r.returncode == 0, r.stderr
     assert "layout:" not in (root / "canonical_root_hub.yaml").read_text(encoding="utf-8")
-    assert (root / "ontology/system/semantic/demo/demo.ttl").exists()
+    assert (root / "ontology/semantic/demo/demo.ttl").exists()
     assert sh(SKILLS / "skb-ontology/scripts/skb-ontology", "validate", "--target", root, "--domain", "demo").returncode == 0
     r = sh(sys.executable, SKILLS / "skb-graph-reasoning/scripts/graph_reasoning.py", "check", "--target", root)
     assert r.returncode == 0 and "triples=1 " in r.stdout

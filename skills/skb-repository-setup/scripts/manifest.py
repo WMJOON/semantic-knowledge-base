@@ -26,14 +26,14 @@ class Entry:
 
 # v1.1.0 topology — three layers separated by name:
 #   evidence/   raw sources and the catalog that describes them
-#   ontology/system/semantic/ the TTL-only SSOT (authored semantics)
+#   ontology/semantic/ the TTL-only SSOT (authored semantics)
+#   ontology/kinetic/, ontology/dynamic/ rule and event graphs (no system/ level)
 #   projection/ everything derived from the ontology for humans and tools
 BASE_DIRS: tuple[str, ...] = (
     "ontology",
-    "ontology/system",
-    "ontology/system/semantic",
-    "ontology/system/kinetic",
-    "ontology/system/dynamic",
+    "ontology/semantic",
+    "ontology/kinetic",
+    "ontology/dynamic",
     "projection",
     "projection/wikigraph",
     "projection/wikigraph/class",
@@ -145,7 +145,6 @@ DEFAULT_LAYOUT = "b1"
 # b1 — 이름만 공개 도구 관례를 따르는 배치. 정본은 계속 TTL 이고, 스킬은 canonical_root_hub.yaml 의
 # layout: 섹션으로 경로를 찾는다(템플릿이 그 섹션을 선언한다). legacy 는 layout: 이 없던 이전 배치다.
 _B1_DROP_DIRS = {
-    "ontology/system/semantic",
     "evidence/md",
     "evidence/raw",
     "agent-context/workflow/evidence",
@@ -154,7 +153,6 @@ _B1_DROP_DIRS = {
     "agent-context/workflow/explorer",
 }
 _B1_ADD_DIRS: tuple[str, ...] = (
-    "ontology/semantic",
     "evidence/artifact",
     "evidence/artifact/raw",
     "evidence/chunk",
@@ -191,7 +189,8 @@ _B1_FILES: tuple[Entry, ...] = (
 
 
 def semantic_rel(layout: str = DEFAULT_LAYOUT) -> str:
-    return "ontology/semantic" if layout == "b1" else "ontology/system/semantic"
+    """두 배치 모두 정본 TTL 은 ontology/semantic/ 에 둔다 (system 단계 없음)."""
+    return "ontology/semantic"
 
 
 def domain_entries(cluster: str, layout: str = DEFAULT_LAYOUT) -> tuple[Entry, ...]:
@@ -203,9 +202,9 @@ def domain_entries(cluster: str, layout: str = DEFAULT_LAYOUT) -> tuple[Entry, .
         Entry(hub, "dir"),
         Entry(f"projection/wikigraph/instance/{cluster}", "dir"),
         Entry(f"{hub}/{cluster}__class.md", "file_template", "domain_hub.md", "markdown"),
-        Entry(f"{semantic}/{cluster}.ttl", "file_template", "ontology/system/semantic/domain.ttl"),
-        Entry(f"ontology/system/kinetic/{cluster}.ttl", "file_empty"),
-        Entry(f"ontology/system/dynamic/{cluster}.ttl", "file_empty"),
+        Entry(f"{semantic}/{cluster}.ttl", "file_template", "ontology/semantic/domain.ttl"),
+        Entry(f"ontology/kinetic/{cluster}.ttl", "file_empty"),
+        Entry(f"ontology/dynamic/{cluster}.ttl", "file_empty"),
     )
 
 

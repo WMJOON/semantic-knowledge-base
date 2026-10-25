@@ -40,7 +40,7 @@ SKB 는 형식 온톨로지가 아니라 **graph knowledge base** 를 기본형�
 ## Artifact 표면
 
 publish 번들 root 기준. `{domain}` 은 KB 도메인 이름. 원본 경로는 skb-ontology 의
-`ontology/system/**` 레이아웃을 따르며, manifest 에 원본→번들 매핑을 기록한다.
+`ontology/**` 레이아웃(semantic·kinetic·dynamic)을 따르며, manifest 에 원본→번들 매핑을 기록한다.
 
 | # | artifact | 번들 경로 (초안) | 형식 | 최소 Level | 용도 |
 |---|----------|------|------|------|------|

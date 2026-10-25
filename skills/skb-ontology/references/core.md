@@ -3,7 +3,7 @@
 ## Canonical layout
 
 ```text
-ontology/system/semantic/<domain>/
+ontology/semantic/<domain>/
   <domain>.ttl            asserted TBox, RBox, ABox, registry, provenance
   <domain>.shapes.ttl     SHACL validation graph
   <domain>.inferred.ttl   derived reasoning projection; never hand-edited

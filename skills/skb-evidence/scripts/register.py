@@ -8,7 +8,7 @@
 입력  : evidence/catalog/catalog.ttl 의 ec:Source 중 ec:rawPath 가 있는 것 + 그 raw frontmatter(날짜·저자·계정 선언값)
 출력  : evidence/registrations/<document-key>.ttl  (기본 dry-run, --apply 로 쓴다)
         관찰 데이터(언급·계정)는 문서마다 쌓이므로 skb-ontology 의 term 레지스트리 계약(인스턴스 선언) 대신 이 도구의 SHACL 게이트로 검증한다.
-        카탈로그(evidence/catalog)와 같은 층이다. 신원 해소로 승격된 Person/Organization 은 사람 검토 뒤 ontology/system/semantic/source-agents 에 둔다.
+        카탈로그(evidence/catalog)와 같은 층이다. 신원 해소로 승격된 Person/Organization 은 사람 검토 뒤 ontology/semantic/source-agents 에 둔다.
 
 검사(결정적): ① lexical(대체문자·제어/숨은 문자·비정상 공백·mojibake·NFC) ② SHACL(references/domains/source-agents 의 shapes)
 같은 문서·같은 스냅샷은 기존 등록을 보존한다. 같은 문서의 내용이 바뀌었으면 등록을 중단한다.

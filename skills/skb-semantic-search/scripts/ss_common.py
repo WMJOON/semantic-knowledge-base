@@ -26,7 +26,7 @@ HYBRID_KINDS = ("concepts", "tbox")  # 키워드 색인을 함께 쓰는 kind. e
 STORE_NAMES = {"concepts": "zvec_store_concepts_eg2", "evidence": "zvec_store_evidence_eg2", "tbox": "zvec_store_tbox_eg2"}
 FIELDS = {"concepts": ("iri", "label", "status", "scheme"), "evidence": ("seed_id", "title", "uri", "md_path"),
           "tbox": ("iri", "label", "tkind", "domain", "range", "super")}
-SEMANTIC_DIR = "ontology/system/semantic"  # layout: 이 없을 때의 기본값. 실제 경로는 skb_layout.semantic_dir
+SEMANTIC_DIR = "ontology/semantic"  # layout: 이 없을 때의 기본값. 실제 경로는 skb_layout.semantic_dir
 SKIP_SUFFIXES = (".inferred.ttl", ".shapes.ttl")
 MANIFEST = "search_manifest.json"
 CONCEPTS_JSONL = "kb_concepts.jsonl"

@@ -5,7 +5,7 @@
 기본 배치는 `b1`이다. 아래 트리는 `legacy`(옛 배치)이고, `b1`은 달라지는 부분이 다음과 같다. `canonical_root_hub.yaml`의 `layout:`이 이 경로를 선언한다.
 
 ```text
-ontology/semantic/{domain}/{domain}.ttl       # legacy: ontology/system/semantic/
+ontology/semantic/{domain}/{domain}.ttl       # legacy: ontology/semantic/
 ontology/system/{kinetic,dynamic}/{cluster}.ttl
 evidence/artifact/raw/                         # legacy: evidence/raw/
 evidence/chunk/                                # legacy: evidence/md/

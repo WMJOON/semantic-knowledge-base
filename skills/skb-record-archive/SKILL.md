@@ -5,7 +5,7 @@ description: |
   SQLite runtime DB, append-only events, derived records, Parquet snapshots,
   temporal fields, ECA rule_runner entrypoint를 담당한다.
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
 ---
 
 # skb-record-archive (v1.0.0)

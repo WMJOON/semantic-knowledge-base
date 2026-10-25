@@ -3,8 +3,8 @@
 layout: 섹션에서 읽어온다 (core.md addendum §7.2 "canonical 위치는 canonical_root_hub.yaml이
 선언한 경로를 따른다"의 실제 구현).
 
-fail-soft 3단계 (byte-identical invariant — layout: 섹션이 없는 모든 기존 repo는
-이 모듈 도입 전과 완전히 동일한 경로를 돌려받는다):
+fail-soft 3단계 (layout: 섹션이 없으면 기본 경로를 쓴다. semantic 만은 예외: ontology/semantic 이 없고
+ontology/system/semantic 만 있는 이전 배치 KB 는 이전 경로를 돌려받는다):
   1. canonical_root_hub.yaml 이 없음   -> 하드코딩 기본값
   2. 있으나 YAML 파싱 실패             -> 하드코딩 기본값 + 경고 1줄(stderr)
   3. 있고 layout: 섹션이 있음          -> 선언된 키만 기본값을 덮어씀 (키 단위 병합)
@@ -29,7 +29,7 @@ _DEFAULTS: dict[str, tuple[str, ...]] = {
     "abox_dir": ("ontology", "Abox"),
     "tbox_dir": ("ontology", "Tbox"),
     "rbox_dir": ("ontology", "Rbox"),
-    "semantic_dir": ("ontology", "system", "semantic"),
+    "semantic_dir": ("ontology", "semantic"),
     "explain_dir": ("ontology", "explain"),
     "inferred_dir": ("ontology", "Abox", "_inferred"),
     # v0.15.0 — projection/evidence layers plus the md and graph splits.
@@ -116,6 +116,17 @@ def apply_declared(target: Path, defaults: dict, declared: dict) -> dict[str, Pa
     return layout
 
 
+# 이전 배치의 semantic 경로. layout: 가 없고 새 기본 경로는 없는데 이 경로만 있으면 이전 KB 로 보고 읽는다.
+_LEGACY_SEMANTIC_DIR = ("ontology", "system", "semantic")
+
+
 def resolve_layout(target: Path) -> dict[str, Path]:
     """target repo의 layout 딕셔너리(키 -> 절대 Path)를 반환한다."""
-    return apply_declared(target, _DEFAULTS, read_layout_section(target))
+    declared = read_layout_section(target)
+    layout = apply_declared(target, _DEFAULTS, declared)
+    if not declared.get("semantic_dir"):
+        current = Path(target).resolve().joinpath(*_DEFAULTS["semantic_dir"])
+        legacy = Path(target).resolve().joinpath(*_LEGACY_SEMANTIC_DIR)
+        if not current.exists() and legacy.exists():
+            layout["semantic_dir"] = legacy
+    return layout

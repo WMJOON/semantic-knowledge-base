@@ -18,7 +18,7 @@ def main():
     print(f"  row={row_data}")
     print()
     print("향후 구현 예정:")
-    print("  1. ontology/system/kinetic/{domain}.ttl에서 transition/action rule graph 로드")
+    print("  1. ontology/kinetic/{domain}.ttl에서 transition/action rule graph 로드")
     print("  2. Event(row 변경) → Condition(술어 평가) → Action(트리거)")
     print("  3. eca_log 테이블에 실행 기록 저장")
 

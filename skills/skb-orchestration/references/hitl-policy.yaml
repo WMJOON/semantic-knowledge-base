@@ -22,7 +22,13 @@ pretool_block_patterns:
   - path_glob: "ontology/explain/instance/**/*.jsonl"
     reason: tbox_abox_boundary_move
     proposed_action: "use skb-ontology workflow with HITL ack"
-  - path_glob: "ontology/system/**/*.ttl"
+  - path_glob: "ontology/semantic/**/*.ttl"
+    reason: tbox_abox_boundary_move
+    proposed_action: "use skb-ontology workflow with HITL ack"
+  - path_glob: "ontology/kinetic/**/*.ttl"
+    reason: tbox_abox_boundary_move
+    proposed_action: "use skb-ontology workflow with HITL ack"
+  - path_glob: "ontology/dynamic/**/*.ttl"
     reason: tbox_abox_boundary_move
     proposed_action: "use skb-ontology workflow with HITL ack"
   - path_glob: "agent-context/workflow/**/*.yaml"

@@ -1,6 +1,6 @@
 # SKB — Semantic Knowledge Base (v1.8)
 
-SKB는 에이전트가 읽고 쓸 수 있는 **지식 베이스 스킬 팩**이다. 온톨로지 도메인 데이터의 정본은 TTL만 쓴다. 용어, 관계, 인스턴스, 공리, 레지스트리 소속, 출처는 모두 `ontology/system/semantic/**/*.ttl`에 둔다.
+SKB는 에이전트가 읽고 쓸 수 있는 **지식 베이스 스킬 팩**이다. 온톨로지 도메인 데이터의 정본은 TTL만 쓴다. 용어, 관계, 인스턴스, 공리, 레지스트리 소속, 출처는 모두 `ontology/semantic/**/*.ttl`에 둔다.
 
 > README에는 **현재 마이너 버전의 운영 의미**만 남긴다. 패치와 이전 버전의 상세 변경은 [docs/changelog.md](docs/changelog.md)에 있다.
 
@@ -56,7 +56,7 @@ YAML과 JSONL은 온톨로지 용어를 정의하지 않는다. 이 둘은 워�
 ```mermaid
 flowchart LR
     A["원천 문서"] -->|수집·인용 검증| E["skb-evidence<br/>증거 카탈로그"]
-    E -->|주장 등록| T["정본 TTL<br/>ontology/system/semantic"]
+    E -->|주장 등록| T["정본 TTL<br/>ontology/semantic"]
     T -->|검증·정합성| O["skb-ontology<br/>검증·고아·통계"]
     T -->|OWL 2 RL 추론| G["skb-graph-reasoning<br/>파생 추론"]
     T -->|색인| S["skb-semantic-search<br/>하이브리드 검색·SPARQL 템플릿"]

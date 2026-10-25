@@ -78,7 +78,7 @@ row INSERT
   → trajectory log (event_type: eca_fired / eca_skip)
 ```
 
-ECA 규칙 정의는 `ontology/system/kinetic/{domain}.ttl`의 transition/action rule graph에서 로드한다.
+ECA 규칙 정의는 `ontology/kinetic/{domain}.ttl`의 transition/action rule graph에서 로드한다.
 
 ## 6. export-snapshot 흐름
 

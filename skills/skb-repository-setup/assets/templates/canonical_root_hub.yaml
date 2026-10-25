@@ -10,10 +10,10 @@ locked: true
 domains: []
 
 scan:
-  include: "ontology/system/semantic/**/*.ttl"
+  include: "ontology/semantic/**/*.ttl"
   exclude:
-    - "ontology/system/semantic/**/*.shapes.ttl"
-    - "ontology/system/semantic/**/*.inferred.ttl"
+    - "ontology/semantic/**/*.shapes.ttl"
+    - "ontology/semantic/**/*.inferred.ttl"
   orphan_exit_code: 1
 
 sync:

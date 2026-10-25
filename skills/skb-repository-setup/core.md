@@ -72,7 +72,7 @@ Gate: `>=0.85 pass`, `0.70~0.85 warn`, `<0.70 fail`.
 | 경로 | 내용 |
 |------|------|
 | `<target>/canonical_root_hub.yaml` | locked SSOT |
-| `<target>/ontology/system/semantic/<domain>/<domain>.ttl` | asserted ontology SSOT |
+| `<target>/ontology/semantic/<domain>/<domain>.ttl` | asserted ontology SSOT |
 | `<target>/agent-context/workflow/{index.yaml,evidence/,ontology/,maintain/,explorer/}` | MSO canonical workflow yaml migration layer |
 | `<target>/record-archive/{registry,runtime,events,derived,snapshots,schema}` | record archive |
 | `<target>/agent-context/work-memory/{auditlog,worklog,track-record,insight-record,index.md}` | MSO work-memory |

@@ -11,7 +11,7 @@ locked: true
 domains: []
 
 # 스킬이 경로를 찾는 곳. 이 섹션이 없는 저장소는 이전 관례
-# (ontology/system/semantic, evidence/{md,raw,...})를 그대로 쓴다.
+# (ontology/semantic, evidence/{md,raw,...})를 그대로 쓴다.
 layout:
   semantic_dir: ontology/semantic
   seeds_path: evidence/catalog/seeds.jsonl

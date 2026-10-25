@@ -8,9 +8,9 @@ locked: true
 domains: []
 
 system:
-  semantic: ontology/system/semantic/**/*.ttl
-  kinetic: ontology/system/kinetic/**/*.ttl
-  dynamic: ontology/system/dynamic/**/*.ttl
+  semantic: ontology/semantic/**/*.ttl
+  kinetic: ontology/kinetic/**/*.ttl
+  dynamic: ontology/dynamic/**/*.ttl
 
 record_archive:
   registry: record-archive/registry/**/*.jsonl
@@ -29,15 +29,15 @@ time_axes:
 
 provenance:
   source_registry: evidence/seeds.jsonl
-  asserted_graph: ontology/system/semantic/**/*.ttl
-  shapes: ontology/system/semantic/**/*.shapes.ttl
+  asserted_graph: ontology/semantic/**/*.ttl
+  shapes: ontology/semantic/**/*.shapes.ttl
 
 scan:
   include:
-    - "ontology/system/semantic/**/*.ttl"
+    - "ontology/semantic/**/*.ttl"
   exclude:
-    - "ontology/system/semantic/**/*.shapes.ttl"
-    - "ontology/system/semantic/**/*.inferred.ttl"
+    - "ontology/semantic/**/*.shapes.ttl"
+    - "ontology/semantic/**/*.inferred.ttl"
   orphan_exit_code: 1
 
 sync:

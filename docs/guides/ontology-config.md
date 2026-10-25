@@ -5,7 +5,7 @@
 온톨로지 도메인 데이터의 유일한 정본은 다음 Turtle graph입니다.
 
 ```text
-ontology/system/semantic/<domain>/
+ontology/semantic/<domain>/
   <domain>.ttl
   <domain>.shapes.ttl
   <domain>.inferred.ttl

@@ -142,19 +142,19 @@ concept__descriptive-statistics              ← 하위 Concept (HITL 필수)
 
 | 영역 | 책임 | 표현 방식 | 상태 |
 |------|------|----------|------|
-| **ontology/system/** | 형식 logic과 ontology domain 정본 | Turtle (`*.ttl`) / RDF / OWL | ✅ v1.1.0 canonical |
+| **ontology/semantic/** | 형식 logic과 ontology domain 정본 (`kinetic/`, `dynamic/`은 같은 층의 규칙·이벤트 그래프) | Turtle (`*.ttl`) / RDF / OWL | ✅ canonical |
 | **ontology/explain/** | 자연어 narrative projection | Markdown (frontmatter + body) | ✅ derived view |
 | **evidence/** | 1차/2차 출처 자료 + PROV-O 입력 | URL, source-note, seed id | ✅ 운영 중 (기본) |
 
-- **explain ← system**: explain은 TTL 정본에서 생성하는 단방향 projection이다.
+- **explain ← semantic**: explain은 TTL 정본에서 생성하는 단방향 projection이다.
 - **ontology ↔ evidence**: 모든 개념·사례는 TTL의 `prov:hadPrimarySource` IRI로 근거를 연결한다.
-- `ontology/system/`에는 Markdown anchor를 두지 않는다. 사람이 읽는 anchor와 explain projection은 `ontology/explain/`이 담당하고, `system/`은 `*.ttl` 그래프 산출물만 둔다.
-- `ontology/system/semantic/*.ttl` 내부에서 TBox/RBox는 파일명이 아니라 `owl:Class`, `owl:ObjectProperty`, `rdfs:subClassOf`, `rdfs:domain/range`, `owl:propertyChainAxiom` 같은 RDF/OWL 구문으로 구분한다.
-- `ontology/system/kinetic/`과 `ontology/system/dynamic/`은 실제 row/event 값을 저장하지 않는다. 변화 규칙과 상태 의미는 ontology에 두고, 실제 레코드는 `record-archive/`에 둔다.
+- `ontology/semantic/`, `ontology/kinetic/`, `ontology/dynamic/`에는 Markdown anchor를 두지 않는다. 사람이 읽는 anchor와 explain projection은 `ontology/explain/`이 담당하고, 이 세 폴더는 `*.ttl` 그래프 산출물만 둔다. `system/` 단계는 두지 않는다(v1.9.0).
+- `ontology/semantic/*.ttl` 내부에서 TBox/RBox는 파일명이 아니라 `owl:Class`, `owl:ObjectProperty`, `rdfs:subClassOf`, `rdfs:domain/range`, `owl:propertyChainAxiom` 같은 RDF/OWL 구문으로 구분한다.
+- `ontology/kinetic/`과 `ontology/dynamic/`은 실제 row/event 값을 저장하지 않는다. 변화 규칙과 상태 의미는 ontology에 두고, 실제 레코드는 `record-archive/`에 둔다.
 
 > [!important] TTL-only 정본
 > 사람은 explain projection을 우선 읽을 수 있지만 에이전트와 검증기는 항상
-> `ontology/system/semantic/**/*.ttl`을 정본으로 소비한다.
+> `ontology/semantic/**/*.ttl`을 정본으로 소비한다.
 
 ---
 
@@ -166,8 +166,8 @@ concept__descriptive-statistics              ← 하위 Concept (HITL 필수)
 | 입력/산출 | 역할 | 매핑 |
 |----------|------|------|
 | `evidence/seeds.jsonl` | source registry | 각 seed id는 `prov:Entity` 후보 |
-| `ontology/system/semantic/{domain}/*.ttl` | ontology 정본 | term이 `prov:hadPrimarySource`를 직접 보유 |
-| `ontology/system/semantic/{domain}/*.shapes.ttl` | SHACL gate | 출처 없는 registry term 차단 |
+| `ontology/semantic/{domain}/*.ttl` | ontology 정본 | term이 `prov:hadPrimarySource`를 직접 보유 |
+| `ontology/semantic/{domain}/*.shapes.ttl` | SHACL gate | 출처 없는 registry term 차단 |
 | `ontology/explain/**/*.md` | human-readable projection | TTL identifier/label/provenance를 투영 |
 
 규칙:
@@ -233,15 +233,15 @@ ABox 영역의 모든 노드는 인스턴스. `type_of` 관계로 TBox class와 
 | `record-archive/derived/*.jsonl` | 이벤트와 규칙으로 도출된 값 | materialized derived records |
 | `record-archive/snapshots/*.parquet` | 분석·projection용 스냅샷 | generated OLAP artifact |
 | `ontology/explain/instance/*.md` | 사람이 읽는 instance snapshot | `skb-explain` generated projection |
-| `ontology/system/kinetic/{domain}.ttl` | 변화 규칙·전이·action 의미 | formal rule graph |
-| `ontology/system/dynamic/{domain}.ttl` | event/state/derived-value 의미 모델 | formal state graph |
+| `ontology/kinetic/{domain}.ttl` | 변화 규칙·전이·action 의미 | formal rule graph |
+| `ontology/dynamic/{domain}.ttl` | event/state/derived-value 의미 모델 | formal state graph |
 
 변화 처리 원칙:
 
 - 변화가 발생하면 원본 이벤트는 `record-archive/events/*.jsonl`에 append한다.
-- 어떤 변화가 어떤 조건에서 어떤 action을 유발하는지는 `ontology/system/kinetic/{domain}.ttl`에 둔다.
+- 어떤 변화가 어떤 조건에서 어떤 action을 유발하는지는 `ontology/kinetic/{domain}.ttl`에 둔다.
 - 변화 후 도출된 실제 값은 `record-archive/derived/` 또는 `record-archive/runtime/runtime.db`에 저장한다.
-- 도출값의 의미, 상태 타입, 이벤트 타입, 유효한 상태 전이 모델은 `ontology/system/dynamic/{domain}.ttl`에 둔다.
+- 도출값의 의미, 상태 타입, 이벤트 타입, 유효한 상태 전이 모델은 `ontology/dynamic/{domain}.ttl`에 둔다.
 - `ontology/explain/instance/*.md`는 위 record archive에서 생성한 최신 설명 snapshot으로 취급한다.
 
 ---
@@ -336,14 +336,14 @@ domains:
   technical:
     concept: ontology/explain/concept/technical/
     instance: ontology/explain/instance/technical/
-    semantic_graph: ontology/system/semantic/technical/**/*.ttl
+    semantic_graph: ontology/semantic/technical/**/*.ttl
   marketing:
     concept: ontology/explain/concept/marketing/
     instance: ontology/explain/instance/marketing/
 system:                              # v1.2.0 formal graph layer
-  semantic: ontology/system/semantic/**/*.ttl
-  kinetic:  ontology/system/kinetic/**/*.ttl
-  dynamic:  ontology/system/dynamic/**/*.ttl
+  semantic: ontology/semantic/**/*.ttl
+  kinetic:  ontology/kinetic/**/*.ttl
+  dynamic:  ontology/dynamic/**/*.ttl
 record_archive:
   registry: record-archive/registry/**/*.jsonl
   runtime: record-archive/runtime/runtime.db
@@ -359,8 +359,8 @@ time_axes:
   derivation_time: derived_at
 provenance:
   source_registry: evidence/seeds.jsonl
-  asserted_graph: ontology/system/semantic/**/*.ttl
-  shapes: ontology/system/semantic/**/*.shapes.ttl
+  asserted_graph: ontology/semantic/**/*.ttl
+  shapes: ontology/semantic/**/*.shapes.ttl
 ```
 
 `locked: true`인 경우 `skb-ontology`를 통해서만 갱신 가능.
@@ -374,7 +374,7 @@ provenance:
 | `ontology/Tbox/{cluster}/` | `ontology/explain/concept/{cluster}/` |
 | `ontology/Abox/{cluster}/` | `ontology/explain/instance/{cluster}/` |
 | `{name}__hub.md` | `{name}__class.md` (D-1) |
-| (없음) | `ontology/system/{semantic, kinetic, dynamic}/**/*.ttl` (formal graph layer) |
+| (없음) | `ontology/{semantic, kinetic, dynamic}/**/*.ttl` (formal graph layer) |
 | `instance/runtime.db` | `record-archive/runtime/runtime.db` |
 | `instance/snapshots/` | `record-archive/snapshots/` |
 | `data-record/` | `record-archive/` |

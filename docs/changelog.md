@@ -1,5 +1,28 @@
 # Changelog
 
+## v1.9.0 (2026-10-25) — 온톨로지 정본 경로를 `ontology/semantic/`으로 통일, `system/` 단계 제거
+
+### Changed
+
+- **정본 TTL 위치**: `ontology/system/semantic/` → `ontology/semantic/`. 규칙·이벤트 그래프는 `ontology/system/{kinetic,dynamic}/` → `ontology/{kinetic,dynamic}/`.
+  `skb init`은 두 배치(b1, legacy) 모두 `ontology/system/`을 만들지 않는다.
+- **허브 선언**: 새 KB의 `canonical_root_hub.yaml`은 `layout.semantic_dir: ontology/semantic`을 선언한다(b1은 이전부터 선언했고, legacy 허브에는 `layout:`이 없다).
+- **승인 정책**: `skb-orchestration`의 HITL 정책 글로브가 `ontology/semantic`, `ontology/kinetic`, `ontology/dynamic`을 각각 본다.
+
+### Added
+
+- **`skb-repository-setup/scripts/migrate_ontology_layout.py`**: 이전 배치 KB를 새 배치로 옮긴다. 기본은 드라이런이고 `--apply`에서만 바꾼다. 디렉토리는 rename으로 옮기고, 목적지가 내용 있는 디렉토리로 이미 있으면 충돌로 보고 아무것도 바꾸지 않는다. 빈 목적지(scaffold가 만든 빈 `ontology/kinetic` 등)는 충돌이 아니다. 빈 `system/`만 rmdir하고 파일은 지우지 않는다. 허브의 `layout:`과 옛 경로 문자열, `agent-context/index/index.yaml`, KB 메타데이터(ttl·yaml·json·jsonl·md)를 바꾸고, `evidence/` 원문은 건드리지 않는다. 두 번 실행해도 결과가 같다.
+
+### Compatibility
+
+- **읽기 호환**: `skb-ontology`, `skb-graph-reasoning`, `skb-semantic-search`의 경로 해석은 `layout:`이 없을 때 `ontology/semantic`을 먼저 보고, 그 경로가 없고 `ontology/system/semantic`만 있으면 옛 경로를 쓴다. 마이그레이션 전 KB도 그대로 읽힌다.
+- **쓰기**: 옛 KB를 새 배치로 바꾸려면 `migrate_ontology_layout.py --target <KB>`를 드라이런으로 먼저 본 뒤 `--apply`로 실행한다.
+- 옛 `ontology/system/{kinetic,dynamic}` 경로를 직접 가리키던 외부 스크립트는 새 경로로 바꿔야 한다.
+
+### Versions
+
+- `skb-repository-setup` 1.3.0, `skb-ontology` 1.6.0, `skb-graph-reasoning` 0.3.0, `skb-semantic-search` 0.5.0, `skb-record-archive` 1.0.1, `skb-orchestration` 1.0.2, `skb-evidence` 1.2.7
+
 ## Unreleased — skb-semantic-search 0.3.0 · 0.4.0 (2026-10-25)
 
 ### Added

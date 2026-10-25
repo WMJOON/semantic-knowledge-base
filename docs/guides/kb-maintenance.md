@@ -1,6 +1,6 @@
 # KB 유지보수 가이드
 
-> Ontology drift 판단의 기준은 `ontology/system/semantic/**/*.ttl`입니다. explain Markdown과
+> Ontology drift 판단의 기준은 `ontology/semantic/**/*.ttl`입니다. explain Markdown과
 > JSON report는 파생 산출물이므로 정본 TTL을 고친 뒤 재생성합니다.
 
 전용 유지보수 스킬(`skb-maintain`)은 v1.3.0에서 제거됐습니다. 점검은 각 데이터의 소유 스킬이 맡고,

@@ -45,7 +45,7 @@ case "$sub" in
 skb-ontology — TTL-only ontology manager
 
 Canonical data:
-  ontology/system/semantic/<domain>/*.ttl
+  ontology/semantic/<domain>/*.ttl
 
 Commands:
   add          Add a class, property, individual, or reified assertion directly to Turtle
