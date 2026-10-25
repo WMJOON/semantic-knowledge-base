@@ -6,10 +6,10 @@ description: |
   원천이 바뀌었는지 신선도를 점검한다(status). 정본(TTL, seeds.jsonl)은 읽기만 하고 수정하지 않는다.
   트리거: "의미 검색", "개념 검색", "evidence 검색", "비슷한 개념 찾아줘", "임베딩 인덱스", "재색인", "인덱스 최신인지".
 metadata:
-  version: "0.2.0"
+  version: "0.3.0"
 ---
 
-# skb-semantic-search (v0.1.0)
+# skb-semantic-search (v0.3.0)
 
 ## What
 
@@ -78,3 +78,26 @@ Claude Code, Codex(`~/.agents/skills`), Antigravity CLI(`agy`)에서 같은 `SKI
 `python -m pytest -q tests` (순수 함수만; mlx·zvec 불필요). 인덱스 생성·검색 동작은 실제 KB 에서 `--store-dir /tmp/...` 로 시험한다.
 
 자세한 필드·manifest 형식은 [references/index-spec.md](references/index-spec.md).
+
+## v0.3.0 추가: TBox 색인, 하이브리드 검색, TBox 확장, SPARQL 템플릿
+
+| kind | 원천 | 한 항목 | 임베딩 텍스트 |
+|---|---|---|---|
+| `tbox` | `owl:Class`, `rdfs:Class`, `owl:ObjectProperty`, `owl:DatatypeProperty` | 클래스 또는 속성 1개 | `label (alt): definition/scopeNote/comment` |
+
+- **라벨**: prefLabel(언어별), altLabel(동의어), hiddenLabel(검색 전용, 화면에 쓰지 않음). IRI 는 식별자, 라벨은 입구다.
+- **하이브리드(기본, concepts·tbox)**: 벡터 순위와 키워드(BM25) 순위를 상호 순위 결합(RRF)으로 합친다. 키워드 색인은 `<KB>/embedding/texts_<kind>.jsonl` 에 같은 id 로 저장한다. 필드 가중치는 라벨 3회, 대체·숨은 라벨 2회, 정의 1회.
+- **`--mode vector`** 로 벡터만 쓸 수 있다. evidence 는 벡터만 지원한다.
+- **`expand`**: TBox 를 검색한 뒤 `domain`·`range`·상하위 관계를 따라 스키마 요소를 덧붙인다. 클래스는 그 domain 을 가진 속성과 상위 클래스, 속성은 domain·range 클래스와 상위 속성을 가져온다. `--max-add` 로 개수를 제한한다.
+- **SPARQL 템플릿**: `references/sparql-templates.json`. 질문 예시로 템플릿을 찾고(`sparql-search`), `<<SLOT>>` 에 IRI 만 채워 읽기 전용 SELECT 로 실행한다(`sparql-run`). 슬롯 값이 `q:텍스트` 이면 TBox 키워드 검색 1순위의 IRI 를 쓰고, 후보 목록을 함께 보여 준다. 쓰기 키워드가 있으면 실행하지 않는다. 그래프 실행은 `SKB_RDF_PYTHON`(rdflib) 인터프리터에서 `sparql_run.py` 로 돈다.
+
+| 명령 | 설명 |
+|---|---|
+| `index tbox --target KB` | TBox 색인(벡터 + 키워드 텍스트) |
+| `search tbox "질의" --target KB [--mode vector\|hybrid]` | TBox 검색 |
+| `expand "질의" --target KB [--max-add 10] [--json]` | TBox 검색 + 이웃 확장 |
+| `sparql-search "질문" [-k 3]` | 템플릿 찾기 (IRI 없이) |
+| `sparql-run --template ID --bind SLOT=IRI\|q:텍스트 --target KB [--dry-run]` | 바인딩, 쿼리 생성, 실행 |
+
+**검증 범위**: 추출(KB 실측: 개념 1559, TBox 836), 템플릿 검색, IRI 해석, 쿼리 생성, 그래프 실행은 KB 에서 확인했다. 벡터 색인과 하이브리드·`expand` 의 벡터 경로는 이 환경에 zvec 과 임베딩 모델이 없어 실행하지 못했다. 단위 테스트(31개)는 순수 로직(토큰화, BM25, RRF, 확장, 템플릿 검증, 읽기 전용 검사)을 덮는다.
+

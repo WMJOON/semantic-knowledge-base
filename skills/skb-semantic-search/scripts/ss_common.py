@@ -21,13 +21,16 @@ DOC_PREFIX = "title: none | text: "
 QUERY_PREFIX = "task: search result | query: "
 MAX_TOKENS = 512
 
-KINDS = ("concepts", "evidence")
-STORE_NAMES = {"concepts": "zvec_store_concepts_eg2", "evidence": "zvec_store_evidence_eg2"}
-FIELDS = {"concepts": ("iri", "label", "status", "scheme"), "evidence": ("seed_id", "title", "uri", "md_path")}
+KINDS = ("concepts", "evidence", "tbox")
+HYBRID_KINDS = ("concepts", "tbox")  # 키워드 색인을 함께 쓰는 kind. evidence 는 벡터만
+STORE_NAMES = {"concepts": "zvec_store_concepts_eg2", "evidence": "zvec_store_evidence_eg2", "tbox": "zvec_store_tbox_eg2"}
+FIELDS = {"concepts": ("iri", "label", "status", "scheme"), "evidence": ("seed_id", "title", "uri", "md_path"),
+          "tbox": ("iri", "label", "tkind", "domain", "range", "super")}
 SEMANTIC_DIR = "ontology/system/semantic"  # layout: 이 없을 때의 기본값. 실제 경로는 skb_layout.semantic_dir
 SKIP_SUFFIXES = (".inferred.ttl", ".shapes.ttl")
 MANIFEST = "search_manifest.json"
 CONCEPTS_JSONL = "kb_concepts.jsonl"
+TBOX_JSONL = "kb_tbox.jsonl"
 
 
 def sql_quote(value: str) -> str:
@@ -113,7 +116,7 @@ def semantic_ttl_files(target: Path) -> list[Path]:
 def source_fingerprint(target: Path, kind: str) -> str:
     """인덱스 원천의 내용 지문. 원천이 같으면 같고, 한 파일이라도 바뀌면 달라진다."""
     h = hashlib.sha256()
-    if kind == "concepts":
+    if kind in ("concepts", "tbox"):
         for p in semantic_ttl_files(target):
             h.update(rel_to(target, p).encode() + b"\0" + sha256_file(p).encode() + b"\n")
     elif kind == "evidence":

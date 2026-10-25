@@ -1,0 +1,69 @@
+{
+  "version": "0.1.0",
+  "note": "자주 묻는 SPARQL 구조. 슬롯 <<NAME>> 에는 IRI 만 들어간다. slots: class | property | instance.",
+  "templates": [
+    {
+      "id": "instances-of-class",
+      "questions": ["어떤 종류의 X 목록", "X 인스턴스 보여줘", "X 가 뭐가 있어", "list instances of a class"],
+      "description": "클래스에 속한 개체 목록과 라벨",
+      "slots": {"CLASS": "class"},
+      "sparql": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT ?s ?label WHERE { ?s rdf:type <<CLASS>> . OPTIONAL { ?s rdfs:label ?label } } LIMIT 100"
+    },
+    {
+      "id": "subclasses-of",
+      "questions": ["X 의 하위 클래스", "X 종류는 뭐가 있어", "subclasses of a class"],
+      "description": "직계 하위 클래스 목록",
+      "slots": {"CLASS": "class"},
+      "sparql": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT ?sub WHERE { ?sub rdfs:subClassOf <<CLASS>> } LIMIT 100"
+    },
+    {
+      "id": "superclasses-of",
+      "questions": ["X 의 상위 클래스", "X 는 무엇의 한 종류인가", "superclasses of a class"],
+      "description": "상위 클래스 전체(이행 폐포)",
+      "slots": {"CLASS": "class"},
+      "sparql": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT ?sup WHERE { <<CLASS>> rdfs:subClassOf+ ?sup } LIMIT 100"
+    },
+    {
+      "id": "property-domain-range",
+      "questions": ["Y 의 domain 과 range", "Y 는 어떤 클래스 사이를 잇나", "domain and range of a property"],
+      "description": "속성의 domain 과 range",
+      "slots": {"PROPERTY": "property"},
+      "sparql": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT ?d ?r WHERE { <<PROPERTY>> rdfs:domain ?d . OPTIONAL { <<PROPERTY>> rdfs:range ?r } }"
+    },
+    {
+      "id": "properties-of-class",
+      "questions": ["X 가 가질 수 있는 속성", "X 의 속성 목록", "properties of a class"],
+      "description": "domain 이 클래스인 속성 목록",
+      "slots": {"CLASS": "class"},
+      "sparql": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT ?p WHERE { ?p rdfs:domain <<CLASS>> } LIMIT 100"
+    },
+    {
+      "id": "pairs-linked-by-property",
+      "questions": ["Y 로 연결된 개체 쌍", "Y 관계를 가진 것들", "pairs linked by a property"],
+      "description": "속성으로 연결된 주어와 목적어 쌍",
+      "slots": {"PROPERTY": "property"},
+      "sparql": "SELECT ?s ?o WHERE { ?s <<PROPERTY>> ?o } LIMIT 100"
+    },
+    {
+      "id": "entity-property-values",
+      "questions": ["X 의 Y 값은", "X 가 가진 Y", "value of a property of an entity"],
+      "description": "개체의 속성 값",
+      "slots": {"ENTITY": "instance", "PROPERTY": "property"},
+      "sparql": "SELECT ?v WHERE { <<ENTITY>> <<PROPERTY>> ?v } LIMIT 100"
+    },
+    {
+      "id": "entity-types",
+      "questions": ["X 는 어떤 종류인가", "X 의 타입", "type of an entity"],
+      "description": "개체의 rdf:type 목록",
+      "slots": {"ENTITY": "instance"},
+      "sparql": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nSELECT ?t WHERE { <<ENTITY>> rdf:type ?t }"
+    },
+    {
+      "id": "class-definition",
+      "questions": ["X 의 정의", "X 가 무엇인지 설명", "definition of a class"],
+      "description": "클래스의 정의와 범위 주석",
+      "slots": {"CLASS": "class"},
+      "sparql": "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\nSELECT ?def WHERE { <<CLASS>> skos:definition|skos:scopeNote|rdfs:comment ?def }"
+    }
+  ]
+}
